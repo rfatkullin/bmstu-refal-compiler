@@ -1,0 +1,690 @@
+{
+	"Builtins": {},
+	"ExtMap": {},
+	"GlobMap": {
+		"Go": {
+			"Start": {
+				"Offs": 0,
+				"Line": 1,
+				"Col": 1
+			},
+			"Follow": {
+				"Offs": 38,
+				"Line": 4,
+				"Col": 2
+			},
+			"Offs": 7,
+			"Line": 1,
+			"Col": 8,
+			"HasName": true,
+			"FuncName": "Go",
+			"IsIdent": true,
+			"IsSe": false,
+			"IsEntry": true,
+			"Rollback": false,
+			"Params": {
+				"VarMap": [
+					null,
+					null,
+					null,
+					null
+				],
+				"AnonymousCount": 0,
+				"FuncMap": null,
+				"Parent": null
+			},
+			"Sentences": [
+				{
+					"Start": {
+						"Offs": 16,
+						"Line": 3,
+						"Col": 2
+					},
+					"Follow": {
+						"Offs": 34,
+						"Line": 3,
+						"Col": 20
+					},
+					"VarMap": [
+						null,
+						null,
+						null,
+						null
+					],
+					"AnonymousCount": 0,
+					"FuncMap": null,
+					"Parent": null,
+					"Pattern": {
+						"Start": {
+							"Offs": 16,
+							"Line": 3,
+							"Col": 2
+						},
+						"Follow": {
+							"Offs": 16,
+							"Line": 3,
+							"Col": 2
+						},
+						"Terms": null
+					},
+					"Actions": [
+						{
+							"Comment": "'='",
+							"Start": {
+								"Offs": 16,
+								"Line": 3,
+								"Col": 2
+							},
+							"Follow": {
+								"Offs": 34,
+								"Line": 3,
+								"Col": 20
+							},
+							"ActionOp": 1,
+							"Terms": [
+								{
+									"Comment": "EVAL",
+									"Start": {
+										"Offs": 18,
+										"Line": 3,
+										"Col": 4
+									},
+									"Follow": {
+										"Offs": 34,
+										"Line": 3,
+										"Col": 20
+									},
+									"TermTag": 11,
+									"Str": null,
+									"Name": "",
+									"IsIdent": false,
+									"VarType": 0,
+									"Int": null,
+									"Float": 0,
+									"Exprs": [
+										{
+											"Start": {
+												"Offs": 19,
+												"Line": 3,
+												"Col": 5
+											},
+											"Follow": {
+												"Offs": 33,
+												"Line": 3,
+												"Col": 19
+											},
+											"Terms": [
+												{
+													"Comment": "COMP 'EqualTerms'",
+													"Start": {
+														"Offs": 19,
+														"Line": 3,
+														"Col": 5
+													},
+													"Follow": {
+														"Offs": 29,
+														"Line": 3,
+														"Col": 15
+													},
+													"TermTag": 3,
+													"Str": null,
+													"Name": "EqualTerms",
+													"IsIdent": true,
+													"VarType": 0,
+													"Int": null,
+													"Float": 0,
+													"Exprs": null
+												},
+												{
+													"Comment": "COMP 'a'",
+													"Start": {
+														"Offs": 30,
+														"Line": 3,
+														"Col": 16
+													},
+													"Follow": {
+														"Offs": 31,
+														"Line": 3,
+														"Col": 17
+													},
+													"TermTag": 3,
+													"Str": null,
+													"Name": "a",
+													"IsIdent": true,
+													"VarType": 0,
+													"Int": null,
+													"Float": 0,
+													"Exprs": null
+												},
+												{
+													"Comment": "COMP 'a'",
+													"Start": {
+														"Offs": 32,
+														"Line": 3,
+														"Col": 18
+													},
+													"Follow": {
+														"Offs": 33,
+														"Line": 3,
+														"Col": 19
+													},
+													"TermTag": 3,
+													"Str": null,
+													"Name": "a",
+													"IsIdent": true,
+													"VarType": 0,
+													"Int": null,
+													"Float": 0,
+													"Exprs": null
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		"Pal": {
+			"Start": {
+				"Offs": 42,
+				"Line": 6,
+				"Col": 1
+			},
+			"Follow": {
+				"Offs": 110,
+				"Line": 12,
+				"Col": 2
+			},
+			"Offs": 42,
+			"Line": 6,
+			"Col": 1,
+			"HasName": true,
+			"FuncName": "Pal",
+			"IsIdent": true,
+			"IsSe": false,
+			"IsEntry": false,
+			"Rollback": false,
+			"Params": {
+				"VarMap": [
+					null,
+					null,
+					null,
+					null
+				],
+				"AnonymousCount": 0,
+				"FuncMap": null,
+				"Parent": null
+			},
+			"Sentences": [
+				{
+					"Start": {
+						"Offs": 51,
+						"Line": 8,
+						"Col": 2
+					},
+					"Follow": {
+						"Offs": 74,
+						"Line": 8,
+						"Col": 25
+					},
+					"VarMap": [
+						{
+							"1": 0
+						},
+						null,
+						null,
+						{
+							"1": 0
+						}
+					],
+					"AnonymousCount": 0,
+					"FuncMap": null,
+					"Parent": null,
+					"Pattern": {
+						"Start": {
+							"Offs": 51,
+							"Line": 8,
+							"Col": 2
+						},
+						"Follow": {
+							"Offs": 62,
+							"Line": 8,
+							"Col": 13
+						},
+						"Terms": [
+							{
+								"Comment": "VAR s.1",
+								"Start": {
+									"Offs": 51,
+									"Line": 8,
+									"Col": 2
+								},
+								"Follow": {
+									"Offs": 54,
+									"Line": 8,
+									"Col": 5
+								},
+								"TermTag": 6,
+								"Str": null,
+								"Name": "1",
+								"IsIdent": false,
+								"VarType": 3,
+								"Int": null,
+								"Float": 0,
+								"Exprs": null
+							},
+							{
+								"Comment": "VAR e.1",
+								"Start": {
+									"Offs": 55,
+									"Line": 8,
+									"Col": 6
+								},
+								"Follow": {
+									"Offs": 58,
+									"Line": 8,
+									"Col": 9
+								},
+								"TermTag": 6,
+								"Str": null,
+								"Name": "1",
+								"IsIdent": false,
+								"VarType": 0,
+								"Int": null,
+								"Float": 0,
+								"Exprs": null
+							},
+							{
+								"Comment": "VAR s.1",
+								"Start": {
+									"Offs": 59,
+									"Line": 8,
+									"Col": 10
+								},
+								"Follow": {
+									"Offs": 62,
+									"Line": 8,
+									"Col": 13
+								},
+								"TermTag": 6,
+								"Str": null,
+								"Name": "1",
+								"IsIdent": false,
+								"VarType": 3,
+								"Int": null,
+								"Float": 0,
+								"Exprs": null
+							}
+						]
+					},
+					"Actions": [
+						{
+							"Comment": "'='",
+							"Start": {
+								"Offs": 63,
+								"Line": 8,
+								"Col": 14
+							},
+							"Follow": {
+								"Offs": 74,
+								"Line": 8,
+								"Col": 25
+							},
+							"ActionOp": 1,
+							"Terms": [
+								{
+									"Comment": "EVAL",
+									"Start": {
+										"Offs": 65,
+										"Line": 8,
+										"Col": 16
+									},
+									"Follow": {
+										"Offs": 74,
+										"Line": 8,
+										"Col": 25
+									},
+									"TermTag": 11,
+									"Str": null,
+									"Name": "",
+									"IsIdent": false,
+									"VarType": 0,
+									"Int": null,
+									"Float": 0,
+									"Exprs": [
+										{
+											"Start": {
+												"Offs": 66,
+												"Line": 8,
+												"Col": 17
+											},
+											"Follow": {
+												"Offs": 73,
+												"Line": 8,
+												"Col": 24
+											},
+											"Terms": [
+												{
+													"Comment": "COMP 'Pal'",
+													"Start": {
+														"Offs": 66,
+														"Line": 8,
+														"Col": 17
+													},
+													"Follow": {
+														"Offs": 69,
+														"Line": 8,
+														"Col": 20
+													},
+													"TermTag": 3,
+													"Str": null,
+													"Name": "Pal",
+													"IsIdent": true,
+													"VarType": 0,
+													"Int": null,
+													"Float": 0,
+													"Exprs": null
+												},
+												{
+													"Comment": "VAR e.1",
+													"Start": {
+														"Offs": 70,
+														"Line": 8,
+														"Col": 21
+													},
+													"Follow": {
+														"Offs": 73,
+														"Line": 8,
+														"Col": 24
+													},
+													"TermTag": 6,
+													"Str": null,
+													"Name": "1",
+													"IsIdent": false,
+													"VarType": 0,
+													"Int": null,
+													"Float": 0,
+													"Exprs": null
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"Start": {
+						"Offs": 79,
+						"Line": 9,
+						"Col": 2
+					},
+					"Follow": {
+						"Offs": 86,
+						"Line": 9,
+						"Col": 9
+					},
+					"VarMap": [
+						null,
+						null,
+						null,
+						{
+							"1": 0
+						}
+					],
+					"AnonymousCount": 0,
+					"FuncMap": null,
+					"Parent": null,
+					"Pattern": {
+						"Start": {
+							"Offs": 79,
+							"Line": 9,
+							"Col": 2
+						},
+						"Follow": {
+							"Offs": 82,
+							"Line": 9,
+							"Col": 5
+						},
+						"Terms": [
+							{
+								"Comment": "VAR s.1",
+								"Start": {
+									"Offs": 79,
+									"Line": 9,
+									"Col": 2
+								},
+								"Follow": {
+									"Offs": 82,
+									"Line": 9,
+									"Col": 5
+								},
+								"TermTag": 6,
+								"Str": null,
+								"Name": "1",
+								"IsIdent": false,
+								"VarType": 3,
+								"Int": null,
+								"Float": 0,
+								"Exprs": null
+							}
+						]
+					},
+					"Actions": [
+						{
+							"Comment": "'='",
+							"Start": {
+								"Offs": 83,
+								"Line": 9,
+								"Col": 6
+							},
+							"Follow": {
+								"Offs": 86,
+								"Line": 9,
+								"Col": 9
+							},
+							"ActionOp": 1,
+							"Terms": [
+								{
+									"Comment": "COMP 'T'",
+									"Start": {
+										"Offs": 85,
+										"Line": 9,
+										"Col": 8
+									},
+									"Follow": {
+										"Offs": 86,
+										"Line": 9,
+										"Col": 9
+									},
+									"TermTag": 3,
+									"Str": null,
+									"Name": "T",
+									"IsIdent": true,
+									"VarType": 0,
+									"Int": null,
+									"Float": 0,
+									"Exprs": null
+								}
+							]
+						}
+					]
+				},
+				{
+					"Start": {
+						"Offs": 90,
+						"Line": 10,
+						"Col": 2
+					},
+					"Follow": {
+						"Offs": 93,
+						"Line": 10,
+						"Col": 5
+					},
+					"VarMap": [
+						null,
+						null,
+						null,
+						null
+					],
+					"AnonymousCount": 0,
+					"FuncMap": null,
+					"Parent": null,
+					"Pattern": {
+						"Start": {
+							"Offs": 90,
+							"Line": 10,
+							"Col": 2
+						},
+						"Follow": {
+							"Offs": 90,
+							"Line": 10,
+							"Col": 2
+						},
+						"Terms": null
+					},
+					"Actions": [
+						{
+							"Comment": "'='",
+							"Start": {
+								"Offs": 90,
+								"Line": 10,
+								"Col": 2
+							},
+							"Follow": {
+								"Offs": 93,
+								"Line": 10,
+								"Col": 5
+							},
+							"ActionOp": 1,
+							"Terms": [
+								{
+									"Comment": "COMP 'T'",
+									"Start": {
+										"Offs": 92,
+										"Line": 10,
+										"Col": 4
+									},
+									"Follow": {
+										"Offs": 93,
+										"Line": 10,
+										"Col": 5
+									},
+									"TermTag": 3,
+									"Str": null,
+									"Name": "T",
+									"IsIdent": true,
+									"VarType": 0,
+									"Int": null,
+									"Float": 0,
+									"Exprs": null
+								}
+							]
+						}
+					]
+				},
+				{
+					"Start": {
+						"Offs": 97,
+						"Line": 11,
+						"Col": 2
+					},
+					"Follow": {
+						"Offs": 104,
+						"Line": 11,
+						"Col": 9
+					},
+					"VarMap": [
+						{
+							"1": 0
+						},
+						null,
+						null,
+						null
+					],
+					"AnonymousCount": 0,
+					"FuncMap": null,
+					"Parent": null,
+					"Pattern": {
+						"Start": {
+							"Offs": 97,
+							"Line": 11,
+							"Col": 2
+						},
+						"Follow": {
+							"Offs": 100,
+							"Line": 11,
+							"Col": 5
+						},
+						"Terms": [
+							{
+								"Comment": "VAR e.1",
+								"Start": {
+									"Offs": 97,
+									"Line": 11,
+									"Col": 2
+								},
+								"Follow": {
+									"Offs": 100,
+									"Line": 11,
+									"Col": 5
+								},
+								"TermTag": 6,
+								"Str": null,
+								"Name": "1",
+								"IsIdent": false,
+								"VarType": 0,
+								"Int": null,
+								"Float": 0,
+								"Exprs": null
+							}
+						]
+					},
+					"Actions": [
+						{
+							"Comment": "'='",
+							"Start": {
+								"Offs": 101,
+								"Line": 11,
+								"Col": 6
+							},
+							"Follow": {
+								"Offs": 104,
+								"Line": 11,
+								"Col": 9
+							},
+							"ActionOp": 1,
+							"Terms": [
+								{
+									"Comment": "COMP 'F'",
+									"Start": {
+										"Offs": 103,
+										"Line": 11,
+										"Col": 8
+									},
+									"Follow": {
+										"Offs": 104,
+										"Line": 11,
+										"Col": 9
+									},
+									"TermTag": 3,
+									"Str": null,
+									"Name": "F",
+									"IsIdent": true,
+									"VarType": 0,
+									"Int": null,
+									"Float": 0,
+									"Exprs": null
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	}
+}

@@ -6,16 +6,13 @@ import (
 )
 
 import (
+	"strings"
 	"syntax"
+	"tokens"
 )
 
 const (
-	PARAMS_PTR = "%rsi"
-	LOCALS_PTR = "%rdi"
-	ARG_LEFT   = "%r8"
-	ARG_RIGHT  = "%r9"
-	HEAP_PTR   = "%r10"
-	CUR_LKTERM = "%r11"
+	tab = " "
 )
 
 type Data struct {
@@ -29,18 +26,20 @@ func (f *Data) Blank() { fmt.Fprint(f, "\n") }
 func (f *Data) Comment(s string) { fmt.Fprintf(f, "\t/* %s */\n", s) }
 
 func (f *Data) Header() {
-	fmt.Fprintf(f, "\t/*%s*/\n", f.Name)
+	fmt.Fprintf(f, "// file:%s\n\n", f.Name)
 }
-
-func (f *Data) DotExtern(mangledName string) { fmt.Fprintf(f, "\t.extern\t%s\n", mangledName) }
-
-func (f *Data) DotGlobal(mangledName string) { fmt.Fprintf(f, "\t.globl\t%s\n", mangledName) }
 
 func (f *Data) DotAlign(val int) { fmt.Fprintf(f, "\t.balign\t%d\n", val) }
 
-func (f *Data) Label(name string) { fmt.Fprintf(f, "%s:\n", name) }
+func (f *Data) FuncHeader(name string) {
+	fmt.Fprintf(f, "l_term* %s(vec_header* vecData) \n{\n", name)
+	fmt.Fprintf(f, "%sstruct v_term* data = vecData.data;\n", tab)
+	fmt.Fprintf(f, "%suint32_t length = vecData.size;\n", tab)
+}
 
-func (f *Data) Text(i int) { fmt.Fprintf(f, "\t.text\t%d\n", i) }
+func (f *Data) FuncEnd(name string) {
+	fmt.Fprintf(f, "} // %s\n\n", name)
+}
 
 type functionStack []*syntax.Function
 
@@ -57,45 +56,67 @@ func (s *functionStack) Pop() (fun *syntax.Function) {
 	return
 }
 
-func decorate(name string) string {
-	//TODO: implement real mangling
-	return name
+func tabulation(depth int) string {
+	return strings.Repeat(tab, depth)
 }
 
-func processPattern(f Data, p *syntax.Expr) {
+func (f *Data) processSymbol(termNumber, depth int) {
+
+	var startVar = fmt.Sprintf("start_%d", termNumber)
+	var followVar = fmt.Sprintf("follow_%d", termNumber)
+	var startValue = "0"
+	var tabs = tabulation(depth)
+
+	if termNumber != 0 {
+		var prevFollow = fmt.Sprintf("follow_%d", termNumber-1)
+
+		fmt.Fprintf(f, "%sif (%s >= length) /*Откат*/;\n", tabs, prevFollow)
+
+		startValue = fmt.Sprintf("follow_%d", termNumber-1)
+	}
+
+	fmt.Fprintf(f, "%sint %s = %s = %s;\n", tabs, startVar, followVar, startValue)
+
+	fmt.Fprintf(f, "%sif (data[%s]->tag == V_TERM_SYMBOL_TAG) %s++;\n", tabs, startVar, followVar)
+	fmt.Fprintf(f, "%s\telse /*Откат*/;\n", tabs)
+
+	fmt.Fprintf(f, "//--------------------------------------\n")
+}
+
+func (f *Data) processExpr(termNumber, nestedDepth int) {
+
+}
+
+func (f *Data) processPattern(p *syntax.Expr) {
+
+	for termIndex, term := range p.Terms {
+
+		switch term.TermTag {
+		case syntax.VAR:
+			switch term.Value.VarType {
+
+			case tokens.VT_S:
+				f.processSymbol(termIndex, termIndex+1)
+				break
+
+			case tokens.VT_E:
+				f.processExpr(termIndex, termIndex+1)
+				break
+			}
+
+			//fmt.Fprintf(f, "%s ", term.Value.VarType.String())
+			break
+		}
+	}
+
+	fmt.Fprintf(f, "\n")
 }
 
 func processFile(f Data) {
 	unit := f.Ast
 
 	f.Header()
-	if len(unit.Builtins) > 0 {
-		f.Comment("Used built-in functions")
-		for name, _ := range unit.Builtins {
-			f.DotExtern(decorate(name))
-		}
-		f.Blank()
-	}
 
-	if len(unit.ExtMap) > 0 {
-		f.Comment("External functions")
-		for name, _ := range unit.ExtMap {
-			f.DotExtern(decorate(name))
-		}
-		f.Blank()
-	}
-
-	if len(unit.GlobMap) > 0 {
-		f.Comment("Global functions")
-		for name, fun := range unit.GlobMap {
-			if fun.IsEntry {
-				f.DotGlobal(decorate(name))
-			}
-		}
-		f.Blank()
-	}
-
-	f.Text(0)
 	stack := make(functionStack, 0, len(unit.GlobMap)*2)
 	for _, fun := range f.Ast.GlobMap {
 		stack.Push(fun)
@@ -103,10 +124,10 @@ func processFile(f Data) {
 
 	for !stack.Empty() {
 		fun := stack.Pop()
-		f.Label(decorate(fun.FuncName))
+		f.FuncHeader(fun.FuncName)
 
 		for _, s := range fun.Sentences {
-			processPattern(f, &s.Pattern)
+			f.processPattern(&s.Pattern)
 			for _, a := range s.Actions {
 				switch a.ActionOp {
 				case syntax.COMMA: // ','
@@ -118,6 +139,8 @@ func processFile(f Data) {
 				}
 			}
 		}
+
+		f.FuncEnd(fun.FuncName)
 	}
 }
 
