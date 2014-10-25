@@ -3,15 +3,8 @@
 
 #include <stdint.h>
 
-#include "environment.h"
 #include "l_term.h"
-#include "v_term.h"
-
-struct v_vector
-{
-	struct v_vector* ptr;
-	struct v_vector* newPtr;	
-};
+#include "vec_header.h"
 
 struct vector_heap
 {	
@@ -24,6 +17,6 @@ struct vector_heap
 struct vector_heap heap;
 
 void initAllocator(uint32_t newMaxSize);
-struct v_term* allocate(struct environment* env, struct l_term* expr);
+struct vec_header* allocate(struct l_term* expr);
 	
 #endif

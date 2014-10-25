@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "environment.h"
 #include "allocator.h"
 
 extern void initAllocator(uint32_t newMaxSize);

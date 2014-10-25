@@ -2,10 +2,8 @@
 #define __V_TERM_C__
 
 #include "environment.h"
-#include "range.h"
 
 #define V_TERM_SYMBOL_TAG		0
-#define V_TERM_EXPR_TAG			1
 #define V_TERM_BRACKETS_TAG		2
 
 #define V_SYMBOL_CHAR_TAG		0
@@ -16,9 +14,9 @@
 struct v_symbol;
 
 struct v_closure
-{
-	struct environment* env;
+{	
 	struct v_symbol* func_name;
+	struct l_term* vars[0]
 };
 
 struct v_symbol
@@ -37,11 +35,12 @@ struct v_symbol
 struct v_term
 {
 	int tag;
-
+	int32_t offset;
+	
 	union
 	{
 		struct v_symbol* symbol;		
-		struct v_range* brackets;
+		uint32_t inBracketLength;
 	};
 };
 

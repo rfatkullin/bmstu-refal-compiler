@@ -1,8 +1,7 @@
 #ifndef __L_TERM_H__
 #define __L_TERM_H__
 
-#include "range.h"
-#include "v_term.h"
+#include "vec_header.h"
 
 #define L_TERM_RANGE_TAG	0
 #define L_TERM_CHAIN_TAG	1
@@ -17,8 +16,9 @@ struct chain
 
 struct fragment
 {
-	struct v_term* vector_head;
-	struct v_range* range;
+	struct vec_header* vector_head;	
+	uint32_t offset;
+	uint32_t length;
 };
 
 struct l_term
