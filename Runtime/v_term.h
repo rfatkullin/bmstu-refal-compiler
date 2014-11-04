@@ -1,5 +1,5 @@
-#ifndef __V_TERM_C__
-#define __V_TERM_C__
+#ifndef __V_TERM_H__
+#define __V_TERM_H__
 
 #define V_TERM_SYMBOL_TAG		0
 #define V_TERM_BRACKETS_TAG		2
