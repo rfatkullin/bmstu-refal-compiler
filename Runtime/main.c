@@ -3,11 +3,11 @@
 
 #include "allocator.h"
 
-extern void initAllocator(uint32_t newMaxSize);
+//extern void initAllocator(uint32_t newMaxSize);
 
 int main()
 {
-	initAllocator(200);
+	initAllocator(1024 * 1024);
 	
 	return 0;
 }

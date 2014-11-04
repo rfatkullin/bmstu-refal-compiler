@@ -1,8 +1,6 @@
 #ifndef __V_TERM_C__
 #define __V_TERM_C__
 
-#include "environment.h"
-
 #define V_TERM_SYMBOL_TAG		0
 #define V_TERM_BRACKETS_TAG		2
 
@@ -16,7 +14,7 @@ struct v_symbol;
 struct v_closure
 {	
 	struct v_symbol* func_name;
-	struct l_term* vars[0]
+	struct l_term* vars[0];
 };
 
 struct v_symbol

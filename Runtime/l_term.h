@@ -1,8 +1,6 @@
 #ifndef __L_TERM_H__
 #define __L_TERM_H__
 
-#include "vec_header.h"
-
 #define L_TERM_RANGE_TAG	0
 #define L_TERM_CHAIN_TAG	1
 
@@ -15,8 +13,7 @@ struct chain
 };
 
 struct fragment
-{
-	struct vec_header* vector_head;	
+{	
 	uint32_t offset;
 	uint32_t length;
 };
