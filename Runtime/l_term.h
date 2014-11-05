@@ -6,12 +6,6 @@
 
 struct l_term;
 
-struct chain
-{
-	struct l_term* begin;
-	struct l_term* end;
-};
-
 struct fragment
 {	
 	uint32_t offset;
@@ -19,8 +13,7 @@ struct fragment
 };
 
 struct l_term
-{
-	struct l_term* prev;
+{	
 	struct l_term* next;	
 
 	int tag;
@@ -28,7 +21,7 @@ struct l_term
 	union
 	{
 		struct fragment* range;
-		struct chain* chain;
+		struct l_term* chain;
 	};
 };
 

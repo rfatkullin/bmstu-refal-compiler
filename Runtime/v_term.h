@@ -32,8 +32,7 @@ struct v_symbol
 
 struct v_term
 {
-	int tag;
-	int32_t offset;
+	int tag;	
 	
 	union
 	{

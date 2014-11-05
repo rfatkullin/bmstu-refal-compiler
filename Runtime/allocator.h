@@ -5,6 +5,7 @@
 
 #include "v_term.h"
 #include "l_term.h"
+#include "segment_tree.h"
 
 //Количество элементов в листе дерева отрезков
 #define N 1
@@ -17,10 +18,10 @@
 
 struct memory_manager
 {	
-	uint8_t* activeTermsHeap;
-	uint8_t* inactiveTermsHeap;
+	struct v_term* activeTermsHeap;
+	struct v_term* inactiveTermsHeap;
 	
-	uint32_t* segmentTree;
+	struct segment_tree* segmentTree;
 	
 	uint8_t* activeDataHeap;
 	uint8_t* inactiveDataHeap;
@@ -31,7 +32,8 @@ struct memory_manager
 	uint32_t dataOffset;
 	uint32_t ltermsOffset;		
 		
-	uint32_t size;
+	uint32_t vtermsCount;
+	uint32_t totalSize;
 };
 
 struct memory_manager memoryManager;
