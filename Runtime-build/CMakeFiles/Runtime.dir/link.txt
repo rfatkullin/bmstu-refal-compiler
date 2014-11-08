@@ -1,1 +1,0 @@
-/usr/bin/cc      CMakeFiles/Runtime.dir/sources/memory_manager.c.o CMakeFiles/Runtime.dir/sources/main.c.o CMakeFiles/Runtime.dir/sources/segment_tree.c.o  -o Runtime -rdynamic 

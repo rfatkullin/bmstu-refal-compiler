@@ -11,6 +11,8 @@ static float byte2KByte(uint32_t bytes)
 	return bytes / (float)1024;
 }
 
+//Значение n выводится из формулы:
+//size = 2 * n * sizeof(struct v_term) + (4 * n / N + n) * sizeof(uint32_t)
 static uint32_t allocateMemoryForSegmentTree(uint32_t size, uint32_t* n)
 {	
 	uint32_t memSizeWithoutHeader = size - sizeof(struct segment_tree);
@@ -22,21 +24,19 @@ static uint32_t allocateMemoryForSegmentTree(uint32_t size, uint32_t* n)
     memoryManager.segmentTree->n = *n;
     memoryManager.segmentTree->tree = (uint32_t*)malloc(memSizeForTree);
 	
-	return memSizeWithoutHeader + memSizeForTree + memSizeForElements;	
+    return memSizeForTree + memSizeForElements + sizeof(struct segment_tree);
 }
 
-//Значение n выводится из формулы:
-//size = 2 * n * sizeof(struct v_term) + (4 * n / N + n) * sizeof(uint32_t)
 static uint32_t allocateMemoryForVTerms(uint32_t size)
 {	
 	uint32_t n;
-    uint32_t segmentTreeHeapSize = allocateMemoryForSegmentTree(size, n);
+    uint32_t segmentTreeHeapSize = allocateMemoryForSegmentTree(size, &n);
 	uint32_t activeTermsHeapSize = n * sizeof(struct v_term);
 	uint32_t inactiveTermsHeapSize = n * sizeof(struct v_term);
 	
 	uint32_t usedMemory = activeTermsHeapSize + inactiveTermsHeapSize + segmentTreeHeapSize;
 	
-	assert(usedMemory <= size);
+    assert(usedMemory <= size);
 	
 	memoryManager.activeTermsHeap = (struct v_term*)malloc(activeTermsHeapSize);
 	memoryManager.inactiveTermsHeap = (struct v_term*)malloc(inactiveTermsHeapSize);	
