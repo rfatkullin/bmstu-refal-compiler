@@ -11,6 +11,8 @@ static float byte2KByte(uint32_t bytes)
 	return bytes / (float)1024;
 }
 
+//Значение n выводится из формулы:
+//size = 2 * n * sizeof(struct v_term) + (4 * n / N + n) * sizeof(uint32_t)
 static uint32_t allocateMemoryForVTerms(uint32_t size)
 {
 	uint32_t n = (N * size) / (2 * N * sizeof(struct v_term) + (4 + N) * sizeof(uint32_t));
