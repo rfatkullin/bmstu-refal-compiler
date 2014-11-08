@@ -13,15 +13,16 @@ static float byte2KByte(uint32_t bytes)
 
 //Значение n выводится из формулы:
 //size = 2 * n * sizeof(struct v_term) + (4 * n / N + n) * sizeof(uint32_t)
-static uint32_t allocateMemoryForSegmentTree(uint32_t size, uint32_t* n)
+static uint32_t allocateMemoryForSegmentTree(uint32_t size)
 {
+	uint32_t chunck = memoryManager.N;
 	uint32_t memSizeWithoutHeader = size - sizeof(struct segment_tree);
-	*n = (memoryManager.N * memSizeWithoutHeader) / (2 * memoryManager.N * sizeof(struct v_term) + (4 + memoryManager.N) * sizeof(uint32_t));
-	uint32_t memSizeForTree = 4 * (*n) / memoryManager.N * sizeof(uint32_t);
-	uint32_t memSizeForElements = (*n) * sizeof(uint32_t);
+	uint32_t n = (chunck * memSizeWithoutHeader) / (2 * chunck * sizeof(struct v_term) + (4 + chunck) * sizeof(uint32_t));
+	uint32_t memSizeForTree = 4 * n / chunck * sizeof(uint32_t);
+	uint32_t memSizeForElements = n * sizeof(uint32_t);
 
 	memoryManager.segmentTree = (struct segment_tree*)malloc(sizeof(struct segment_tree));
-	memoryManager.segmentTree->n = *n;
+	memoryManager.segmentTree->n = n;
 	memoryManager.segmentTree->tree = (int32_t*)malloc(memSizeForTree);
 	memoryManager.segmentTree->elements = (int32_t*)malloc(memSizeForElements);
 
@@ -30,10 +31,9 @@ static uint32_t allocateMemoryForSegmentTree(uint32_t size, uint32_t* n)
 
 static uint32_t allocateMemoryForVTerms(uint32_t size)
 {
-	uint32_t n;
-	uint32_t segmentTreeHeapSize = allocateMemoryForSegmentTree(size, &n);
-	uint32_t activeTermsHeapSize = n * sizeof(struct v_term);
-	uint32_t inactiveTermsHeapSize = n * sizeof(struct v_term);
+	uint32_t segmentTreeHeapSize = allocateMemoryForSegmentTree(size);
+	uint32_t activeTermsHeapSize = memoryManager.segmentTree->n * sizeof(struct v_term);
+	uint32_t inactiveTermsHeapSize = memoryManager.segmentTree->n * sizeof(struct v_term);
 
 	uint32_t usedMemory = activeTermsHeapSize + inactiveTermsHeapSize + segmentTreeHeapSize;
 
@@ -44,7 +44,7 @@ static uint32_t allocateMemoryForVTerms(uint32_t size)
 
 
 	printf("\nMemory allocation for vterms:\n");
-	printf("\tMemory enough terms count:    %d \n", n);
+	printf("\tMemory enough terms count:    %d \n", memoryManager.segmentTree->n);
 	printf("\tActive vterms heap size:      %.2f Kb\n", byte2KByte(activeTermsHeapSize));
 	printf("\tInactive vterms heap size:    %.2f Kb\n", byte2KByte(inactiveTermsHeapSize));
 	printf("\tSegment tree size:            %.2f Kb\n", byte2KByte(segmentTreeHeapSize));

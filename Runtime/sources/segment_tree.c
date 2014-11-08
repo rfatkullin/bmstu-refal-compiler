@@ -8,7 +8,19 @@ static uint32_t sum(uint32_t curr, uint32_t currBegin, uint32_t currEnd, uint32_
 
 void buildSegmentTree(uint32_t n)
 {
-		int treeSize = 4 * n / memoryManager.N;
+	int treeSize = 4 * n / memoryManager.N;
+	int i = 0;
+
+	//Кажется, можно просто обнулять. Но пока работает)))
+	for (i = 0; i < treeSize; ++i)
+		memoryManager.segmentTree->tree[i] = -1;
+
+	memset(memoryManager.segmentTree->elements, 0, sizeof(uint32_t) * memoryManager.segmentTree->n);
+}
+
+void clearSegmentTree()
+{
+	int treeSize = 4 * memoryManager.segmentTree->n / memoryManager.N;
 	int i = 0;
 
 	for (i = 0; i < treeSize; ++i)
