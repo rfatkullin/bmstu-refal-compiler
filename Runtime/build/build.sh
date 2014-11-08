@@ -1,4 +1,5 @@
 #!/bin/bash
 
-gcc ../main.c ../allocator.c
+rm a.out
+gcc ../main.c ../memory_manager.c ../segment_tree.c
 ./a.out

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "allocator.h"
+#include "memory_manager.h"
 
 //extern void initAllocator(uint32_t newMaxSize);
 

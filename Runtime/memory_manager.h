@@ -21,7 +21,7 @@ struct memory_manager
 	struct v_term* activeTermsHeap;
 	struct v_term* inactiveTermsHeap;
 	
-	struct segment_tree* segmentTree;
+	uint32_t* segmentTree;
 	
 	uint8_t* activeDataHeap;
 	uint8_t* inactiveDataHeap;

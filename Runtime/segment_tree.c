@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "segment_tree.h"
 
 void buildSegmentTree(uint32_t n)
@@ -11,7 +13,7 @@ void markInSegmentTree(uint32_t begin, uint32_t end)
 		
 } 
 
-uint32_t sumInSegmentTreee(uint32_t begin, uint32_t end)
+uint32_t sumInSegmentTree(uint32_t begin, uint32_t end)
 {
 	
 }
