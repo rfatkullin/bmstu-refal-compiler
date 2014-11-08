@@ -8,7 +8,7 @@
 #include "segment_tree.h"
 
 //Количество элементов в листе дерева отрезков
-#define N 1
+#define N 2
 
 //Сколько процентов памяти выдялется тому или иному типу данных
 //Память для дерева отрезков берется из памяти для v_term'ов.
@@ -21,7 +21,7 @@ struct memory_manager
 	struct v_term* activeTermsHeap;
 	struct v_term* inactiveTermsHeap;
 	
-	uint32_t* segmentTree;
+	struct segment_tree* segmentTree;
 	
 	uint8_t* activeDataHeap;
 	uint8_t* inactiveDataHeap;

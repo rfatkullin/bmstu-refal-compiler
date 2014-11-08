@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+   <FileVersion major="1" minor="6" />
+   <Project>
+      <Option title="Runtime" />
+      <Option makefile_is_custom="1" />
+      <Option compiler="gcc" />
+      <Option virtualFolders="CMake Files\;" />
+      <Build>
+      <Target title="all">
+         <Option working_dir="/home/rustam/Diploma/Runtime-build" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 all" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="Runtime">
+         <Option output="/home/rustam/Diploma/Runtime-build/Runtime" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/rustam/Diploma/Runtime-build" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/rustam/Diploma/Runtime/headers" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/4.8" />
+            <Add directory="/usr/include/c++/4.8/backward" />
+            <Add directory="/usr/include/i386-linux-gnu" />
+            <Add directory="/usr/include/i386-linux-gnu/c++/4.8" />
+            <Add directory="/usr/lib/gcc/i686-linux-gnu/4.8/include" />
+            <Add directory="/usr/lib/gcc/i686-linux-gnu/4.8/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 Runtime" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="Runtime/fast">
+         <Option output="/home/rustam/Diploma/Runtime-build/Runtime" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/rustam/Diploma/Runtime-build" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/rustam/Diploma/Runtime/headers" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/4.8" />
+            <Add directory="/usr/include/c++/4.8/backward" />
+            <Add directory="/usr/include/i386-linux-gnu" />
+            <Add directory="/usr/include/i386-linux-gnu/c++/4.8" />
+            <Add directory="/usr/lib/gcc/i686-linux-gnu/4.8/include" />
+            <Add directory="/usr/lib/gcc/i686-linux-gnu/4.8/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 Runtime/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rebuild_cache">
+         <Option working_dir="/home/rustam/Diploma/Runtime-build" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 rebuild_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/rustam/Diploma/Runtime-build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      </Build>
+      <Unit filename="/home/rustam/Diploma/Runtime/sources/main.c">
+      </Unit>
+      <Unit filename="/home/rustam/Diploma/Runtime/sources/memory_manager.c">
+      </Unit>
+      <Unit filename="/home/rustam/Diploma/Runtime/sources/segment_tree.c">
+      </Unit>
+      <Unit filename="/home/rustam/Diploma/Runtime/headers/l_term.h">
+      </Unit>
+      <Unit filename="/home/rustam/Diploma/Runtime/headers/memory_manager.h">
+      </Unit>
+      <Unit filename="/home/rustam/Diploma/Runtime/headers/segment_tree.h">
+      </Unit>
+      <Unit filename="/home/rustam/Diploma/Runtime/headers/v_term.h">
+      </Unit>
+      <Unit filename="/home/rustam/Diploma/Runtime/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\" />
+      </Unit>
+   </Project>
+</CodeBlocks_project_file>
