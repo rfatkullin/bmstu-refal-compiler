@@ -3,11 +3,17 @@
 
 #include "memory_manager.h"
 
-//extern void initAllocator(uint32_t newMaxSize);
-
 int main()
 {
-    initAllocator(1024 * 1024);
+	initAllocator(512, 2);
 
-    return 0;
+	markInSegmentTree(0, 2);
+	markInSegmentTree(2, 3);
+	markInSegmentTree(4, 4);
+
+	sumInSegmentTree(0, 4);
+
+	printf("sum: %u\n", sumInSegmentTree(0, 4));
+
+	return 0;
 }
