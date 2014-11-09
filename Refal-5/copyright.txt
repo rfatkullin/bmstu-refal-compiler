@@ -1,0 +1,26 @@
+The REFAL-5 VERSION-PZ Copyright.
+
+Use in source and binary forms, with or without modification, 
+are permitted provided that source code must retain the above copyright notice
+and binary forms must reproduce the above copyright notice.
+
+Source and binary forms of the distributive of REFAL-5 VERSION-PZ, with or without modification, 
+may not be free redistributed as a proper part of any other software product. 
+Right of redistribution of the source and binary forms, with or without modification,
+is a subject for an Agreement between the REFAL-5 VERSION-PZ team of developers and
+a user looking for such a right. See the official Internet REFAL-5 VERSION-PZ site for
+contact information: http://www.botik.ru/pub/local/scp/refal5/ .
+
+Without such an Agreement the source and binary forms of REFAL-5 VERSION-PZ 
+may be just referred to the official Internet REFAL-5 VERSION-PZ site 
+http://www.botik.ru/pub/local/scp/refal5/ from a user distributive using REFAL-5 VERSION-PZ.
+
+Refal-5 source code created by a user and binary forms created by REFAL-5 VERSION-PZ compiler
+may be free distributed under the user License Agreement. The name of the version of 
+REFAL-5 VERSION-PZ, under which the software product does work, must be included 
+in the user License Agreement.
+
+NO WARRANTIES provided without a special Agreement. The REFAL-5 VERSION-PZ team of developers
+SHALL NOT BE liable for any direct or indirect damages arising in any way out of the use of
+this software.
+

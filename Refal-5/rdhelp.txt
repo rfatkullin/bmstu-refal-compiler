@@ -1,0 +1,97 @@
+			REFAL TRACER COMMANDS:
+			----------------------
+
+COMMAND.	ABBR.	PARAMETERS. 			FUNCTION.
+--------        -----   -----------                     ---------
+
+SET_BREAK	SET,	<F P>, where F is	Sets a break point. The Tracer
+		BREAK	a function and P is	will stop when the active
+			a pattern.		function is F and its argument
+						is recognized as P.
+	EXAMPLE:  SET_BREAK   <FUNC e1 'A'>;
+
+PRINT		P, PR	a Refal variable 	Prints the value of the vari-
+						able as it is defined in the 
+						current break point.
+
+			keywords 'VIEW', 'V'	Prints the view field.
+
+			keywords 'EXP', 'ACT'	Prints the active expression.
+
+			keywords 'RESULT',	Prints the result of the 
+			'RES' 			COMPUTE or STEP
+
+			keyword 'CALL'		Prints the value of the calling
+						expression (applicable only 
+						after a STEP or COMPUTE).
+
+	EXAMPLE:  PRINT   e1 
+	EXAMPLE:  P       V
+	EXAMPLE:  PRINT   RESULT 
+	EXAMPLE:  PR      CALL
+
+EXIT		EX	none			Exit the Tracer.
+
+QUIT		Q	none			Exit the tracer (do not print
+						# of steps, view field etc.).
+
+GO		-	none			Resume execution until the next
+						break point.
+
+DELETE		D, DEL	number N		Delete break point number N.
+
+COMPUTE		COM,	'RES' or 'RESULT'	Compute the active expression
+		COMP	or none			and then stop. If 'RESULT' or 
+						'RES' modifier is present
+						the result is printed upon
+						completeion.
+
+STEP		S	number N or none	Make N steps and then stop.
+			and 'RES' or 'RESULT'	Default = 1. If 'RES' or 
+			or none.		'RESULT' is present and
+						N = 1, then the result of
+						the step is printed.
+
+SHOW		SHO,SH	keyword 'STEP'	 	Prints the current step number;
+
+			keyword 'POINT'		Prints the current break point;
+
+			keyword 'BREAK' fol-
+			lowed by number N, or	
+			simply a number N	Prints break point number N;
+
+			keyword 'ALL'		Prints all break points;
+
+			keywords 'MODULES',	Prints the name of the specified
+			'MODULE' or 'MOD' fol-	module and all functions visible
+			lowed by either a 	from that module. If the module
+			module name, empty or 	name specification is '*' then
+			star '*'		all modules are displayed, if 
+						empty only module names appear.
+
+			keywords 'FUNCTION' or	Prints the names of the modules
+			'FUNC' or 'FUN' fol-	from which a function with the
+			lowed by a function 	specified name is visible.
+			name.
+
+	EXAMPLE:  SHOW   BREAK 2 
+	EXAMPLE:  SHOW   2
+	EXAMPLE:  SHOW   MOD ABC
+	EXAMPLE:  SHOW   MODULES
+	EXAMPLE:  SHOW   FUNCTION  DEF
+	EXAMPLE:  SHOW   ALL
+
+HELP		H	none			Print this message.
+
+
+===============================================================================
+
+			COMMAND  SYNTAX.
+
+  Command names and parameters may appear in either upper or lower case (except 
+in pattern specification, where the case is important). Command parameters may
+be separated by blanks, tabs or commas. Commands are separated by end-of-lines
+or semicolons. To continue the command on the next line type a backslash '\'
+in the end of the first line. The dot '.' command repeats the last batch of
+commands appearing on the same line. The dot '.' must appear in the first
+position of the line (the rest of the line is ignored).

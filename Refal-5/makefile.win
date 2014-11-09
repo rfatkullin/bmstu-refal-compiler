@@ -1,0 +1,64 @@
+# For Windows NT
+OBJS_REFGO = refgo.obj refaux.obj bif.obj load.obj ri.obj refio.obj func1.obj func2.obj macros.obj sysfun.obj freeze.obj arithm.obj bif_lex.obj xxx.obj xml2ref.obj
+OBJS_REFTR = trace.obj load.obj rcaux.obj rti.obj bif.obj arithm.obj refaux.obj func1.obj func2.obj macros.obj lex.obj dtrace.obj \
+             dcom.obj sysfun.obj dimpl.obj freeze.obj rcleft.obj refio.obj bif_lex.obj xxx.obj xml2ref.obj
+OBJS_REFC = rc5.obj parser.obj lex.obj sem.obj pass2.obj rc.obj rcleft.obj rcopt.obj rcaux.obj vyvod.obj bif_lex.obj
+
+CC = cl
+C_FLAGS = /J /W4 /DFOR_OS_WINDOWSNT
+# C_FLAGS = /J /W4 /DFOR_OS_WINDOWSNT /I../XML-Clarc/expat-1.1/
+# C_FLAGS = /nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /Fp"Debug/Refal5.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c
+# C_FLAGS = /nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /Fp"Debug/Refal5.pch" /YX /Fd"Debug/" /FD /GZ /c
+rm = del
+L_FLAGS = /link
+# L_FLAGS = 
+
+.c.obj:
+	$(CC) $(C_FLAGS) -c $<
+
+.c.exe:
+	$(CC) $(C_FLAGS) $<
+
+#all: refgo reftr refc see1 see2
+all: refgo reftr refc
+
+#refgo: refgo.o refaux.o bif.o load.o ri.o refio.o func1.o func2.o macros.o \
+#    sysfun.o freeze.o arithm.o
+#	$(CC) $(LFLAGS) version.c `cat refgo.lnk` -o refgo
+#	$(CC_PATH)\strip refgo
+#	$(CC_PATH)\aout2exe refgo
+refgo: $(OBJS_REFGO)
+	$(CC) version.c $(OBJS_REFGO) -o refgo $(L_FLAGS) xmltok.lib xmlparse.lib
+
+
+#reftr: trace.o load.o rcaux.o rti.o bif.o arithm.o refaux.o func1.o func2.o \
+#   macros.o lex.o dtrace.o dcom.o sysfun.o dimpl.o freeze.o rcleft.o refio.o
+#	$(CC) $(LFLAGS) version.c `cat reftr.lnk` -o reftr
+#	$(CC_PATH)\strip reftr
+#	$(CC_PATH)\aout2exe reftr
+reftr: $(OBJS_REFTR)
+	$(CC) version.c $(OBJS_REFTR) -o reftr $(LFLAGS) xmltok.lib xmlparse.lib
+
+#refc: rc5.o parser.o lex.o sem.o pass2.o \
+#	rc.o rcleft.o rcopt.o rcaux.o vyvod.o
+#	$(CC) $(LFLAGS) version.c `cat rc5.lnk` -o refc
+#	$(CC_PATH)\strip refc
+#	$(CC_PATH)\aout2exe refc
+refc: $(OBJS_REFC)
+	$(CC) version.c $(OBJS_REFC) -o refc  $(L_FLAGS)
+
+see1: see1.c
+	$(CC) -o see1 see1.c
+#	$(CC_PATH)\strip see1
+#	$(CC_PATH)\aout2exe see1
+
+see2: see2.c
+	$(CC) -o see2 see2.c
+#	$(CC_PATH)\strip see2
+#	$(CC_PATH)\aout2exe see2
+
+clean: 
+	$(rm) *.obj
+	$(rm) reftr.exe refgo.exe refc.exe see1.exe see2.exe
+
+

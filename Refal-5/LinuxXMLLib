@@ -1,0 +1,8 @@
+cd linux
+ln -s libxml.so.1.8.7 libxml.so.0
+ln -s libxml.so.1.8.7 libxml.so.1
+ln -s libxmlparse.so.1.1 libxmlparse.so
+ln -s libxmlparse.so.1.1 libxmlparse.so.1
+ln -s libxmltok.so.1.1 libxmltok.so
+ln -s libxmltok.so.1.1 libxmltok.so.1
+cd ../

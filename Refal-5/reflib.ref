@@ -1,0 +1,410 @@
+* This file, REFLIB.REF, includes Refal definitions of:
+*             
+* Pair        pairs '(' and ')' into structure brackets
+* PairArg     pairs '(' and ')' into structure brackets from <Arg s.number>
+* Input	      inputs Refal expressions, program style code
+* InputArg    inputs Refal expressions, program style code from <Arg s.number>
+* Xxout       outputs in expression-exchange (XX) code
+* Xxinr       inputs in XX code, Refal definition
+* Xxin        inputs in XX code calling a system function
+* Pprout      pretty print of expressions, empty result
+
+*  Function PAIR converts character-parentheses into paired
+*  structure brackets of Refal, new Syntax
+
+$ENTRY Pair{
+*  e.X  =  <Pair1 [. ^ e.X .]>
+   e.X  =  <Pair1 (( ))( e.X)>        
+   };
+Pair1 {
+*  [ e.1 ^ '('e.2 ]  =  <Pair1 [ e.1( ^ e.2 ]>;
+   (e.L( e.1 ))( '('e.2 )e.R  =  <Pair1 (e.L( e.1)( ))( e.2 )e.R>;
+*  [ e.1(e.2 ^ ')'e.3 ]  =  <Pair1 [ e.1(e.2) ^ e.3 ]>;
+   (e.L( e.1)(e.2 ))( ')'e.3 )e.R  =  <Pair1 (e.L( e.1(e.2) ))( e.3 )e.R>;
+*  [. e.1 ^ ')'e.3 ]  =  error message;
+   (( e.1 ))( ')'e.3 )e.R  =  <Prout '*** ERROR: Unbalanced ")"'
+	'found by Pair:'>  <Prout '*** 'e.1')'>;
+*  [ e.1 ^ s.2 e.3 ]  =  <Pair1 [ e.1 s.2 ^ e.3]>;
+   (e.L( e.1 ))( s.2 e.3 )e.R  =  <Pair1 (e.L( e.1 s.2 ))( e.3 )e.R>;
+*  [. e.1 ^.]  == e.1;
+   (( e.1 ))( )  =  e.1;
+*  [ e.1 ^ .]  =  error message;
+   (e.L( e.1 ))( )  =  <Prout '*** ERROR: Unbalanced "(" '
+	'found by Pair:'> <Prlmb e.L>;
+   };
+
+$ENTRY PairArg { s.numb = <Pair <Arg s.numb>>; }
+
+*  PRint Left MultiBracket
+Prlmb {
+   (e.1)e.2  =  <Prout '*** 'e.1'('> <Prlmb e.2>;
+     =
+   }
+
+
+* INPUT of Refal expressions from  disk or terminal
+* Call <Input s.Channel> where s.Channel is a whole from 1 to 19,
+* or <Input e.File> where e.File (a string of characters)
+* is the name of the file to read from;
+* Call <Input> to read from terminal. Enter empty line to terminate.
+* The format of input -- that of an expression in  a Refal program,
+* but characters different from letters, digits, blanks, quotes,
+* and parentheses can be used unquoted. 
+* If a compound symbol is not an identifier then it has to be quoted.
+* Line-ends are equivalent to blanks.
+* Identifiers may start with a low case letter. 
+* In file, empty lines separate expressions from each other.
+* CAUTION: Be aware of the dangers of using both channels, 
+* and file names in the same program.
+
+$ENTRY Input { 
+        = <Input1 0>;
+       s.C, <Type s.C>: 'N' e.C1 = <Input1 s.C>;
+       e.File, <Status 'r'e.File>: 
+               {New s.C = <Open 'r' s.C e.File>
+                          <Input1 s.C>;
+                Old s.C = <Input1 s.C>;
+               }; }
+*
+Status {
+   s.M e.File, <F-table>: 
+           {e.1 s.C(s.M '/'e.File) e.2 = Old s.C 
+                        <Br 153443950 '=' e.1 s.C(s.M'/'e.File) e.2>;
+	    e.1 s.C(s.M1'/'e.File) e.2 = New s.C
+			<Br 153443950 '=' e.1 s.C(s.M'/'e.File) e.2>;
+            e.1 s.C s.X e.2 = New s.C 
+                         <Br 153443950 '=' e.1 s.C(s.M'/'e.File)s.X e.2>;
+            e.1 = <Prout "Sorry. Can't open " e.File". No more channels">;
+           }; }               
+* File-table
+F-table { , <Dg 153443950> : 
+           { = 19 18 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 'X';
+            e.1 = e.1;
+           }; }
+
+Input1 { s.C  =  
+	<Parse ('$') <Read-in s.C <Get s.C>>>;  }
+
+* Read in cards until EOF or empty line
+Read-in {
+  s.C = ;
+  s.C 0 = ;
+  s.C e.1 = ' 'e.1 <Read-in s.C <Get s.C>>; }
+
+$ENTRY InputArg { s.numb = <Parse ('$') <Arg s.numb>>; }
+
+
+* Convert characters into Refal objects
+Parse {
+  (e.1) ' '  e.2  =  <Parse (e.1) e.2>;
+  (e.1) '\t' e.2  =  <Parse (e.1) e.2>;
+  (e.1) '('e.2  =  <Parse ((e.1)) e.2>;
+  ((e.1)e.2) ')'e.3  =  <Parse (e.1(e.2)) e.3>;
+  ('$'e.1) ')'e.3  = <Prout> <Prout> 
+		<Prout '*** ERROR: Unbalanced \')\' in input'>
+		<Prout e.1 ')'>;
+  (e.1) '\''e.2  =  <Quotes Parse '\''(e.1) e.2>;
+  (e.1) '\"'e.2  =  <Quotes Parse '\"'((e.1)) e.2>;
+  (e.1) '\\' e.2, e.2: 
+         { 'x' s.d1 s.d2 e.3, <Hex s.d1 s.d2>: s.hex
+                                       = <Parse (e.1 s.hex)e.3>;
+           s.A e.3, <Escape s.A>: s.A1 = <Parse (e.1 s.A1)e.3>;
+           e.3 =  <Prout> '*'Error
+	      <Prout '*** ERROR: Unexpected escape sequnce in input'>
+	      <Prout '*** 'e.1> <Prout '*** ''\\' e.3>;
+         };
+
+  (e.1) s.A e.2  =  <Parse1 (e.1) (<Type s.A>) s.A e.2>;
+  ('$'e.1)  = e.1;
+  ((e.1)e.2)  = <Prout> <Prout>
+	        <Prout '*** ERROR: Unbalanced \'(\' in input'>	
+	        <Prout-lm (e.1)e.2>;  }
+  
+* Print out a left multibracket
+Prout-lm {
+  (e.1)e.2  =  <Prout-lm e.1> <Prout '*** (' e.2>;
+  '$'e.1  =  <Prout '*** ' e.1>;  }
+
+* Inside escape.
+Escape {
+ '\\' = '\\'; 'n' = '\n';
+ 'r' = '\r'; 't' = '\t';
+ '\'' = '\''; '\"' = '\"';
+ '(' = '\('; ')' = '\)';
+ '<' = '\<'; '>' = '\>';
+  e.3 = ;
+}
+
+* Inside quotes
+Quotes {
+  s.Fun s.Q (e.1) '\\' e.2 , e.2: 
+         { 'x' s.d1 s.d2 e.3, <Hex s.d1 s.d2>: s.hex
+                                       = <Quotes s.Fun s.Q(e.1 s.hex)e.3>;
+           s.A e.3, <Escape s.A>: s.A1 = <Quotes s.Fun s.Q(e.1 s.A1)e.3>;
+           e.3 =  <Prout> '*'Error
+	      <Prout '*** ERROR: Unexpected escape sequnce in input'>
+	      <Prout '*** 'e.1> <Prout '*** ''\\' e.3>;
+         };
+
+  s.Fun '\'' (e.1)       '\'' e.2 = <Mu s.Fun (e.1) e.2>;
+  s.Fun '\"' ((e.0) e.1) '\"' e.2 = <Mu s.Fun (e.0 <Implode_Ext e.1>)e.2>;
+  s.Fun s.Q  (e.1) EOF = <QuotesError s.Q (e.1)>;
+  s.Fun s.Q  (e.1) s.A e.2 = <Quotes s.Fun s.Q (e.1 s.A) e.2>;
+  s.Fun s.Q  (e.1) = <QuotesError s.Q (e.1)>;
+      };
+
+QuotesError {
+ s.Q  (e.1) =  <Prout> '*'Error
+	      <Prout '*** ERROR: Unbalanced quote in input'>
+              <Prout '*** 'e.1> <Prout '*** 's.Q>;
+}
+ 
+Hex {
+ s.d1 s.d2, <Hex s.d1>: s.h1, <Hex s.d2>: s.h2 
+     = <Chr <Add (<Mul s.h1 16>) s.h2>>;
+
+ s.h, <Type s.h>: 'D' e.D1 = <Numb s.h>;
+ 'A' = 10;  'a' = 10; 'B' = 11;  'b' = 11;
+ 'C' = 12;  'c' = 12; 'D' = 13;  'd' = 13;
+ 'E' = 14;  'e' = 14; 'F' = 15;  'f' = 15; 
+  e.hs = ;
+}
+
+* Go on parsing after the type of the character computed
+Parse1 {
+  (e.1) ('L' e.A1) s.A e.2  =  <Word (e.1) (s.A) e.2>;
+  (e.1) ('D' e.A1) s.A e.2  =  <Number (e.1) (s.A) e.2>;
+  (e.1) (s.T e.A1) s.A e.2  =  <Parse (e.1 s.A) e.2>;  }
+
+Word {
+  (e.1) (e.W) s.B e.2, <Type s.B>:
+	{ 'L' e.B1 = <Word (e.1) (e.W s.B) e.2>;
+	  'D' e.B1 = <Word (e.1) (e.W s.B) e.2>;
+	  'Ol-'  = <Word (e.1) (e.W'-') e.2>;
+	  'Ou_'  = <Word (e.1) (e.W'_') e.2>;
+	  s.T e.B1  = <Parse (e.1 <Implode_Ext e.W>) s.B e.2>;
+	};
+  (e.1) (e.W)  =  <Parse (e.1 <Implode_Ext e.W>)>;  }
+
+Number {
+  (e.1)(e.N) s.X e.2, <Type s.X>: 'D' e.X1 =
+                   <Number (e.1)(e.N s.X) e.2>;
+  (e.1)(e.N) e.X = <Parse (e.1 <Numb e.N>) e.X>;
+       }
+
+
+* Xxout (eXpression eXchange OUT). The format:
+* <Xxout t.Where e.Expr>  ==>  empty 
+* where t.Where is (e.File)or s.Channel
+* e.Expr is coded as a character string (75 char. in line)
+* and written on e.File, or file associated with s.Channel.
+* CAUTION: Be aware of the dangers which appear when both channels, 
+* and file names are used in the same program.
+
+$ENTRY Xxout { 
+       s.C e.X, <Type s.C>: 'N' e.C1 = <Xxout1 s.C e.X>;
+       (e.File)e.X, <Status 'w'e.File>: 
+               {New s.C = <Open 'w' s.C e.File>
+                          <Xxout1 s.C e.X>;
+                Old s.C = <Xxout1 s.C e.X>;
+               }; }
+
+Xxout1 { s.C e.X = <Cut-Put s.C <ConS e.X>>; };
+
+/* Old Syntax.
+* CONvert to a String
+ConS {
+  '#'e.1 = '##' <ConS e.1>;
+  '('e.1 = '#(' <ConS e.1>;
+  ')'e.1 = '#)' <ConS e.1>;
+  s.A e.1, <Type s.A>:
+	{'F' e.A1 = '#'<Explode s.A>' ' <ConS e.1>;
+	 'N' e.A1 = '#'<Symb s.A>' ' <ConS e.1>;
+	 s.T e.A1 = s.A <ConS e.1>;
+	};
+  (e.1)e.2 = '(' <ConS e.1> ')' <ConS e.2>;
+  = ;
+     };
+*/
+
+* CONvert to a String. New Syntax.
+ConS {
+  s.A e.1, <Type s.A>:
+       {
+        'W' e.A1 = <WORD <String (Word NoQuote) <Explode s.A>>> ' ' <ConS e.1>;
+        'N'  e.A1 = <Symb s.A> ' ' <ConS e.1>;
+        s.T  e.A1 = '\''<String (Chars NoQuote) s.A e.1>;
+       };
+  (e.1) e.2 = '(' <ConS e.1> ')' <ConS e.2>;
+            = ;
+     };
+
+WORD { 
+ e.word Quote = '\"' e.word '\"'; 
+ e.word NoQuote = e.word ; 
+}
+
+String {
+ (s.flag e.Quote) '-' e.1 = '-' <String1 (s.flag Quote) e.1>;
+ (s.flag e.Quote) '_' e.1 = '_' <String1 (s.flag Quote) e.1>;
+ (s.flag e.Quote) s.A e.1, <Type s.A>: 'D' e.digit 
+                          = s.A <String1 (s.flag Quote) e.1>;
+ (Word e.Quote)           = <String1 (Word Quote)>;
+ t.flag               e.1 = <String1 t.flag e.1>;
+}
+
+String1 {
+ (s.flag e.Quote) '\\' e.1 = '\\' '\\' <String1 (s.flag Quote) e.1>;
+ (s.flag e.Quote) '\'' e.1 = '\\' '\'' <String1 (s.flag Quote) e.1>;
+ (s.flag e.Quote) '\"' e.1 = '\\' '\"' <String1 (s.flag Quote) e.1>;
+ (s.flag e.Quote) '\t' e.1 = '\\' 't'  <String1 (s.flag Quote) e.1>;
+ (s.flag e.Quote) '\n' e.1 = '\\' 'n'  <String1 (s.flag Quote) e.1>;
+ (s.flag e.Quote) '\r' e.1 = '\\' 'r'  <String1 (s.flag Quote) e.1>;
+ t.flag            '-' e.1 = '-' <String1 t.flag e.1>;
+ t.flag            '_' e.1 = '_' <String1 t.flag e.1>;
+ t.flag s.A e.1, t.flag <Type s.A>:
+       {
+        t.flag1 'W' e.Word   = <String1 t.flag> 
+                       <WORD <String (Word NoQuote) <Explode s.A>>> ' ' <ConS e.1>;
+        t.flag1 'N' e.Number = <String1 t.flag> <Symb s.A> ' ' <ConS e.1>;
+        t.flag1           'L' e.Letter = s.A <String1 t.flag e.1>;
+        t.flag1           'D' e.Digit  = s.A <String1 t.flag e.1>;
+        (s.flag1 e.Quote) 'P' e.Printable = s.A <String1 (s.flag1 Quote) e.1>;
+        (s.flag1 e.Quote) s.T e.A1
+                        = '\\x' <ToHex <Ord s.A>> <String1 (s.flag1 Quote) e.1>;
+       };
+
+ t.flag (e.1) e.2 = <String1 t.flag> '(' <ConS e.1> ')' <ConS e.2>;
+ (Word  s.Quote) = s.Quote;
+ (Chars e.Quote) = '\'';
+}
+
+ToHex {
+ s.digit, <Divmod (s.digit) 16>: (s.q) s.r = <ToHexDig s.q> <ToHexDig s.r>;
+}
+
+ToHexDig {
+ 15 = 'F'; 14 = 'E'; 13 = 'D'; 12 = 'C';
+ 11 = 'B'; 10 = 'A'; s.d = <Symb s.d>;
+}
+ 
+* CUT the arg. into 75-pieces and PUT in file
+Cut-Put {
+  s.C  = ;
+  s.C e.X, <First 75 e.X>:
+		{(e.1) =  <Putout s.C e.1>;
+                 (e.1)e.2 = <Putout s.C e.1> <Cut-Put s.C e.2>;
+		};
+	};
+
+* Xxinr (eXpression eXchange IN written in Refal) is disk-oriented input. 
+* It is inverse to Xxout. The format:
+* <Xxinr e.Where> == e.Expression
+* were e.Where is s.Channel or e.File
+* The following program is mostly for the sake of a formal definition.
+* For greater efficiency use function Xxin, which uses the built-in
+* function Sysfun.
+
+$ENTRY Xxinr { 
+        = <Xxinr1 0>;
+       s.C, <Type s.C>: 'N' e.C1 = <Xxinr1 s.C>;
+       e.File, <Status 'r'e.File>: 
+               {New s.C = <Open 'r' s.C e.File>
+                          <Xxinr1 s.C>;
+                Old s.C = <Xxinr1 s.C>;
+               }; }
+
+Xxinr1 {s.C = <Mescp ('$')<Read-all s.C <Get s.C>>>; };
+
+Read-all {
+  s.C 0 = EOF;
+  s.C e.X = e.X <Read-all s.C <Get s.C>>;
+	 };
+       
+* Meet ESCape character and Pair parentheses
+Mescp {
+  (e.1) '\'' e.2 = <Quotes Mescp '\''(e.1) e.2>;
+  (e.1) '\"' e.2 = <Quotes Mescp '\"'((e.1)) e.2>;
+  (e.1) '\\' e.2 =  <Prout> '*'Error
+                    <Prout '*** ERROR: Unexpected escape sequnce in input'>
+                    <Prout '*** 'e.1> <Prout '*** ''\\' e.2>; 
+  (e.1) '(' e.2 = <Mescp ((e.1)) e.2>;
+  ((e.1)e.2) ')'e.3 = <Mescp (e.1(e.2)) e.3>;
+  (e.1) ')'e.3 =  <Prout> <Prout> 
+		<Prout 'Unbalanced ) in input'>
+		<Prout e.1' ***)***'>;
+  (e.1) EOF = <Mescp (e.1)>;
+  (e.1) s.A e.2 = <Mescp1 (<Type s.A>)(e.1)(s.A) e.2>;
+  ('$'e.1) = e.1;
+  ((e.1)e.2) =  <Prout> <Prout> 
+		<Prout 'Unbalanced (... in input'>
+		<Prout e.1 ' ***(***'>;
+      };
+
+Mescp1 {
+  ('L' e.A1)(e.1)(s.A e.2)' 'e.3 = <Mescp (e.1 <Implode s.A e.2>) e.3>;
+  ('L' e.A1)(e.1)(s.A e.2) EOF = <Mescp (e.1 <Implode s.A e.2>) >;
+  ('D' e.A1)(e.1)(s.A e.2)' 'e.3 = <Mescp (e.1 <Numb s.A e.2>) e.3>;
+  ('D' e.A1)(e.1)(s.A e.2) EOF = <Mescp (e.1 <Numb s.A e.2>) >;
+  (s.T e.A1)(e.1)(s.A e.2)s.X e.3 = <Mescp1 (s.T e.A1)(e.1)(s.A e.2 s.X) e.3>;
+       };
+
+/* Old Syntax.
+Mescp {
+  (e.1) '##' e.2 = <Mescp (e.1'#') e.2>;
+  (e.1) '#(' e.2 = <Mescp (e.1'(') e.2>;
+  (e.1) '#)' e.2 = <Mescp (e.1')') e.2>;
+  (e.1) '#' EOF = <Prout 'Error: single # at the end'> <ADD>;
+/* Add is called improperly to produce abnormal stop *+/
+  (e.1) '#'s.A e.2 = <Mescp1 (<Type s.A>)(e.1)(s.A) e.2>;
+  (e.1) '(' e.2 = <Mescp ((e.1)) e.2>;
+  ((e.1)e.2) ')'e.3 = <Mescp (e.1(e.2)) e.3>;
+  (e.1) ')'e.3 =  <Prout> <Prout> 
+		<Prout 'Unbalanced ) in input'>
+		<Prout e.1' ***)***'>;
+  (e.1) EOF = <Mescp (e.1)>;
+  (e.1) s.A e.2 = <Mescp (e.1 s.A) e.2>;
+  ('$'e.1) = e.1;
+  ((e.1)e.2) =  <Prout> <Prout> 
+		<Prout 'Unbalanced (... in input'>
+		<Prout e.1 ' ***(***'>;
+      };
+*/
+
+
+* Xxin (eXpression eXchange IN) is fast disk-oriented input. 
+* It is inverse to Xxout. The format:
+* <Xxin e.File> == e.Expression
+
+$ENTRY Xxin { 
+  e.File, <F-table>: 
+           {e.1 s.C('w/'e.File) e.2 =  
+                  <Br 153443950 '=' e.1 s.C('r/'e.File) e.2>
+		  <Open 'r' s.C e.File>
+		  <Sysfun 1 e.File>;
+  	    e.1 =  <Br 153443950 '=' e.1>
+                   <Sysfun 1 e.File>;
+	   };
+	}
+
+* Pretty print-out of expressions
+
+$ENTRY Pprout { e.X = <Pp (' ')(' ') e.X>;  }
+
+* <Pp (e.B)(e.L) e.Expression>
+* Here e.B is the offset made of blanks;
+* e.L is the offset and left parentheses for beginning.
+* The lengths of e.B and e.L are always equal.
+* The initial offset 1 blank is to see transfers.
+
+Pp {
+  (e.B)(e.L) (e.2)e.3 = <Pp (e.B' ')(e.L'(')e.2>
+                        <Prout e.B ')'>
+                        <Pp (e.B)(e.B) e.3>; 
+
+  (e.B)(e.L) e.1(e.2)e.3 = <Prout e.L e.1>
+                  <Pp (e.B' ')(e.B'(') e.2>
+                  <Prout e.B ')'>
+                  <Pp (e.B)(e.B) e.3>;
+  (e.B)(e.L' ') = ;
+  (e.B)(e.L) e.1 = <Prout e.L e.1>;  }

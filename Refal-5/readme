@@ -1,0 +1,161 @@
+          1. INSTALLATION AND USE of REFAL-5
+
+
+1.1 Installation
+
+The system diskette contains the following files:
+
+      readme
+      refc      exe
+      refgo     exe
+      reftr     exe
+      xmlparse  dll 
+      xmltok    dll
+      e         ref
+      mbprep    ref
+      redhelp   txt
+      test      ref      
+      reflib    ref
+      news      txt
+      copyright txt
+
+
+1. Copy the three exe and two dll files into any subdirectory which is in the PATH.
+
+   Or you can create a directory ( let it be REFAL ),where put the binary files, and add 
+   c:\REFAL to your search path. Under Windows 95 you can accomplish this by editing your 
+   autoexec.bat file and modifying ( or adding ) the line starting with "PATH".
+   For example:
+   PATH=c:\windows;\c:\REFAL
+
+   Under Windows NT, the same change can made through the control panel. 
+
+   Under Linux you should make this change in the initialization files of whatever 
+   shell you use. 
+       a) csh and tcsh users will want to make this change in their .cshrc file.
+       The following line must be added:
+       setenv PATH ($PATH /REFAL)
+    b) bash users will want to make this change in their .bash_profile file.
+       The following line must be added:
+       PATH=$PATH:/REFAL; export PATH
+    c) sh users will want to make this change in their .profile file.
+       The change will looks like following:
+       The following line must be added:
+       PATH=$PATH:/REFAL; export PATH
+
+2. Copy all other files except readme into any subdirectory;
+let it be REFAL.
+
+3. Switch to REFAL and execute:
+
+refc mbprep
+refc reflib
+refc e
+
+This will add the files mbprep.rsl, reflib.rsl and e.rsl to REFAL.
+
+4. Put the line
+
+SET RD_HELP=C:/REFAL/rdhelp.txt
+
+5. You are all set up now. To check that things work as expected,
+run:
+
+refc test
+refgo test
+
+This  will start an interactive program for translation
+of simple arithmetic expressions.
+
+
+1.2 Use
+
+In the following XXX, YYY, etc. are some file names 
+(without extensions). 
+
+Using any editor create a Refal program in XXX.REF.
+To compile, execute:
+
+refc XXX 
+
+In case of no errors no message will be sent.
+The file XXX.RSL containing the translation of the Refal program into
+the interpreted language RASL will be added to the current directory.
+If there is a message of errors, see file XXX.LIS for the listing
+of the Refal program with the descriptions of errors.
+
+To run the Refal program execute:
+ 
+refgo XXX
+
+If you need functions defined in other modules YYY, ZZZ, etc.
+compile YYY, ZZZ, etc. and run:
+
+refgo XXX+YYY+ZZZ  etc.
+
+Note: Make sure there are no blanks between file names and pluses.
+
+You can specify options with REFGO:
+
+refgo -nt XXX+YYY etc.  
+
+or 
+
+refgo XXX+YYY etc. -nt
+
+Then the number of steps and the execution time will be 
+printed out at the end. -n will print out only the number of steps,
+and -t the execution time.
+
+To run program by the Tracer use reftr instead of refgo:
+
+reftr XXX+YYY+ZZZ  etc.
+
+To run with arguments execute:
+
+refgo XXX+YYY etc. Arg1 Arg2 etc.
+reftr XXX+YYY etc. Arg1 Arg2 etc.
+
+An argument cannot start with -.
+To access Args from the Refal program use <Arg s.N> 
+
+
+                2. ABOUT THIS RELEASE (October 2004)
+
+In this release of Refal-5 real numbers are not implemented.
+Correspondingly, built-in functions Trunc, Real and Realfun are absent.
+
+An original version of the release was created by Dmitrij V.Turchin (New York).
+The version was changed in Pereslavl-Zalessky and Moscow.
+Syntax was changed in the current version. ( by Alexandr P. Konyshev )
+The version is being supported in Pereslavl-Zalessky.
+
+                3. BUGS
+
+-1- File descriptors are reduced modulo 40. 
+
+                4. FLAGS RECOGNIZED BY THE REFAL-5 SYSTEM:
+ -n : upon normal stop print the number of steps.
+ -v :   "   "   "   "   "   "    view field.
+ -k :   "   "   "   "   "   "    content of the stock.
+ -t :   "   "   "   "   "   "    elapsed time.
+ -s :   "   "   "   "   "   "    maximum allocated storage.
+ -a : all of the above.
+ -i : ignore unresolved external references. 
+ -e : upon internal error stop do not use interactive mode -
+      "Do you want to print view-field? [Yn]", use [n] as default.
+ -h : print this help on start switches of the Refal-5 interpreter.
+ -lnnn : memory_limit,  memory is equal about nnn MB.
+ -cnnn (or --code_limit=nnn) : rsl-module's size is limited with nnn Kb. By default 64Kb.
+ -Vnn  (or --var_stack=nn  ) 
+       : size of the element's table is limited with nn*(a BASE_SIZE_TABLE_OF_ELEMENT), 
+         We keep values of Refal-variables in the table.(e,s,t-variabbles)
+         (As well as other information for pattern matching).
+         We recommend the range of the counter from 1 to 10.
+ -Cnn (or --call_stack=nn) :
+       : size of stack of function call from left sides of Refal sentences is
+         is limited with nn*(a BASE_SIZE_STACK). 
+         We recommend the range of the counter from 1 to 10.
+
+
+ Use refgo -FLAG (reftr -FLAG) to see (set) the information.

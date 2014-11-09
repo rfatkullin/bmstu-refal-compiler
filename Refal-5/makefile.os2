@@ -1,0 +1,66 @@
+# For Linux
+OBJS_REFGO = refgo.o refaux.o bif.o load.o ri.o refio.o func1.o func2.o macros.o sysfun.o freeze.o arithm.o
+OBJS_REFTR = trace.o load.o rcaux.o rti.o bif.o arithm.o refaux.o func1.o func2.o macros.o lex.o dtrace.o dcom.o sysfun.o dimpl.o freeze.o rcleft.o refio.o
+OBJS_REFC = rc5.o parser.o lex.o sem.o pass2.o rc.o rcleft.o rcopt.o rcaux.o vyvod.o
+
+OBJS_REFGO_OBJ = refgo.obj refaux.obj bif.obj load.obj ri.obj refio.obj func1.obj func2.obj macros.obj sysfun.obj freeze.obj arithm.obj
+OBJS_REFTR_OBJ = trace.obj load.obj rcaux.obj rti.obj bif.obj arithm.obj refaux.obj func1.obj func2.obj macros.obj lex.obj dtrace.obj dcom.obj sysfun.obj dimpl.obj freeze.obj rcleft.obj refio.obj
+OBJS_REFC_OBJ = rc5.obj parser.obj lex.obj sem.obj pass2.obj rc.obj rcleft.obj rcopt.obj rcaux.obj vyvod.obj
+
+CC = gcc
+# C_FLAGS = -O2 -c -W -Wreturn-type -Wunused -Wshadow -funsigned-char 
+# C_FLAGS = -O2 -c -Wall -funsigned-char 
+# C_FLAGS = -g3 -c -Wall -funsigned-char 
+C_FLAGS = -c -DFOR_OS_OS2 -DFOR_OS_LINUX -Wall -funsigned-char -Zomf -Zsys -s -w 
+LFLAGS = -Zomf -Zsys -s 
+rm = rm -f 
+
+.c.o:
+	$(CC) $(C_FLAGS) $<
+
+.o.exe:
+	$(CC) $(C_FLAGS) $<
+
+# all: refgo reftr refc see1 see2
+all: refgo.exe reftr.exe refc.exe
+
+#refgo: refgo.o refaux.o bif.o load.o ri.o refio.o func1.o func2.o macros.o \
+#    sysfun.o freeze.o arithm.o
+#	$(CC) $(LFLAGS) version.c `cat refgo.lnk` -o refgo
+#	$(CC_PATH)\strip refgo
+#	$(CC_PATH)\aout2exe refgo
+refgo.exe: $(OBJS_REFGO)
+	$(CC) $(LFLAGS) version.c $(OBJS_REFGO_OBJ) -o refgo.exe
+
+
+#reftr: trace.o load.o rcaux.o rti.o bif.o arithm.o refaux.o func1.o func2.o \
+#   macros.o lex.o dtrace.o dcom.o sysfun.o dimpl.o freeze.o rcleft.o refio.o
+#	$(CC) $(LFLAGS) version.c `cat reftr.lnk` -o reftr
+#	$(CC_PATH)\strip reftr
+#	$(CC_PATH)\aout2exe reftr
+reftr.exe: $(OBJS_REFTR)
+	$(CC) $(LFLAGS) version.c $(OBJS_REFTR_OBJ) -o reftr.exe
+
+#refc: rc5.o parser.o lex.o sem.o pass2.o \
+#	rc.o rcleft.o rcopt.o rcaux.o vyvod.o
+#	$(CC) $(LFLAGS) version.c `cat rc5.lnk` -o refc
+#	$(CC_PATH)\strip refc
+#	$(CC_PATH)\aout2exe refc
+refc.exe: $(OBJS_REFC)
+	$(CC) $(LFLAGS) version.c $(OBJS_REFC_OBJ) -o refc.exe
+
+see1.exe: see1.c
+	$(CC) -o see1.exe see1.c
+#	$(CC_PATH)\strip see1
+#	$(CC_PATH)\aout2exe see1
+
+see2.exe: see2.c
+	$(CC) -o see2.exe see2.c
+#	$(CC_PATH)\strip see2
+#	$(CC_PATH)\aout2exe see2
+
+clean: 
+	$(rm) *.o
+	$(rm) *.obj
+	$(rm) a.out reftr.exe refgo.exe refc.exe see1.exe see2.exe
+

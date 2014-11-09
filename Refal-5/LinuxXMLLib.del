@@ -1,0 +1,4 @@
+cd linux
+rm libxml.so.0 libxml.so.1 libxmlparse.so libxmlparse.so.1 
+rm libxmltok.so libxmltok.so.1
+cd ..

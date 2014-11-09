@@ -1,0 +1,2 @@
+trace.o load.o rcaux.o rti.o bif.o arithm.o refaux.o func1.o func2.o macros.o
+lex.o dtrace.o dcom.o sysfun.o dimpl.o freeze.o rcleft.o refio.o version.o

@@ -1,0 +1,100 @@
+
+
+              Guide to Writing a Built in Function for Refal-5.
+
+                    Expressions and Links.
+
+NOTE: This description is obsolete as of 11/13/1991. The new 
+description is forthcoming.
+
+Refal expressions are represented as a double linked list where
+each link is defined using the following "C" typedef: (see file DECL.H)
+ typedef struct link
+    {
+    char ptype; /* type of the link */
+    union
+        {
+        struct link *b;    /* bracket: ptr to the pair */
+        char *f;    /* function or compound symbol: ptr to label. */
+        char c;     /* symbol: actual value. */
+        long n;     /* macrodigit: number */
+        } pair;
+    struct link *prec; /* ptr to preceding link */
+    struct link *foll; /* ptr to following link */
+    } LINK;
+
+The first element of this structure -- 'char ptype' determines the type 
+of the link (and also the type of the next field -- 'union pair') 
+and can have the following values (with interpretation):
+
+   0 - left structure bracket: pair.b contains the pointer to the
+       corresponding right bracket.
+   1 - right structure bracket: pair.b contains the pointer to the
+       corresponding left bracket.
+   2 - character (simple symbol): pair.c contains the character value.
+   3 - compound symbol (atom): pair.f contains the pointer to the character
+       string which is the value of the atom.
+   4 - macrodigit (number symbol): pair.n contains the value of the 
+       macrodigit (in the range 0 .. 2^31 - 1).
+   5 - left activization bracket: pair.f contains the pointer to the
+       Refal function.
+   6 - right activization bracket: pair.b contains the pointer to the
+       corresponding left activization bracket.
+   7 - s-variable
+   8 - e-variable
+(the last two are not fully implemented yet.)
+
+File MACROS.H contains some macros which determine the type of the link.
+It is suggested that they are used (in case we need to change the underlying
+values).
+In all case q is pointer to typedef LINK.
+    LINK_SYMBOL(q) - true if q points to a symbol, otherwise false
+    LINK_STRUCTB(q) - true if q points to a structure bracket, otherwise false
+    LINK_LSTRUCTB(q) - true if q points to a left structure bracket, 
+          otherwise false
+    LINK_RSTRUCTB(q) - true if q points to a right structure bracket, 
+          otherwise false
+    LINK_CHAR(q) - true if q points to character symbol, otherwise false
+    LINK_COMPSYM(q) - true if q points to compound symbol (atom), 
+          otherwise false
+    LINK_NUMBER(q) - true if q points to macrodigit, otherwise false
+    LINK_LACT(q) - true if q points to left activization bracket, 
+          otherwise false
+    LINK_RACT(q) - true if q points to right activization bracket, 
+          otherwise false
+    LINK_SVAR(q) - true if q points to an s-variable, otherwise false
+    LINK_EVAR(q) - true if q points to an e-variable, otherwise false
+    LINK_VAR(q) - true if q points to a variable, otherwise false.
+For more details see file MACROS.H
+
+
+
+              Link allocation and freeing.
+
+Refal supports a list of free memory -- i.e. a list of all Refal links
+which have been allocated from the operating system, but are not
+currently in use by the interpreter. At startup time Refal interpreter
+initializes the list of free memory by allocating a block of memory
+from the operating system and structuring it (i.e. breaking it up
+into links and linking them together). A single global variable 
+    LINK *lfm;
+is maintained which points to the beginning of the free list. (The last 
+element of the list is pointing to NULL). If the Refal interpreter needs
+to allocate a link, it uses links from the list of free memory, when
+discarding a link it prepends it the list of free memory.
+A parameterless macro  'all' checks that the list of free memory is not
+empty and if it is allocates more memory from the operating system.
+The following segment of "C" code allocates a link new_link:
+
+     LINK *new_link;
+     new_link = lfm;
+     all;
+
+ ... and then releases it back:
+
+     weld(new_link, lfm);
+     lfm = new_link;
+
+Macro 'weld' links 2 links together. Both macros 'weld' and 'all' are 
+defined in file MACROS.H, see there for details.
+
