@@ -9,7 +9,7 @@
 				"Col": 1
 			},
 			"Follow": {
-				"Offs": 38,
+				"Offs": 31,
 				"Line": 4,
 				"Col": 2
 			},
@@ -41,9 +41,9 @@
 						"Col": 2
 					},
 					"Follow": {
-						"Offs": 34,
+						"Offs": 27,
 						"Line": 3,
-						"Col": 20
+						"Col": 13
 					},
 					"VarMap": [
 						null,
@@ -76,9 +76,9 @@
 								"Col": 2
 							},
 							"Follow": {
-								"Offs": 34,
+								"Offs": 27,
 								"Line": 3,
-								"Col": 20
+								"Col": 13
 							},
 							"ActionOp": 1,
 							"Terms": [
@@ -90,9 +90,9 @@
 										"Col": 4
 									},
 									"Follow": {
-										"Offs": 34,
+										"Offs": 27,
 										"Line": 3,
-										"Col": 20
+										"Col": 13
 									},
 									"TermTag": 11,
 									"Str": null,
@@ -109,26 +109,26 @@
 												"Col": 5
 											},
 											"Follow": {
-												"Offs": 33,
+												"Offs": 26,
 												"Line": 3,
-												"Col": 19
+												"Col": 12
 											},
 											"Terms": [
 												{
-													"Comment": "COMP 'EqualTerms'",
+													"Comment": "COMP 'Pal'",
 													"Start": {
 														"Offs": 19,
 														"Line": 3,
 														"Col": 5
 													},
 													"Follow": {
-														"Offs": 29,
+														"Offs": 22,
 														"Line": 3,
-														"Col": 15
+														"Col": 8
 													},
 													"TermTag": 3,
 													"Str": null,
-													"Name": "EqualTerms",
+													"Name": "Pal",
 													"IsIdent": true,
 													"VarType": 0,
 													"Int": null,
@@ -138,14 +138,14 @@
 												{
 													"Comment": "COMP 'a'",
 													"Start": {
-														"Offs": 30,
+														"Offs": 23,
 														"Line": 3,
-														"Col": 16
+														"Col": 9
 													},
 													"Follow": {
-														"Offs": 31,
+														"Offs": 24,
 														"Line": 3,
-														"Col": 17
+														"Col": 10
 													},
 													"TermTag": 3,
 													"Str": null,
@@ -159,14 +159,14 @@
 												{
 													"Comment": "COMP 'a'",
 													"Start": {
-														"Offs": 32,
+														"Offs": 25,
 														"Line": 3,
-														"Col": 18
+														"Col": 11
 													},
 													"Follow": {
-														"Offs": 33,
+														"Offs": 26,
 														"Line": 3,
-														"Col": 19
+														"Col": 12
 													},
 													"TermTag": 3,
 													"Str": null,
@@ -189,16 +189,16 @@
 		},
 		"Pal": {
 			"Start": {
-				"Offs": 42,
+				"Offs": 35,
 				"Line": 6,
 				"Col": 1
 			},
 			"Follow": {
-				"Offs": 110,
+				"Offs": 103,
 				"Line": 12,
 				"Col": 2
 			},
-			"Offs": 42,
+			"Offs": 35,
 			"Line": 6,
 			"Col": 1,
 			"HasName": true,
@@ -221,12 +221,12 @@
 			"Sentences": [
 				{
 					"Start": {
-						"Offs": 51,
+						"Offs": 44,
 						"Line": 8,
 						"Col": 2
 					},
 					"Follow": {
-						"Offs": 74,
+						"Offs": 67,
 						"Line": 8,
 						"Col": 25
 					},
@@ -245,12 +245,12 @@
 					"Parent": null,
 					"Pattern": {
 						"Start": {
-							"Offs": 51,
+							"Offs": 44,
 							"Line": 8,
 							"Col": 2
 						},
 						"Follow": {
-							"Offs": 62,
+							"Offs": 55,
 							"Line": 8,
 							"Col": 13
 						},
@@ -258,12 +258,12 @@
 							{
 								"Comment": "VAR s.1",
 								"Start": {
-									"Offs": 51,
+									"Offs": 44,
 									"Line": 8,
 									"Col": 2
 								},
 								"Follow": {
-									"Offs": 54,
+									"Offs": 47,
 									"Line": 8,
 									"Col": 5
 								},
@@ -279,12 +279,12 @@
 							{
 								"Comment": "VAR e.1",
 								"Start": {
-									"Offs": 55,
+									"Offs": 48,
 									"Line": 8,
 									"Col": 6
 								},
 								"Follow": {
-									"Offs": 58,
+									"Offs": 51,
 									"Line": 8,
 									"Col": 9
 								},
@@ -300,12 +300,12 @@
 							{
 								"Comment": "VAR s.1",
 								"Start": {
-									"Offs": 59,
+									"Offs": 52,
 									"Line": 8,
 									"Col": 10
 								},
 								"Follow": {
-									"Offs": 62,
+									"Offs": 55,
 									"Line": 8,
 									"Col": 13
 								},
@@ -324,12 +324,12 @@
 						{
 							"Comment": "'='",
 							"Start": {
-								"Offs": 63,
+								"Offs": 56,
 								"Line": 8,
 								"Col": 14
 							},
 							"Follow": {
-								"Offs": 74,
+								"Offs": 67,
 								"Line": 8,
 								"Col": 25
 							},
@@ -338,12 +338,12 @@
 								{
 									"Comment": "EVAL",
 									"Start": {
-										"Offs": 65,
+										"Offs": 58,
 										"Line": 8,
 										"Col": 16
 									},
 									"Follow": {
-										"Offs": 74,
+										"Offs": 67,
 										"Line": 8,
 										"Col": 25
 									},
@@ -357,12 +357,12 @@
 									"Exprs": [
 										{
 											"Start": {
-												"Offs": 66,
+												"Offs": 59,
 												"Line": 8,
 												"Col": 17
 											},
 											"Follow": {
-												"Offs": 73,
+												"Offs": 66,
 												"Line": 8,
 												"Col": 24
 											},
@@ -370,12 +370,12 @@
 												{
 													"Comment": "COMP 'Pal'",
 													"Start": {
-														"Offs": 66,
+														"Offs": 59,
 														"Line": 8,
 														"Col": 17
 													},
 													"Follow": {
-														"Offs": 69,
+														"Offs": 62,
 														"Line": 8,
 														"Col": 20
 													},
@@ -391,12 +391,12 @@
 												{
 													"Comment": "VAR e.1",
 													"Start": {
-														"Offs": 70,
+														"Offs": 63,
 														"Line": 8,
 														"Col": 21
 													},
 													"Follow": {
-														"Offs": 73,
+														"Offs": 66,
 														"Line": 8,
 														"Col": 24
 													},
@@ -419,12 +419,12 @@
 				},
 				{
 					"Start": {
-						"Offs": 79,
+						"Offs": 72,
 						"Line": 9,
 						"Col": 2
 					},
 					"Follow": {
-						"Offs": 86,
+						"Offs": 79,
 						"Line": 9,
 						"Col": 9
 					},
@@ -441,12 +441,12 @@
 					"Parent": null,
 					"Pattern": {
 						"Start": {
-							"Offs": 79,
+							"Offs": 72,
 							"Line": 9,
 							"Col": 2
 						},
 						"Follow": {
-							"Offs": 82,
+							"Offs": 75,
 							"Line": 9,
 							"Col": 5
 						},
@@ -454,12 +454,12 @@
 							{
 								"Comment": "VAR s.1",
 								"Start": {
-									"Offs": 79,
+									"Offs": 72,
 									"Line": 9,
 									"Col": 2
 								},
 								"Follow": {
-									"Offs": 82,
+									"Offs": 75,
 									"Line": 9,
 									"Col": 5
 								},
@@ -478,12 +478,12 @@
 						{
 							"Comment": "'='",
 							"Start": {
-								"Offs": 83,
+								"Offs": 76,
 								"Line": 9,
 								"Col": 6
 							},
 							"Follow": {
-								"Offs": 86,
+								"Offs": 79,
 								"Line": 9,
 								"Col": 9
 							},
@@ -492,12 +492,12 @@
 								{
 									"Comment": "COMP 'T'",
 									"Start": {
-										"Offs": 85,
+										"Offs": 78,
 										"Line": 9,
 										"Col": 8
 									},
 									"Follow": {
-										"Offs": 86,
+										"Offs": 79,
 										"Line": 9,
 										"Col": 9
 									},
@@ -516,12 +516,12 @@
 				},
 				{
 					"Start": {
-						"Offs": 90,
+						"Offs": 83,
 						"Line": 10,
 						"Col": 2
 					},
 					"Follow": {
-						"Offs": 93,
+						"Offs": 86,
 						"Line": 10,
 						"Col": 5
 					},
@@ -536,12 +536,12 @@
 					"Parent": null,
 					"Pattern": {
 						"Start": {
-							"Offs": 90,
+							"Offs": 83,
 							"Line": 10,
 							"Col": 2
 						},
 						"Follow": {
-							"Offs": 90,
+							"Offs": 83,
 							"Line": 10,
 							"Col": 2
 						},
@@ -551,12 +551,12 @@
 						{
 							"Comment": "'='",
 							"Start": {
-								"Offs": 90,
+								"Offs": 83,
 								"Line": 10,
 								"Col": 2
 							},
 							"Follow": {
-								"Offs": 93,
+								"Offs": 86,
 								"Line": 10,
 								"Col": 5
 							},
@@ -565,12 +565,12 @@
 								{
 									"Comment": "COMP 'T'",
 									"Start": {
-										"Offs": 92,
+										"Offs": 85,
 										"Line": 10,
 										"Col": 4
 									},
 									"Follow": {
-										"Offs": 93,
+										"Offs": 86,
 										"Line": 10,
 										"Col": 5
 									},
@@ -589,12 +589,12 @@
 				},
 				{
 					"Start": {
-						"Offs": 97,
+						"Offs": 90,
 						"Line": 11,
 						"Col": 2
 					},
 					"Follow": {
-						"Offs": 104,
+						"Offs": 97,
 						"Line": 11,
 						"Col": 9
 					},
@@ -611,12 +611,12 @@
 					"Parent": null,
 					"Pattern": {
 						"Start": {
-							"Offs": 97,
+							"Offs": 90,
 							"Line": 11,
 							"Col": 2
 						},
 						"Follow": {
-							"Offs": 100,
+							"Offs": 93,
 							"Line": 11,
 							"Col": 5
 						},
@@ -624,12 +624,12 @@
 							{
 								"Comment": "VAR e.1",
 								"Start": {
-									"Offs": 97,
+									"Offs": 90,
 									"Line": 11,
 									"Col": 2
 								},
 								"Follow": {
-									"Offs": 100,
+									"Offs": 93,
 									"Line": 11,
 									"Col": 5
 								},
@@ -648,12 +648,12 @@
 						{
 							"Comment": "'='",
 							"Start": {
-								"Offs": 101,
+								"Offs": 94,
 								"Line": 11,
 								"Col": 6
 							},
 							"Follow": {
-								"Offs": 104,
+								"Offs": 97,
 								"Line": 11,
 								"Col": 9
 							},
@@ -662,12 +662,12 @@
 								{
 									"Comment": "COMP 'F'",
 									"Start": {
-										"Offs": 103,
+										"Offs": 96,
 										"Line": 11,
 										"Col": 8
 									},
 									"Follow": {
-										"Offs": 104,
+										"Offs": 97,
 										"Line": 11,
 										"Col": 9
 									},

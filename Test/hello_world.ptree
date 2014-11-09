@@ -1,0 +1,172 @@
+{
+	"Builtins": {
+		"Prout": true
+	},
+	"ExtMap": {},
+	"GlobMap": {
+		"Go": {
+			"Start": {
+				"Offs": 0,
+				"Line": 1,
+				"Col": 1
+			},
+			"Follow": {
+				"Offs": 38,
+				"Line": 1,
+				"Col": 39
+			},
+			"Offs": 7,
+			"Line": 1,
+			"Col": 8,
+			"HasName": true,
+			"FuncName": "Go",
+			"IsIdent": true,
+			"IsSe": false,
+			"IsEntry": true,
+			"Rollback": false,
+			"Params": {
+				"VarMap": [
+					null,
+					null,
+					null,
+					null
+				],
+				"AnonymousCount": 0,
+				"FuncMap": null,
+				"Parent": null
+			},
+			"Sentences": [
+				{
+					"Start": {
+						"Offs": 12,
+						"Line": 1,
+						"Col": 13
+					},
+					"Follow": {
+						"Offs": 37,
+						"Line": 1,
+						"Col": 38
+					},
+					"VarMap": [
+						null,
+						null,
+						null,
+						null
+					],
+					"AnonymousCount": 0,
+					"FuncMap": null,
+					"Parent": null,
+					"Pattern": {
+						"Start": {
+							"Offs": 12,
+							"Line": 1,
+							"Col": 13
+						},
+						"Follow": {
+							"Offs": 12,
+							"Line": 1,
+							"Col": 13
+						},
+						"Terms": null
+					},
+					"Actions": [
+						{
+							"Comment": "'='",
+							"Start": {
+								"Offs": 12,
+								"Line": 1,
+								"Col": 13
+							},
+							"Follow": {
+								"Offs": 37,
+								"Line": 1,
+								"Col": 38
+							},
+							"ActionOp": 1,
+							"Terms": [
+								{
+									"Comment": "EVAL",
+									"Start": {
+										"Offs": 14,
+										"Line": 1,
+										"Col": 15
+									},
+									"Follow": {
+										"Offs": 37,
+										"Line": 1,
+										"Col": 38
+									},
+									"TermTag": 11,
+									"Str": null,
+									"Name": "",
+									"IsIdent": false,
+									"VarType": 0,
+									"Int": null,
+									"Float": 0,
+									"Exprs": [
+										{
+											"Start": {
+												"Offs": 15,
+												"Line": 1,
+												"Col": 16
+											},
+											"Follow": {
+												"Offs": 36,
+												"Line": 1,
+												"Col": 37
+											},
+											"Terms": [
+												{
+													"Comment": "COMP 'Prout'",
+													"Start": {
+														"Offs": 15,
+														"Line": 1,
+														"Col": 16
+													},
+													"Follow": {
+														"Offs": 20,
+														"Line": 1,
+														"Col": 21
+													},
+													"TermTag": 3,
+													"Str": null,
+													"Name": "Prout",
+													"IsIdent": true,
+													"VarType": 0,
+													"Int": null,
+													"Float": 0,
+													"Exprs": null
+												},
+												{
+													"Comment": "COMP 'Hello, World!'",
+													"Start": {
+														"Offs": 21,
+														"Line": 1,
+														"Col": 22
+													},
+													"Follow": {
+														"Offs": 36,
+														"Line": 1,
+														"Col": 37
+													},
+													"TermTag": 3,
+													"Str": null,
+													"Name": "Hello, World!",
+													"IsIdent": false,
+													"VarType": 0,
+													"Int": null,
+													"Float": 0,
+													"Exprs": null
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	}
+}

@@ -1,6 +1,6 @@
 $ENTRY Go 
 {
-	= <EqualTerms a a>;
+	= <Pal a a>;
 }
 
 Pal
