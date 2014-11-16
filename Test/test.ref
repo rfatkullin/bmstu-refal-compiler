@@ -1,0 +1,22 @@
+$ENTRY Go
+{
+	= <Func "Hello">;
+	asda s.1 = (VAr aasd) () (asdasd 123 (231))
+}
+
+Func
+{
+	s.1 s.2 t.1 t.2 t.3 s.3 = "Goodbye";
+	s.1 s.2 = s.2 s.1;
+	= ;
+}
+
+Func2
+{
+	s.1 s.2 t.1: t.1 s.2 s.1 = { s.1 = s.1
+		t.1 s.2 = "Ok!"
+	} t.1;
+	
+	
+	s.1 -> {s.1 = "wwoooooo"} = ;
+}

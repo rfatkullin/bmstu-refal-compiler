@@ -1,4 +1,4 @@
-// file:/home/rustam/Diploma/Test/FAB.ref
+// file:FAB.ref
 
 l_term* Go(vec_header* vecData) 
 {

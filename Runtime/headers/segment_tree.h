@@ -5,7 +5,7 @@
 
 struct segment_tree
 {
-	uint32_t n;
+	uint32_t currN;
 	int32_t* tree;
 	uint32_t* elements;
 };

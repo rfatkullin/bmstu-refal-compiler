@@ -19,6 +19,8 @@ int main(int argc, char** argv)
 	uint32_t sum;
 	uint32_t correctSum;
 
+	buildSegmentTree(memoryManager.maxVTermCount - 1);
+
 	while (scanf("%u", &n) == 1)
 	{
 		clearSegmentTree();

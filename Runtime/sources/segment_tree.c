@@ -8,35 +8,36 @@ static uint32_t sum(uint32_t curr, uint32_t currBegin, uint32_t currEnd, uint32_
 
 void buildSegmentTree(uint32_t n)
 {
-	int treeSize = 4 * n / memoryManager.N;
-	int i = 0;
+	memoryManager.segmentTree->currN = n;
+	uint32_t treeSize = 4 * memoryManager.segmentTree->currN / memoryManager.SegmentLen;
+	uint32_t i = 0;
 
 	//Кажется, можно просто обнулять. Но пока работает)))
 	for (i = 0; i < treeSize; ++i)
 		memoryManager.segmentTree->tree[i] = -1;
 
-	memset(memoryManager.segmentTree->elements, 0, sizeof(uint32_t) * memoryManager.segmentTree->n);
+	memset(memoryManager.segmentTree->elements, 0, sizeof(uint32_t) * memoryManager.segmentTree->currN);
 }
 
 void clearSegmentTree()
 {
-	int treeSize = 4 * memoryManager.segmentTree->n / memoryManager.N;
-	int i = 0;
+	uint32_t treeSize = 4 * memoryManager.segmentTree->currN / memoryManager.SegmentLen;
+	uint32_t i = 0;
 
 	for (i = 0; i < treeSize; ++i)
 		memoryManager.segmentTree->tree[i] = -1;
 
-	memset(memoryManager.segmentTree->elements, 0, sizeof(uint32_t) * memoryManager.segmentTree->n);
+	memset(memoryManager.segmentTree->elements, 0, sizeof(uint32_t) * memoryManager.segmentTree->currN);
 }
 
 void markInSegmentTree(uint32_t begin, uint32_t end)
 {
-	mark(1, 0, memoryManager.segmentTree->n - 1, begin, end);
+	mark(1, 0, memoryManager.segmentTree->currN - 1, begin, end);
 }
 
 uint32_t sumInSegmentTree(uint32_t begin, uint32_t end)
 {
-	sum(1, 0, memoryManager.segmentTree->n - 1, begin, end);
+	sum(1, 0, memoryManager.segmentTree->currN - 1, begin, end);
 }
 
 static uint32_t max(uint32_t a, uint32_t b)
@@ -58,9 +59,9 @@ static uint32_t min(uint32_t a, uint32_t b)
 static void markElements(uint32_t needBegin, uint32_t needEnd, int32_t mark)
 {
 	int i = 0;
-	uint32_t segmentNum = needBegin / memoryManager.N;
+	uint32_t segmentNum = needBegin / memoryManager.SegmentLen;
 
-	for (i = segmentNum * memoryManager.N; i < (segmentNum + 1) * memoryManager.N; ++i)
+	for (i = segmentNum * memoryManager.SegmentLen; i < (segmentNum + 1) * memoryManager.SegmentLen; ++i)
 	{
 		if (i >= needBegin && i <= needEnd)
 			memoryManager.segmentTree->elements[i] = 1;
@@ -92,12 +93,12 @@ static void push(uint32_t curr)
 
 static uint32_t left(uint32_t val)
 {
-	return val * memoryManager.N;
+	return val * memoryManager.SegmentLen;
 }
 
 static uint32_t right(uint32_t val)
 {
-	return (val + 1) * memoryManager.N - 1;
+	return (val + 1) * memoryManager.SegmentLen - 1;
 }
 
 static void mark(uint32_t curr, uint32_t currBegin, uint32_t currEnd, uint32_t needBegin, uint32_t needEnd)

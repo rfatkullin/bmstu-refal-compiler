@@ -46,9 +46,8 @@ func (f *Data) checkOKVar(tabs string) {
 	fmt.Fprintf(f, "%sif (ok == 1)\n%s{", tabs)
 }
 
-func (f *Data) endBlock(tabs string)
-{
-	fmt.Fprintf(f, "%s}\n");
+func (f *Data) endBlock(tabs string) {
+	fmt.Fprintf(f, "%s}\n")
 }
 
 func (f *Data) FuncEnd(name string) {
@@ -115,12 +114,11 @@ func (f *Data) processPattern(p *syntax.Expr) {
 	fmt.Fprintf(f, "\n")
 }
 
-func (f *Data) processAction(*Action act ) {
+func (f *Data) processAction(act *syntax.Action) {
 
 	f.checkOKVar(tabulation(1))
-	
-	
-	f.endBlock(tabulation(1));
+
+	f.endBlock(tabulation(1))
 }
 
 func processFile(currFileData Data) {

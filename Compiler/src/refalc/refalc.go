@@ -3,7 +3,6 @@ package main
 
 // Standard packages
 import (
-	_ "encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -19,7 +18,6 @@ import (
 	"messages"
 	"syntax"
 	"tokens"
-	//"encoding/json"
 )
 
 func changeExt(file, newExt string) string {

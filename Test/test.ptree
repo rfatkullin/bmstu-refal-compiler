@@ -1,0 +1,247 @@
+ Builtins: 
+Go
+ IsEntry: true
+ IsIdent: true
+ IsSe: false
+ Rollback: false
+
+ Nested funcs num: 0
+ Parent scope is not exists
+ Vars: 
+  e: 
+  v: 
+  t: 
+  s: 
+
+ <---Sentence #0--->
+  Nested funcs num: 0
+  Parent scope is not exists
+  Vars: 
+   e: 
+   v: 
+   t: 
+   s: 
+
+  Pattern:
+
+  Actions:
+   '=':
+     EVAL
+
+
+ <---Sentence #1--->
+  Nested funcs num: 0
+  Parent scope is not exists
+  Vars: 
+   e: 
+   v: 
+   t: 
+   s: {s.1, 0}
+
+  Pattern:
+   {Symbol:asda}
+   s.1
+  Actions:
+   '=':
+     
+     
+     
+
+
+
+
+Func2
+ IsEntry: false
+ IsIdent: true
+ IsSe: false
+ Rollback: false
+
+ Nested funcs num: 0
+ Parent scope is not exists
+ Vars: 
+  e: 
+  v: 
+  t: 
+  s: 
+
+ <---Sentence #0--->
+  Nested funcs num: 0
+  Parent scope is not exists
+  Vars: 
+   e: 
+   v: 
+   t: {t.1, 0}
+   s: {s.1, 0}, {s.2, 1}
+
+  Pattern:
+   s.1
+   s.2
+   t.1
+  Actions:
+   ':':
+     t.1
+     s.2
+     s.1
+   '=':
+     Func term:
+      Anonymous
+       IsEntry: false
+       IsIdent: false
+       IsSe: false
+       Rollback: false
+
+       Nested funcs num: 0
+       Parent scope is exists
+       Vars: 
+        e: 
+        v: 
+        t: {t.1, 0}
+        s: {s.1, 0}, {s.2, 1}
+
+       <---Sentence #0--->
+        Nested funcs num: 0
+        Parent scope is exists
+        Vars: 
+         e: 
+         v: 
+         t: 
+         s: 
+
+        Pattern:
+         s.1
+        Actions:
+         '=':
+           s.1
+           t.1
+           s.2
+         '=':
+           {Symbol:Ok!}
+
+
+
+
+     t.1
+
+
+ <---Sentence #1--->
+  Nested funcs num: 0
+  Parent scope is not exists
+  Vars: 
+   e: 
+   v: 
+   t: 
+   s: {s.1, 0}
+
+  Pattern:
+   s.1
+  Actions:
+   '->':
+     Func term:
+      Anonymous
+       IsEntry: false
+       IsIdent: false
+       IsSe: false
+       Rollback: false
+
+       Nested funcs num: 0
+       Parent scope is exists
+       Vars: 
+        e: 
+        v: 
+        t: 
+        s: {s.1, 0}
+
+       <---Sentence #0--->
+        Nested funcs num: 0
+        Parent scope is exists
+        Vars: 
+         e: 
+         v: 
+         t: 
+         s: 
+
+        Pattern:
+         s.1
+        Actions:
+         '=':
+           {Symbol:wwoooooo}
+
+
+
+
+   '=':
+
+
+
+
+
+Func
+ IsEntry: false
+ IsIdent: true
+ IsSe: false
+ Rollback: false
+
+ Nested funcs num: 0
+ Parent scope is not exists
+ Vars: 
+  e: 
+  v: 
+  t: 
+  s: 
+
+ <---Sentence #0--->
+  Nested funcs num: 0
+  Parent scope is not exists
+  Vars: 
+   e: 
+   v: 
+   t: {t.3, 2}, {t.1, 0}, {t.2, 1}
+   s: {s.1, 0}, {s.2, 1}, {s.3, 2}
+
+  Pattern:
+   s.1
+   s.2
+   t.1
+   t.2
+   t.3
+   s.3
+  Actions:
+   '=':
+     {Symbol:Goodbye}
+
+
+ <---Sentence #1--->
+  Nested funcs num: 0
+  Parent scope is not exists
+  Vars: 
+   e: 
+   v: 
+   t: 
+   s: {s.2, 1}, {s.1, 0}
+
+  Pattern:
+   s.1
+   s.2
+  Actions:
+   '=':
+     s.2
+     s.1
+
+
+ <---Sentence #2--->
+  Nested funcs num: 0
+  Parent scope is not exists
+  Vars: 
+   e: 
+   v: 
+   t: 
+   s: 
+
+  Pattern:
+
+  Actions:
+   '=':
+
+
+
+

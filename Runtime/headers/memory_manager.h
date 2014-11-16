@@ -33,7 +33,10 @@ struct memory_manager
 	uint32_t totalSize;
 
 	//Количество элементов в листе дерева отрезков
-	uint32_t N;
+	uint32_t SegmentLen;
+
+	//На какое число v_term'ов хватит памяти
+	uint32_t maxVTermCount;
 };
 
 struct memory_manager memoryManager;
@@ -41,5 +44,7 @@ struct memory_manager memoryManager;
 void initAllocator(uint32_t size, uint32_t N);
 void markTerms(struct l_term* term);
 struct v_term* allocate(struct l_term* expr);
+void collectGarbage(struct l_term* expr);
+struct l_term* allocateVector(int strLen, char* str);
 
 #endif

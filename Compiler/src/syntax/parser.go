@@ -3,12 +3,12 @@ package syntax
 
 import (
 	"coords"
+	//"encoding/json"
 	"messages"
 	"tokens"
 )
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 )
@@ -666,7 +666,8 @@ func Intercept(out chan<- *Unit, w io.WriteCloser, in <-chan *Unit) {
 	tree := <-in
 	out <- tree
 	close(out)
-	bs, _ := json.MarshalIndent(tree, "", "\t")
-	w.Write(bs)
+	//bs, _ := json.MarshalIndent(tree, "", "\t")
+	w.Write([]byte(PrintUnit(tree)))
+	//w.Write(bs)
 	w.Close()
 }
