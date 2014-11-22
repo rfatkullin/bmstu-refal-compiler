@@ -666,6 +666,7 @@ func Intercept(out chan<- *Unit, w io.WriteCloser, in <-chan *Unit) {
 	tree := <-in
 	out <- tree
 	close(out)
+	fmt.Printf("Hello")
 	//bs, _ := json.MarshalIndent(tree, "", "\t")
 	w.Write([]byte(PrintUnit(tree)))
 	//w.Write(bs)

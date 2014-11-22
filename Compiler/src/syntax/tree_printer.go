@@ -116,18 +116,17 @@ func printScope(depth int, funcParams Scope) string {
 
 func printFuncSentences(depth int, sentences []*Sentence) string {
 	tabs := genTabs(depth)
-	funcSentencesStr := ""
+	sentStrs := make([]string, 0)
 
 	for ind, sentece := range sentences {
 
-		funcSentencesStr += fmt.Sprintf("%s<---Sentence #%d--->\n", tabs, ind)
-		funcSentencesStr += fmt.Sprintf("%s\n", printScope(depth+1, sentece.Scope))
-		funcSentencesStr += fmt.Sprintf("%s\n", printPattern(depth+1, sentece.Pattern))
-		funcSentencesStr += fmt.Sprintf("%s\n", printActions(depth+1, sentece.Actions))
-		funcSentencesStr += "\n"
+		sentStrs = append(sentStrs, fmt.Sprintf("%s<---Sentence #%d--->", tabs, ind),
+			printScope(depth+1, sentece.Scope),
+			printPattern(depth+1, sentece.Pattern),
+			printActions(depth+1, sentece.Actions))
 	}
 
-	return funcSentencesStr
+	return strings.Join(sentStrs, "\n")
 }
 
 //type Expr struct {
@@ -141,17 +140,6 @@ func printPattern(depth int, pattern Expr) string {
 	return fmt.Sprintf("%sPattern:\n%s", tabs, printExpr(depth, pattern))
 }
 
-func printExprs(depth int, exprs []*Expr) string {
-	tabs := genTabs(depth)
-	exprsStr := make([]string, 0)
-
-	for _, expr := range exprs {
-		exprsStr = append(exprsStr, printExpr(0, *expr))
-	}
-
-	return fmt.Sprintf("%s%s", tabs, strings.Join(exprsStr, "; "))
-}
-
 func printExpr(depth int, pattern Expr) string {
 	termStrs := make([]string, 0)
 
@@ -160,6 +148,54 @@ func printExpr(depth int, pattern Expr) string {
 	}
 
 	return strings.Join(termStrs, "\n")
+}
+
+func printBracedExpr(depth int, expr Expr) string {
+	tabs := genTabs(depth)
+
+	return fmt.Sprintf("%s(\n%s\n%s)", tabs, printExpr(depth+1, expr), tabs)
+}
+
+func printVarTerm(depth int, term Term) string {
+	tabs := genTabs(depth)
+
+	return fmt.Sprintf("%s%s.%s", tabs, tokens.VarType(term.Value.VarType).String(), term.Value.Name)
+}
+
+func printEvalTerm(depth int, term Term) string {
+	tabs := genTabs(depth)
+
+	return fmt.Sprintf("%s<\n%s\n%s>", tabs, printExpr(depth+1, *term.Exprs[0]), tabs)
+}
+
+func printActions(depth int, actions []*Action) string {
+	tabs := genTabs(depth)
+	actStrs := make([]string, 0)
+
+	for _, action := range actions {
+		actStrs = append(actStrs, printAction(depth+1, action))
+	}
+
+	return fmt.Sprintf("%sActions:\n%s", tabs, strings.Join(actStrs, "\n"))
+}
+
+//type Action struct {
+//	Comment string
+//	coords.Fragment
+//	ActionOp
+//	Expr
+//}
+
+func printAction(depth int, action *Action) string {
+	tabs := genTabs(depth)
+
+	return fmt.Sprintf("%s%s:\n%s", tabs, action.ActionOp.String(), printExpr(depth+1, action.Expr))
+}
+
+func printFuncTerm(depth int, funcInfo *Function) string {
+	tabs := genTabs(depth)
+
+	return fmt.Sprintf("%sFunc term:\n%s", tabs, printFuncInfo(depth+1, funcInfo))
 }
 
 //type Term struct {
@@ -178,86 +214,47 @@ func printTerm(depth int, term *Term) string {
 	switch term.TermTag {
 	case L:
 	case R:
-		termStr = TermTag(term.TermTag).String()
+		termStr = fmt.Sprintf("%s%s", tabs, TermTag(term.TermTag).String())
 		break
 
 	case STR:
-		termStr = string(term.Value.Str)
+		termStr = fmt.Sprintf("%s%s", tabs, string(term.Value.Str))
 		break
 
 	case COMP:
-		termStr = fmt.Sprintf("{Symbol:%s}", term.Value.Name)
+		termStr = fmt.Sprintf("%s%s", tabs, term.Value.Name)
 		break
 
 	case INT:
-		termStr = term.Value.Int.String()
+		termStr = fmt.Sprintf("%s%s", tabs, term.Value.Int.String())
 		break
 
 	case FLOAT:
-		termStr = "Float number"
-		//termStr = strconv.FormatFloat(term.tokens.Value.Float, 10)
+		termStr = fmt.Sprintf("%s", tabs, "Float number")
 		break
 
 	case VAR:
-		termStr = fmt.Sprintf("%s.%s", tokens.VarType(term.Value.VarType).String(), term.Value.Name)
+		termStr = printVarTerm(depth+1, *term)
 		break
 
 	case EXPR:
-		//TO FIX:
-		//termStr = fmt.Sprintf("(%s)", printPattern(0, ))
-		break
-
-	case BRACED_EXPR:
-		termStr = TermTag(term.TermTag).String()
-		break
-
-	case BRACKETED_EXPR:
-		termStr = TermTag(term.TermTag).String()
-		break
-
-	case ANGLED_EXPR:
-		termStr = TermTag(term.TermTag).String()
+		termStr = printBracedExpr(depth+1, *term.Exprs[0])
 		break
 
 	case EVAL:
-		//termStr = printEvalExpr(0, term)
-		termStr = TermTag(term.TermTag).String()
+		termStr = printEvalTerm(depth+1, *term)
 		break
 
 	case FUNC:
-		termStr = fmt.Sprintf("Func term:\n%s", printFuncInfo(depth+1, term.Function))
+		termStr = printFuncTerm(depth+1, term.Function)
+		break
+
+	case BRACED_EXPR:
+	case BRACKETED_EXPR:
+	case ANGLED_EXPR:
+		termStr = fmt.Sprintf("%s", tabs, TermTag(term.TermTag).String())
 		break
 	}
 
-	return fmt.Sprintf("%s%s", tabs, termStr)
-}
-
-func printEvalExpr(depth int, term *Term) string {
-	tabs := genTabs(depth)
-
-	return fmt.Sprintf("%s<%s %s>", tabs, term.Function.FuncName, printExprs(depth, term.Exprs))
-}
-
-func printActions(depth int, actions []*Action) string {
-	tabs := genTabs(depth)
-	actionsStr := fmt.Sprintf("%sActions:\n", tabs)
-
-	for _, action := range actions {
-		actionsStr += fmt.Sprintf("%s\n", printAction(depth+1, action))
-	}
-
-	return actionsStr
-}
-
-//type Action struct {
-//	Comment string
-//	coords.Fragment
-//	ActionOp
-//	Expr
-//}
-
-func printAction(depth int, action *Action) string {
-	tabs := genTabs(depth)
-
-	return fmt.Sprintf("%s%s:\n%s", tabs, action.ActionOp.String(), printExpr(depth+1, action.Expr))
+	return termStr
 }
