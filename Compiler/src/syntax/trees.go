@@ -134,6 +134,7 @@ type Term struct {
 
 type Scope struct {
 	VarMap         [tokens.VAR_TYPES_NUM]map[string]int
+	VarCount       int
 	AnonymousCount int
 	FuncMap        map[string]int
 
@@ -173,8 +174,8 @@ func (s *Scope) AddVar(vt tokens.VarType, n string) {
 		s.VarMap[vt] = make(map[string]int, 8)
 	}
 
-	index := len(s.VarMap[vt])
-	s.VarMap[vt][n] = index
+	s.VarMap[vt][n] = s.VarCount
+	s.VarCount++
 }
 
 func (s *Scope) AddAnonymousVar(vt tokens.VarType) (n string) {
