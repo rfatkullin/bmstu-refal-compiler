@@ -26,6 +26,13 @@ Go
 
   Actions:
    '=':
+     1
+     23
+     123
+     qweqw
+     AAAAA
+     %!(EXTRA string=Float number)
+     d
       (
         asdasd
         asdasd
@@ -36,7 +43,4 @@ Go
       (
         111
       )
-      <
-        asd
-        qwe
-      >
+     hell

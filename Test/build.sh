@@ -22,4 +22,5 @@ if [ "$?" != 0 ] ; then
 	Fail "Can't compile $1"
 fi
 
-cat $1.ptree
+#cat $1.ptree
+cat $1.c

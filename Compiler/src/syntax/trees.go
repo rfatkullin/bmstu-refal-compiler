@@ -126,6 +126,7 @@ type Expr struct {
 type Term struct {
 	Comment string
 	coords.Fragment
+	Index int
 	TermTag
 	tokens.Value
 	Exprs []*Expr

@@ -19,12 +19,22 @@ type Data struct {
 	Name string
 	Ast  *syntax.Unit
 	io.WriteCloser
+	CurrTermNum int
 }
 
 func (f *Data) Comment(s string) { fmt.Fprintf(f, "\t/* %s */\n", s) }
 
 func (f *Data) Header() {
 	fmt.Fprintf(f, "// file:%s\n\n", f.Name)
+}
+
+func (f *Data) mainFuncHeader() {
+
+	fmt.Fprintf(f, "int main()\n{\n")
+}
+
+func (f *Data) mainFuncEnd() {
+	fmt.Fprintf(f, "%sreturn 0;\n}\n", tab)
 }
 
 func (f *Data) funcHeader(name string) {
@@ -54,7 +64,7 @@ func (f *Data) FuncEnd(name string) {
 	fmt.Fprintf(f, "} // %s\n\n", name)
 }
 
-func tabulation(depth int) string {
+func genTabs(depth int) string {
 	return strings.Repeat(tab, depth)
 }
 
@@ -63,7 +73,7 @@ func (f *Data) processSymbol(termNumber, depth int) {
 	var startVar = fmt.Sprintf("start_%d", termNumber)
 	var followVar = fmt.Sprintf("follow_%d", termNumber)
 	var startValue = "0"
-	var tabs = tabulation(depth)
+	var tabs = genTabs(depth)
 
 	if termNumber != 0 {
 		var prevFollow = fmt.Sprintf("follow_%d", termNumber-1)
@@ -88,7 +98,7 @@ func (f *Data) processExpr(termNumber, nestedDepth int) {
 func (f *Data) processPattern(p *syntax.Expr) {
 
 	if len(p.Terms) == 0 {
-		f.setOkVar(tabulation(1))
+		f.setOkVar(genTabs(1))
 	} else {
 		for termIndex, term := range p.Terms {
 
@@ -116,9 +126,127 @@ func (f *Data) processPattern(p *syntax.Expr) {
 
 func (f *Data) processAction(act *syntax.Action) {
 
-	f.checkOKVar(tabulation(1))
+	f.checkOKVar(genTabs(1))
 
-	f.endBlock(tabulation(1))
+	f.endBlock(genTabs(1))
+}
+
+// Инициализация vterm_t строкового литерала
+// Пока только ASCII символы
+func (f *Data) initStrVTerm(depth int, term syntax.Term) {
+	tabs := genTabs(depth)
+	str := string(term.Value.Str)
+	strLen := len(str)
+
+	for i := 0; i < strLen; i++ {
+		fmt.Fprintf(f, "%smemoryManager.constTermsHeap[memoryManager.constTermOffset++] = {.tag = V_CHAR_TAG, .ch = %c};\n", tabs, str[i])
+	}
+
+	term.Index = f.CurrTermNum
+	f.CurrTermNum += strLen
+}
+
+// Инициализация vterm_t для литералов целого типа
+// Пока только обычные
+func (f *Data) initIntNumVTerm(depth int, term syntax.Term) {
+	tabs := genTabs(depth)
+
+	fmt.Fprintf(f, "%smemoryManager.constTermsHeap[memoryManager.constTermOffset++] = {.tag = V_INT_NUM_TAG, .intNum = %d};\n", tabs, term.Value.Int)
+	term.Index = f.CurrTermNum
+	f.CurrTermNum++
+}
+
+// Инициализация vterm_t для литералов вещественного типа
+func (f *Data) initFloatVTerm(depth int, term syntax.Term) {
+	tabs := genTabs(depth)
+
+	fmt.Fprintf(f, "%smemoryManager.constTermsHeap[memoryManager.constTermOffset++] = {.tag = V_FLOAT_NUM_TAG, .floatNum = %f};\n", tabs, term.Value.Float)
+	term.Index = f.CurrTermNum
+	f.CurrTermNum++
+}
+
+// Инициализация vterm_t для идентификатора
+// Пока только ASCII символы
+func (f *Data) initIdentVTerm(depth int, term syntax.Term) {
+	tabs := genTabs(depth)
+
+	fmt.Fprintf(f, "%smemoryManager.constTermsHeap[memoryManager.constTermOffset++] = {.tag = V_IDENT_TAG, .str = %s};\n", tabs, string(term.Value.Name))
+
+	term.Index = f.CurrTermNum
+	f.CurrTermNum++
+}
+
+func (f *Data) initActionData(depth int, expr syntax.Expr) {
+
+	terms := make([]*syntax.Term, len(expr.Terms))
+	copy(terms, expr.Terms)
+
+	for len(terms) > 0 {
+
+		term := terms[0]
+		terms = terms[1:]
+
+		switch term.TermTag {
+
+		case syntax.STR:
+			f.initStrVTerm(depth, *term)
+			break
+
+		case syntax.COMP:
+			f.initIdentVTerm(depth, *term)
+			break
+
+		case syntax.INT:
+			f.initIntNumVTerm(depth, *term)
+			break
+
+		case syntax.FLOAT:
+			f.initFloatVTerm(depth, *term)
+			break
+
+		case syntax.EXPR:
+			terms = append(terms, term.Exprs[0].Terms...)
+			break
+
+		case syntax.EVAL:
+			//TO DO
+			break
+
+		case syntax.FUNC:
+			//TO DO
+			break
+
+		case syntax.BRACED_EXPR:
+		case syntax.BRACKETED_EXPR:
+		case syntax.ANGLED_EXPR:
+			//Пока считаем, что тут не может быть литералов
+			break
+
+		case syntax.VAR:
+		case syntax.L:
+		case syntax.R:
+			//Не литералы
+			break
+		}
+	}
+}
+
+func (f *Data) initData(depth int) {
+	unit := f.Ast
+	tabs := genTabs(depth)
+
+	fmt.Fprintf(f, "%smemoryManager.constTermOffset = 0;\n", tabs)
+	fmt.Fprintf(f, "%sint i = 0;\n\n", tabs)
+
+	for _, fun := range unit.GlobMap {
+		for _, s := range fun.Sentences {
+			for _, a := range s.Actions {
+				f.initActionData(depth, a.Expr)
+			}
+		}
+	}
+
+	fmt.Fprintf(f, "\n")
 }
 
 func processFile(currFileData Data) {
@@ -130,7 +258,7 @@ func processFile(currFileData Data) {
 		currFileData.funcHeader(fun.FuncName)
 
 		for _, s := range fun.Sentences {
-			currFileData.releaseOkVar(tabulation(1))
+			currFileData.releaseOkVar(genTabs(1))
 			currFileData.processPattern(&s.Pattern)
 			for _, a := range s.Actions {
 				switch a.ActionOp {
@@ -148,6 +276,10 @@ func processFile(currFileData Data) {
 
 		currFileData.FuncEnd(fun.FuncName)
 	}
+
+	currFileData.mainFuncHeader()
+	currFileData.initData(1)
+	currFileData.mainFuncEnd()
 }
 
 func Handle(done chan<- bool, fs <-chan Data) {

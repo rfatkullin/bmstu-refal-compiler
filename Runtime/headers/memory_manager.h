@@ -15,16 +15,21 @@
 
 struct memory_manager
 {
+	struct v_term* constTermsHeap;
 	struct v_term* activeTermsHeap;
 	struct v_term* inactiveTermsHeap;
 
 	struct segment_tree* segmentTree;
 
+	uint8_t* constDataHeap;
 	uint8_t* activeDataHeap;
 	uint8_t* inactiveDataHeap;
 
 	uint8_t* lTermsHeap;
 
+	uint32_t constTermOffset;
+	uint32_t constDataOffset;
+	
 	uint32_t vtermsOffset;
 	uint32_t dataOffset;
 	uint32_t ltermsOffset;

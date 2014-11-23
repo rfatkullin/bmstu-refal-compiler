@@ -241,7 +241,7 @@ func main() {
 		}
 
 		if d, err := os.Create(changeExt(x, "c")); err == nil {
-			fs <- emitter.Data{x, <-ast, d}
+			fs <- emitter.Data{x, <-ast, d, 0}
 			fileCount++
 		} else {
 			fmt.Fprintf(os.Stderr, "%v\n", err)

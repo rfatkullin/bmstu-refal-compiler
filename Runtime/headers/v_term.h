@@ -3,9 +3,10 @@
 
 #define V_CHAR_TAG		0
 #define V_IDENT_TAG		1
-#define V_NUMBER_TAG	2
-#define V_CLOSURE_TAG	3
-#define V_BRACKET		4
+#define V_INT_NUM_TAG	2
+#define V_FLOAT_NUM_TAG	3
+#define V_CLOSURE_TAG	4
+#define V_BRACKET		5
 
 struct v_closure
 {
@@ -21,7 +22,8 @@ struct v_term
 	{
 		char* str;
 		char ch;
-		int num;
+		int intNum;
+		float floatNum;
 		struct v_closure* closure;
 		uint32_t inBracketLength;
 	};

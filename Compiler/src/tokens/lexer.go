@@ -2,18 +2,18 @@
 package tokens
 
 import (
-	"math/big"
+	"encoding/json"
 	"fmt"
 	"io"
-	"encoding/json"
+	"math/big"
 	"strconv"
 	"strings"
 )
 
 import (
+	"chars"
 	"coords"
 	"messages"
-	"chars"
 )
 
 type DomainTag int64
@@ -164,12 +164,12 @@ func (vt VarType) String() string {
 }
 
 type Value struct {
-	Str      []rune  // STRING
-	Name     string  // COMPOUND | VAR
-	IsIdent  bool    // COMPOUND
+	Str     []rune   // STRING
+	Name    string   // COMPOUND | VAR
+	IsIdent bool     // COMPOUND
 	VarType          // VAR
-	Int 	*big.Int // INTEGER
-	Float    float64 // FLOAT
+	Int     *big.Int // INTEGER
+	Float   float64  // FLOAT
 }
 
 type Data struct {
@@ -267,7 +267,7 @@ func init() {
 }
 
 func Handle(ts chan<- Data, ms chan<- messages.Data, runes <-chan chars.Rune,
-dialect int, nc bool) {
+	dialect int, nc bool) {
 
 	var r_prev, r, r_next chars.Rune
 	r_next = <-runes
@@ -900,15 +900,15 @@ func Intercept(out chan<- Data, w io.WriteCloser, in <-chan Data) {
 	tokens := make([]Data, 0, 1024)
 
 	for t := range in {
-		out <- t	
+		out <- t
 		tokens = append(tokens, t)
 	}
-	
+
 	bs, err := json.Marshal(tokens)
-	if (err != nil) {
-			fmt.Println(err);
-		}
-	
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	w.Write(bs)
 	w.Close()
 	close(out)
