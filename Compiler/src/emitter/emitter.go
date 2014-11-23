@@ -28,13 +28,12 @@ func (f *Data) Header() {
 	fmt.Fprintf(f, "// file:%s\n\n", f.Name)
 }
 
-func (f *Data) mainFuncHeader() {
+func (f *Data) mainFunc(depth int) {
+	tabs := genTabs(depth + 1)
 
 	fmt.Fprintf(f, "int main()\n{\n")
-}
-
-func (f *Data) mainFuncEnd() {
-	fmt.Fprintf(f, "%sreturn 0;\n}\n", tab)
+	fmt.Fprintf(f, "%s__initLiteralData();\n", tabs)
+	fmt.Fprintf(f, "%sreturn 0;\n}\n", tabs)
 }
 
 func (f *Data) funcHeader(name string) {
@@ -139,7 +138,7 @@ func (f *Data) initStrVTerm(depth int, term syntax.Term) {
 	strLen := len(str)
 
 	for i := 0; i < strLen; i++ {
-		fmt.Fprintf(f, "%smemoryManager.constTermsHeap[memoryManager.constTermOffset++] = {.tag = V_CHAR_TAG, .ch = %c};\n", tabs, str[i])
+		fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_CHAR_TAG, .ch = %c};\n", tabs, str[i])
 	}
 
 	term.Index = f.CurrTermNum
@@ -151,7 +150,7 @@ func (f *Data) initStrVTerm(depth int, term syntax.Term) {
 func (f *Data) initIntNumVTerm(depth int, term syntax.Term) {
 	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%smemoryManager.constTermsHeap[memoryManager.constTermOffset++] = {.tag = V_INT_NUM_TAG, .intNum = %d};\n", tabs, term.Value.Int)
+	fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = %d};\n", tabs, term.Value.Int)
 	term.Index = f.CurrTermNum
 	f.CurrTermNum++
 }
@@ -160,7 +159,7 @@ func (f *Data) initIntNumVTerm(depth int, term syntax.Term) {
 func (f *Data) initFloatVTerm(depth int, term syntax.Term) {
 	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%smemoryManager.constTermsHeap[memoryManager.constTermOffset++] = {.tag = V_FLOAT_NUM_TAG, .floatNum = %f};\n", tabs, term.Value.Float)
+	fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_FLOAT_NUM_TAG, .floatNum = %f};\n", tabs, term.Value.Float)
 	term.Index = f.CurrTermNum
 	f.CurrTermNum++
 }
@@ -170,7 +169,7 @@ func (f *Data) initFloatVTerm(depth int, term syntax.Term) {
 func (f *Data) initIdentVTerm(depth int, term syntax.Term) {
 	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%smemoryManager.constTermsHeap[memoryManager.constTermOffset++] = {.tag = V_IDENT_TAG, .str = %s};\n", tabs, string(term.Value.Name))
+	fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_IDENT_TAG, .str = %s};\n", tabs, string(term.Value.Name))
 
 	term.Index = f.CurrTermNum
 	f.CurrTermNum++
@@ -233,10 +232,6 @@ func (f *Data) initActionData(depth int, expr syntax.Expr) {
 
 func (f *Data) initData(depth int) {
 	unit := f.Ast
-	tabs := genTabs(depth)
-
-	fmt.Fprintf(f, "%smemoryManager.constTermOffset = 0;\n", tabs)
-	fmt.Fprintf(f, "%sint i = 0;\n\n", tabs)
 
 	for _, fun := range unit.GlobMap {
 		for _, s := range fun.Sentences {
@@ -249,37 +244,46 @@ func (f *Data) initData(depth int) {
 	fmt.Fprintf(f, "\n")
 }
 
+func (f *Data) initLiteralDataFunc(depth int) {
+	tabs := genTabs(depth + 1)
+
+	fmt.Fprintf(f, "void __initLiteralData()\n{\n")
+	fmt.Fprintf(f, "%sinitAllocator(1024 * 1024 * 1024);\n", tabs)
+	f.initData(depth + 1)
+	fmt.Fprintf(f, "%sinitHeaps(2);\n", tabs)
+	fmt.Fprintf(f, "} // __initLiteralData()\n\n")
+}
+
 func processFile(currFileData Data) {
-	unit := currFileData.Ast
+	//unit := currFileData.Ast
 
 	currFileData.Header()
 
-	for _, fun := range unit.GlobMap {
-		currFileData.funcHeader(fun.FuncName)
+	//for _, fun := range unit.GlobMap {
+	//	currFileData.funcHeader(fun.FuncName)
 
-		for _, s := range fun.Sentences {
-			currFileData.releaseOkVar(genTabs(1))
-			currFileData.processPattern(&s.Pattern)
-			for _, a := range s.Actions {
-				switch a.ActionOp {
-				case syntax.COMMA: // ','
-				case syntax.REPLACE: // '='
-					currFileData.processAction(a)
-					break
-				case syntax.TARROW: // '->'
-				case syntax.ARROW: // '=>'
-				case syntax.COLON: // ':'
-				case syntax.DCOLON: // '::'
-				}
-			}
-		}
+	//	for _, s := range fun.Sentences {
+	//		currFileData.releaseOkVar(genTabs(1))
+	//		currFileData.processPattern(&s.Pattern)
+	//		for _, a := range s.Actions {
+	//			switch a.ActionOp {
+	//			case syntax.COMMA: // ','
+	//			case syntax.REPLACE: // '='
+	//				currFileData.processAction(a)
+	//				break
+	//			case syntax.TARROW: // '->'
+	//			case syntax.ARROW: // '=>'
+	//			case syntax.COLON: // ':'
+	//			case syntax.DCOLON: // '::'
+	//			}
+	//		}
+	//	}
 
-		currFileData.FuncEnd(fun.FuncName)
-	}
+	//	currFileData.FuncEnd(fun.FuncName)
+	//}
 
-	currFileData.mainFuncHeader()
-	currFileData.initData(1)
-	currFileData.mainFuncEnd()
+	currFileData.initLiteralDataFunc(0)
+	currFileData.mainFunc(0)
 }
 
 func Handle(done chan<- bool, fs <-chan Data) {

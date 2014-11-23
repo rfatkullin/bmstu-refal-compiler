@@ -49,7 +49,7 @@ struct l_term* prout(struct l_term* expr)
 static void printRange(struct fragment* frag)
 {
 	int i = 0;
-	struct v_term* currTerm = memoryManager.activeTermsHeap + frag->offset;
+	struct v_term* currTerm = memMngr.activeTermsHeap + frag->offset;
 
 	for (i = 0; i < frag->length; ++i)
 		printSymbol(currTerm + i);
@@ -65,8 +65,8 @@ static void printSymbol(struct v_term* term)
 	case V_IDENT_TAG:
 		printf("%s ", term->str);
 		break;
-	case V_NUMBER_TAG:
-		printf("%d ", term->num);
+	case V_INT_NUM_TAG:
+		printf("%d ", term->intNum);
 		break;
 	case V_CLOSURE_TAG:
 		//TO DO

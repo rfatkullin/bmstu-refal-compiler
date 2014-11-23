@@ -8,36 +8,36 @@ static uint32_t sum(uint32_t curr, uint32_t currBegin, uint32_t currEnd, uint32_
 
 void buildSegmentTree(uint32_t n)
 {
-	memoryManager.segmentTree->currN = n;
-	uint32_t treeSize = 4 * memoryManager.segmentTree->currN / memoryManager.SegmentLen;
+	memMngr.segmentTree->currN = n;
+	uint32_t treeSize = 4 * memMngr.segmentTree->currN / memMngr.segmentLen;
 	uint32_t i = 0;
 
 	//Кажется, можно просто обнулять. Но пока работает)))
 	for (i = 0; i < treeSize; ++i)
-		memoryManager.segmentTree->tree[i] = -1;
+		memMngr.segmentTree->tree[i] = -1;
 
-	memset(memoryManager.segmentTree->elements, 0, sizeof(uint32_t) * memoryManager.segmentTree->currN);
+	memset(memMngr.segmentTree->elements, 0, sizeof(uint32_t) * memMngr.segmentTree->currN);
 }
 
 void clearSegmentTree()
 {
-	uint32_t treeSize = 4 * memoryManager.segmentTree->currN / memoryManager.SegmentLen;
+	uint32_t treeSize = 4 * memMngr.segmentTree->currN / memMngr.segmentLen;
 	uint32_t i = 0;
 
 	for (i = 0; i < treeSize; ++i)
-		memoryManager.segmentTree->tree[i] = -1;
+		memMngr.segmentTree->tree[i] = -1;
 
-	memset(memoryManager.segmentTree->elements, 0, sizeof(uint32_t) * memoryManager.segmentTree->currN);
+	memset(memMngr.segmentTree->elements, 0, sizeof(uint32_t) * memMngr.segmentTree->currN);
 }
 
 void markInSegmentTree(uint32_t begin, uint32_t end)
 {
-	mark(1, 0, memoryManager.segmentTree->currN - 1, begin, end);
+	mark(1, 0, memMngr.segmentTree->currN - 1, begin, end);
 }
 
 uint32_t sumInSegmentTree(uint32_t begin, uint32_t end)
 {
-	sum(1, 0, memoryManager.segmentTree->currN - 1, begin, end);
+	sum(1, 0, memMngr.segmentTree->currN - 1, begin, end);
 }
 
 static uint32_t max(uint32_t a, uint32_t b)
@@ -59,14 +59,14 @@ static uint32_t min(uint32_t a, uint32_t b)
 static void markElements(uint32_t needBegin, uint32_t needEnd, int32_t mark)
 {
 	int i = 0;
-	uint32_t segmentNum = needBegin / memoryManager.SegmentLen;
+	uint32_t segmentNum = needBegin / memMngr.segmentLen;
 
-	for (i = segmentNum * memoryManager.SegmentLen; i < (segmentNum + 1) * memoryManager.SegmentLen; ++i)
+	for (i = segmentNum * memMngr.segmentLen; i < (segmentNum + 1) * memMngr.segmentLen; ++i)
 	{
 		if (i >= needBegin && i <= needEnd)
-			memoryManager.segmentTree->elements[i] = 1;
+			memMngr.segmentTree->elements[i] = 1;
 		else
-			memoryManager.segmentTree->elements[i] = mark;
+			memMngr.segmentTree->elements[i] = mark;
 	}
 }
 
@@ -76,29 +76,29 @@ static uint32_t sumElements(uint32_t needBegin, uint32_t needEnd)
 	uint32_t sum = 0;
 
 	for (i = needBegin; i <= needEnd; ++i)
-		sum += memoryManager.segmentTree->elements[i];
+		sum += memMngr.segmentTree->elements[i];
 
 	return sum;
 }
 
 static void push(uint32_t curr)
 {
-	if (memoryManager.segmentTree->tree[curr] == -1)
+	if (memMngr.segmentTree->tree[curr] == -1)
 				return;
 
-	memoryManager.segmentTree->tree[curr * 2] = memoryManager.segmentTree->tree[curr];
-	memoryManager.segmentTree->tree[curr * 2 + 1] = memoryManager.segmentTree->tree[curr];
-	memoryManager.segmentTree->tree[curr] = -1;
+	memMngr.segmentTree->tree[curr * 2] = memMngr.segmentTree->tree[curr];
+	memMngr.segmentTree->tree[curr * 2 + 1] = memMngr.segmentTree->tree[curr];
+	memMngr.segmentTree->tree[curr] = -1;
 }
 
 static uint32_t left(uint32_t val)
 {
-	return val * memoryManager.SegmentLen;
+	return val * memMngr.segmentLen;
 }
 
 static uint32_t right(uint32_t val)
 {
-	return (val + 1) * memoryManager.SegmentLen - 1;
+	return (val + 1) * memMngr.segmentLen - 1;
 }
 
 static void mark(uint32_t curr, uint32_t currBegin, uint32_t currEnd, uint32_t needBegin, uint32_t needEnd)
@@ -109,7 +109,7 @@ static void mark(uint32_t curr, uint32_t currBegin, uint32_t currEnd, uint32_t n
 	//Наткнулись на узел, который совпадает с текущим отрезком
 	if (needBegin == left(currBegin) && needEnd == right(currEnd))
 	{
-		memoryManager.segmentTree->tree[curr] = 1;
+		memMngr.segmentTree->tree[curr] = 1;
 		return;
 	}
 
@@ -118,11 +118,11 @@ static void mark(uint32_t curr, uint32_t currBegin, uint32_t currEnd, uint32_t n
 	{
 		uint32_t label = 0;
 
-		if (memoryManager.segmentTree->tree[currBegin] > 0)
+		if (memMngr.segmentTree->tree[currBegin] > 0)
 			label = 1;
 
 		markElements(needBegin, needEnd, label);
-		memoryManager.segmentTree->tree[curr] = -1;
+		memMngr.segmentTree->tree[curr] = -1;
 		return;
 	}
 
@@ -139,8 +139,8 @@ static uint32_t sum(uint32_t curr, uint32_t currBegin, uint32_t currEnd, uint32_
 	if (needBegin > needEnd)
 		return 0;
 
-	if (memoryManager.segmentTree->tree[curr] != -1)
-		return memoryManager.segmentTree->tree[curr] * (needEnd - needBegin + 1);
+	if (memMngr.segmentTree->tree[curr] != -1)
+		return memMngr.segmentTree->tree[curr] * (needEnd - needBegin + 1);
 
 	//Дошли до листа
 	if (currBegin == currEnd)

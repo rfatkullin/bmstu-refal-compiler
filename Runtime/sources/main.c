@@ -5,7 +5,11 @@
 
 int main(int argc, char** argv)
 {
-	initAllocator(1024 * 1024 * 1024, 2);
+	initAllocator(1024 * 1024 * 1024);
+
+	*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = 100};
+
+	initHeaps(2);
 
 	if (argc > 1)
 		freopen(argv[1], "r", stdin);
@@ -19,7 +23,7 @@ int main(int argc, char** argv)
 	uint32_t sum;
 	uint32_t correctSum;
 
-	buildSegmentTree(memoryManager.maxVTermCount - 1);
+	buildSegmentTree(memMngr.maxVTermCount - 1);
 
 	while (scanf("%u", &n) == 1)
 	{
