@@ -13,17 +13,19 @@ function Fail
 	exit 1;
 }
 
-go install ../Compiler/src/refalc/refalc.go
+../Compiler-build/build.sh ../Compiler-build/${refalSource}
 
 if [ "$?" != 0 ] ; then
-	Fail "Can't build compiler"
+	Fail "Compiler-build error"
 fi
-	
-refalc --ptree ${sourceBaseName}.ref
+
+cp ../Compiler-build/${sourceBaseName}.c ../Project/main.c
+
+make
 
 if [ "$?" != 0 ] ; then
-	Fail "Can't compile ${refalSource}"
+	Fail "Can't build project!"
 fi
 
-#cat ${sourceBaseName}.ptree
-cat ${sourceBaseName}.c
+./Project
+

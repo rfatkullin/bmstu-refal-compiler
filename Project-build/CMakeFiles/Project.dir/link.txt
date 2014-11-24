@@ -1,0 +1,1 @@
+/usr/bin/cc  -g    CMakeFiles/Project.dir/main.c.o  -o Project -rdynamic /home/rustam/Diploma/Runtime-build/libruntime.a 

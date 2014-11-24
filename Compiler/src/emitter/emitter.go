@@ -24,7 +24,7 @@ type Data struct {
 
 func (f *Data) Comment(s string) { fmt.Fprintf(f, "\t/* %s */\n", s) }
 
-func (f *Data) Header() {
+func (f *Data) PrintFileInfo() {
 	fmt.Fprintf(f, "// file:%s\n\n", f.Name)
 }
 
@@ -138,7 +138,7 @@ func (f *Data) initStrVTerm(depth int, term syntax.Term) {
 	strLen := len(str)
 
 	for i := 0; i < strLen; i++ {
-		fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_CHAR_TAG, .ch = %c};\n", tabs, str[i])
+		fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_CHAR_TAG, .ch = '%c'};\n", tabs, str[i])
 	}
 
 	term.Index = f.CurrTermNum
@@ -169,7 +169,7 @@ func (f *Data) initFloatVTerm(depth int, term syntax.Term) {
 func (f *Data) initIdentVTerm(depth int, term syntax.Term) {
 	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_IDENT_TAG, .str = %s};\n", tabs, string(term.Value.Name))
+	fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_IDENT_TAG, .str = \"%s\"};\n", tabs, string(term.Value.Name))
 
 	term.Index = f.CurrTermNum
 	f.CurrTermNum++
@@ -254,10 +254,15 @@ func (f *Data) initLiteralDataFunc(depth int) {
 	fmt.Fprintf(f, "} // __initLiteralData()\n\n")
 }
 
+func (f *Data) PrintHeaders() {
+	fmt.Fprintf(f, "#include <memory_manager.h>\n")
+}
+
 func processFile(currFileData Data) {
 	//unit := currFileData.Ast
 
-	currFileData.Header()
+	currFileData.PrintFileInfo()
+	currFileData.PrintHeaders()
 
 	//for _, fun := range unit.GlobMap {
 	//	currFileData.funcHeader(fun.FuncName)

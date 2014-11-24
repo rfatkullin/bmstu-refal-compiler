@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/rustam/Diploma/Project/main.c
+memory_manager.h
+-
+
+/home/rustam/Diploma/Runtime/headers/l_term.h
+stdint.h
+-
+
+/home/rustam/Diploma/Runtime/headers/memory_manager.h
+stdint.h
+-
+v_term.h
+/home/rustam/Diploma/Runtime/headers/v_term.h
+l_term.h
+/home/rustam/Diploma/Runtime/headers/l_term.h
+segment_tree.h
+/home/rustam/Diploma/Runtime/headers/segment_tree.h
+
+/home/rustam/Diploma/Runtime/headers/segment_tree.h
+memory_manager.h
+/home/rustam/Diploma/Runtime/headers/memory_manager.h
+
+/home/rustam/Diploma/Runtime/headers/v_term.h
+
