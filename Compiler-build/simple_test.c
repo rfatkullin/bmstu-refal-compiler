@@ -1,6 +1,31 @@
-// file:../Compiler-build/simple_test.ref
+// file:simple_test.ref
 
 #include <memory_manager.h>
+#include <v_machine.h>
+
+struct func_result_t Go(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView) 
+{
+ if (entryPoint == 0)
+ {
+  env.locals = (struct l_term*)malloc(1 * sizeof(struct l_term));
+  fieldOfView.backups = (struct l_term_chain_t*)malloc(1 * sizeof(struct l_term_chain_t));
+ }
+ switch (entryPoint)
+ {
+  case 0: 
+ ok = 0;
+ ok = 1;
+
+ if (ok == 1)
+%!s(MISSING){ %s}
+ } // case block end
+ if (res != CALL_RESULT)
+ {
+  free(env.locals);
+  free(fieldOfView.backups);
+ }
+} // Go
+
 void __initLiteralData()
 {
  initAllocator(1024 * 1024 * 1024);
@@ -27,5 +52,6 @@ void __initLiteralData()
 int main()
 {
  __initLiteralData();
+ mainLoop(Go);
  return 0;
 }

@@ -1,14 +1,6 @@
-// file:hello_world.ref
+// file:/home/rustam/Diploma/Compiler-build/hello_world.ref
 
-l_term* Go(vec_header* vecData) 
+#include <memory_manager.h>
+void __initLiteralData()
 {
- struct v_term* data = vecData.data;
- uint32_t length = vecData.size;
- uint32_t ok = 0;
- ok = 0;
- ok = 1;
-
- if (ok == 1)
-%!s(MISSING){%!s(MISSING)}
-} // Go
-
+ initAllocator(1024 * 1024 * 1024);

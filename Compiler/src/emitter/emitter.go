@@ -6,13 +6,9 @@ import (
 )
 
 import (
-	"strings"
+	//	"strings"
 	"syntax"
 	"tokens"
-)
-
-const (
-	tab = " "
 )
 
 type Data struct {
@@ -22,25 +18,33 @@ type Data struct {
 	CurrTermNum int
 }
 
-func (f *Data) Comment(s string) { fmt.Fprintf(f, "\t/* %s */\n", s) }
-
-func (f *Data) PrintFileInfo() {
-	fmt.Fprintf(f, "// file:%s\n\n", f.Name)
-}
-
 func (f *Data) mainFunc(depth int) {
 	tabs := genTabs(depth + 1)
 
 	fmt.Fprintf(f, "int main()\n{\n")
 	fmt.Fprintf(f, "%s__initLiteralData();\n", tabs)
+	fmt.Fprintf(f, "%smainLoop(Go);\n", tabs)
 	fmt.Fprintf(f, "%sreturn 0;\n}\n", tabs)
 }
 
-func (f *Data) funcHeader(name string) {
-	fmt.Fprintf(f, "l_term* %s(vec_header* vecData) \n{\n", name)
-	fmt.Fprintf(f, "%sstruct v_term* data = vecData.data;\n", tab)
-	fmt.Fprintf(f, "%suint32_t length = vecData.size;\n", tab)
-	fmt.Fprintf(f, "%suint32_t ok = 0;\n", tab)
+func (f *Data) FuncDataMemoryAllocation(depth int, funcInfo *syntax.Function) {
+	tabs := genTabs(depth)
+
+	fmt.Fprintf(f, "%sif (entryPoint == 0)\n", tabs)
+	fmt.Fprintf(f, "%s{\n", tabs)
+	fmt.Fprintf(f, "%s%senv.locals = (struct l_term*)malloc(%d * sizeof(struct l_term));\n", tabs, tab, 1)
+	fmt.Fprintf(f, "%s%sfieldOfView.backups = (struct l_term_chain_t*)malloc(%d * sizeof(struct l_term_chain_t));\n", tabs, tab, 1)
+	fmt.Fprintf(f, "%s}\n", tabs)
+}
+
+func (f *Data) FuncDataMemoryFree(depth int) {
+	tabs := genTabs(depth)
+
+	fmt.Fprintf(f, "%sif (res != CALL_RESULT)\n", tabs)
+	fmt.Fprintf(f, "%s{\n", tabs)
+	fmt.Fprintf(f, "%s%sfree(env.locals);\n", tabs, tab)
+	fmt.Fprintf(f, "%s%sfree(fieldOfView.backups);\n", tabs, tab)
+	fmt.Fprintf(f, "%s}\n", tabs)
 }
 
 func (f *Data) releaseOkVar(tabs string) {
@@ -53,18 +57,6 @@ func (f *Data) setOkVar(tabs string) {
 
 func (f *Data) checkOKVar(tabs string) {
 	fmt.Fprintf(f, "%sif (ok == 1)\n%s{", tabs)
-}
-
-func (f *Data) endBlock(tabs string) {
-	fmt.Fprintf(f, "%s}\n")
-}
-
-func (f *Data) FuncEnd(name string) {
-	fmt.Fprintf(f, "} // %s\n\n", name)
-}
-
-func genTabs(depth int) string {
-	return strings.Repeat(tab, depth)
 }
 
 func (f *Data) processSymbol(termNumber, depth int) {
@@ -127,165 +119,53 @@ func (f *Data) processAction(act *syntax.Action) {
 
 	f.checkOKVar(genTabs(1))
 
-	f.endBlock(genTabs(1))
+	f.PrintLabel(1, "%s}\n") //end block
 }
 
-// Инициализация vterm_t строкового литерала
-// Пока только ASCII символы
-func (f *Data) initStrVTerm(depth int, term syntax.Term) {
-	tabs := genTabs(depth)
-	str := string(term.Value.Str)
-	strLen := len(str)
+func (f *Data) processFuncSentences(currFunc *syntax.Function) {
+	currEntryPoint := 0
 
-	for i := 0; i < strLen; i++ {
-		fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_CHAR_TAG, .ch = '%c'};\n", tabs, str[i])
-	}
+	f.funcHeader(currFunc.FuncName)
+	f.FuncDataMemoryAllocation(1, currFunc)
 
-	term.Index = f.CurrTermNum
-	f.CurrTermNum += strLen
-}
+	f.PrintLabel(1, "switch (entryPoint)\n") //case begin
+	f.PrintLabel(1, "{\n")                   //case block begin
+	f.PrintLabel(2, fmt.Sprintf("case %d: \n", currEntryPoint))
 
-// Инициализация vterm_t для литералов целого типа
-// Пока только обычные
-func (f *Data) initIntNumVTerm(depth int, term syntax.Term) {
-	tabs := genTabs(depth)
+	for _, s := range currFunc.Sentences {
+		f.releaseOkVar(genTabs(1))
+		f.processPattern(&s.Pattern)
+		for _, a := range s.Actions {
+			switch a.ActionOp {
 
-	fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = %d};\n", tabs, term.Value.Int)
-	term.Index = f.CurrTermNum
-	f.CurrTermNum++
-}
+			case syntax.COMMA: // ','
 
-// Инициализация vterm_t для литералов вещественного типа
-func (f *Data) initFloatVTerm(depth int, term syntax.Term) {
-	tabs := genTabs(depth)
+			case syntax.REPLACE: // '='
+				f.processAction(a)
+				break
 
-	fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_FLOAT_NUM_TAG, .floatNum = %f};\n", tabs, term.Value.Float)
-	term.Index = f.CurrTermNum
-	f.CurrTermNum++
-}
-
-// Инициализация vterm_t для идентификатора
-// Пока только ASCII символы
-func (f *Data) initIdentVTerm(depth int, term syntax.Term) {
-	tabs := genTabs(depth)
-
-	fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_IDENT_TAG, .str = \"%s\"};\n", tabs, string(term.Value.Name))
-
-	term.Index = f.CurrTermNum
-	f.CurrTermNum++
-}
-
-func (f *Data) initActionData(depth int, expr syntax.Expr) {
-
-	terms := make([]*syntax.Term, len(expr.Terms))
-	copy(terms, expr.Terms)
-
-	for len(terms) > 0 {
-
-		term := terms[0]
-		terms = terms[1:]
-
-		switch term.TermTag {
-
-		case syntax.STR:
-			f.initStrVTerm(depth, *term)
-			break
-
-		case syntax.COMP:
-			f.initIdentVTerm(depth, *term)
-			break
-
-		case syntax.INT:
-			f.initIntNumVTerm(depth, *term)
-			break
-
-		case syntax.FLOAT:
-			f.initFloatVTerm(depth, *term)
-			break
-
-		case syntax.EXPR:
-			terms = append(terms, term.Exprs[0].Terms...)
-			break
-
-		case syntax.EVAL:
-			//TO DO
-			break
-
-		case syntax.FUNC:
-			//TO DO
-			break
-
-		case syntax.BRACED_EXPR:
-		case syntax.BRACKETED_EXPR:
-		case syntax.ANGLED_EXPR:
-			//Пока считаем, что тут не может быть литералов
-			break
-
-		case syntax.VAR:
-		case syntax.L:
-		case syntax.R:
-			//Не литералы
-			break
-		}
-	}
-}
-
-func (f *Data) initData(depth int) {
-	unit := f.Ast
-
-	for _, fun := range unit.GlobMap {
-		for _, s := range fun.Sentences {
-			for _, a := range s.Actions {
-				f.initActionData(depth, a.Expr)
+			case syntax.TARROW: // '->'
+			case syntax.ARROW: // '=>'
+			case syntax.COLON: // ':'
+			case syntax.DCOLON: // '::'
 			}
 		}
 	}
 
-	fmt.Fprintf(f, "\n")
-}
-
-func (f *Data) initLiteralDataFunc(depth int) {
-	tabs := genTabs(depth + 1)
-
-	fmt.Fprintf(f, "void __initLiteralData()\n{\n")
-	fmt.Fprintf(f, "%sinitAllocator(1024 * 1024 * 1024);\n", tabs)
-	f.initData(depth + 1)
-	fmt.Fprintf(f, "%sinitHeaps(2);\n", tabs)
-	fmt.Fprintf(f, "} // __initLiteralData()\n\n")
-}
-
-func (f *Data) PrintHeaders() {
-	fmt.Fprintf(f, "#include <memory_manager.h>\n")
+	f.PrintLabel(1, "} // case block end\n") //case block end
+	f.FuncDataMemoryFree(1)
+	f.PrintLabel(0, fmt.Sprintf("} // %s\n\n", currFunc.FuncName)) // func block end
 }
 
 func processFile(currFileData Data) {
-	//unit := currFileData.Ast
+	unit := currFileData.Ast
 
-	currFileData.PrintFileInfo()
+	currFileData.PrintLabel(0, fmt.Sprintf("// file:%s\n\n", currFileData.Name))
 	currFileData.PrintHeaders()
 
-	//for _, fun := range unit.GlobMap {
-	//	currFileData.funcHeader(fun.FuncName)
-
-	//	for _, s := range fun.Sentences {
-	//		currFileData.releaseOkVar(genTabs(1))
-	//		currFileData.processPattern(&s.Pattern)
-	//		for _, a := range s.Actions {
-	//			switch a.ActionOp {
-	//			case syntax.COMMA: // ','
-	//			case syntax.REPLACE: // '='
-	//				currFileData.processAction(a)
-	//				break
-	//			case syntax.TARROW: // '->'
-	//			case syntax.ARROW: // '=>'
-	//			case syntax.COLON: // ':'
-	//			case syntax.DCOLON: // '::'
-	//			}
-	//		}
-	//	}
-
-	//	currFileData.FuncEnd(fun.FuncName)
-	//}
+	for _, currFunc := range unit.GlobMap {
+		currFileData.processFuncSentences(currFunc)
+	}
 
 	currFileData.initLiteralDataFunc(0)
 	currFileData.mainFunc(0)

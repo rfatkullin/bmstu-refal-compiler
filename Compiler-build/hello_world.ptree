@@ -1,2 +1,32 @@
-Builtins: Prout
+ Builtins: Prout
 Go
+ IsEntry: true
+ IsIdent: true
+ IsSe: false
+ Rollback: false
+
+ Nested funcs num: 0
+ Parent scope is not exists
+ Vars: 
+  e: 
+  v: 
+  t: 
+  s: 
+
+ <---Sentence #0--->
+  Nested funcs num: 0
+  Parent scope is not exists
+  Vars: 
+   e: 
+   v: 
+   t: 
+   s: 
+
+  Pattern:
+
+  Actions:
+   '=':
+      <
+        Prout
+        Hello, World!
+      >
