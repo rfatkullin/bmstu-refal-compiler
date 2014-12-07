@@ -27,20 +27,10 @@ Go
   Actions:
    '=':
      1
-     23
-     123
-     qweqw
-     AAAAA
-     %!(EXTRA string=Float number)
-     d
       (
-        asdasd
-        asdasd
+         (
+           23
+           123
+         )
+        qweqw
       )
-      (
-        a
-      )
-      (
-        111
-      )
-     hell

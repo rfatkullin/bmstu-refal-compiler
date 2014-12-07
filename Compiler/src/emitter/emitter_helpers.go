@@ -74,7 +74,9 @@ func (f *Data) initActionData(depth int, expr syntax.Expr) {
 			break
 
 		case syntax.EXPR:
-			terms = append(terms, term.Exprs[0].Terms...)
+			tmpTerms := append(make([]*syntax.Term, 0, len(term.Exprs[0].Terms)+len(terms)), term.Exprs[0].Terms...)
+			tmpTerms = append(tmpTerms, terms...)
+			terms = tmpTerms
 			break
 
 		case syntax.EVAL:

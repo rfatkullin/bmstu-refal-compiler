@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define L_TERM_RANGE_TAG	0
+#define L_TERM_FRAGMENT_TAG	0
 #define L_TERM_CHAIN_TAG	1
 #define L_TERM_FUNC_CALL	2
 
@@ -32,7 +32,7 @@ struct l_term
 
 	union
 	{
-		struct fragment* range;
+		struct fragment* fragment;
 		struct l_term_chain_t* chain;
 		struct func_call_t* funcCall;
 	};

@@ -86,11 +86,9 @@ func (f *Data) processExpr(termNumber, nestedDepth int) {
 
 }
 
-func (f *Data) processPattern(p *syntax.Expr) {
+func (f *Data) processPattern(depth int, p *syntax.Expr) {
 
-	if len(p.Terms) == 0 {
-		f.setOkVar(genTabs(1))
-	} else {
+	if len(p.Terms) != 0 {
 		for termIndex, term := range p.Terms {
 
 			switch term.TermTag {
@@ -122,37 +120,181 @@ func (f *Data) processAction(act *syntax.Action) {
 	f.PrintLabel(1, "%s}\n") //end block
 }
 
-func (f *Data) processFuncSentences(currFunc *syntax.Function) {
+func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
+	fragmentOffset := 0
+	fragmentLength := 0
+	currChainNum := 0
+	stack := make([]int, 0)
+	stackSize := 0
+	termNumberInChain := 0
+
+	if len(resultExpr.Terms) == 0 {
+		f.PrintLabel(depth, "result.status = OK_RESULT;\n")
+		f.PrintLabel(depth, "result.mainChain = 0;\n")
+		f.PrintLabel(depth, "result.callChain = 0;\n")
+	} else {
+
+		fmt.Println(fmt.Sprintf("Terms count: %d", len(resultExpr.Terms)))
+		f.PrintLabel(depth, "struct l_term* currTerm = 0;\n")
+		f.PrintLabel(depth, "struct l_term* tmpTerm = 0;\n")
+		f.PrintLabel(depth, fmt.Sprintf("struct l_term_chain_t* chain%d = (struct l_term_chain_t*)malloc(sizeof(struct l_term_chain_t));\n", currChainNum))
+
+		terms := make([]*syntax.Term, len(resultExpr.Terms))
+		copy(terms, resultExpr.Terms)
+
+		for len(terms) > 0 {
+
+			term := terms[0]
+			terms = terms[1:]
+
+			switch term.TermTag {
+
+			case syntax.STR, syntax.COMP, syntax.INT, syntax.FLOAT:
+
+				if fragmentLength == 0 {
+
+					fragmentOffset = term.Index
+					f.PrintLabel(depth, "tmpTerm = currTerm;\n")
+					f.PrintLabel(depth, "currTerm = (struct l_term*)malloc(sizeof(struct l_term));\n")
+					f.PrintLabel(depth, "currTerm->tag = L_TERM_FRAGMENT_TAG;\n")
+					f.PrintLabel(depth, "currTerm->fragment = (struct fragment*)malloc(sizeof(struct fragment));\n")
+
+					f.PrintLabel(depth, "if (tmpTerm != 0) {\n")
+					f.PrintLabel(depth+1, "tmpTerm->next = currTerm;\n")
+					f.PrintLabel(depth+1, "currTerm->prev = tmpTerm;\n")
+					f.PrintLabel(depth, "}\n")
+				}
+
+				if termNumberInChain == 0 {
+					f.PrintLabel(depth, fmt.Sprintf("chainTerm%d->chain->begin = currTerm;\n", currChainNum))
+				}
+
+				fragmentLength++
+				termNumberInChain++
+
+				break
+			case syntax.EXPR:
+
+				if fragmentLength > 0 {
+					f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = %d;\n", fragmentOffset))
+					f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->length = %d;\n", fragmentLength))
+					fragmentLength = 0
+				}
+
+				currChainNum++
+				f.PrintLabel(depth, fmt.Sprintf("struct l_term* chainTerm%d = (struct l_term*)malloc(struct l_term);\n", currChainNum))
+				f.PrintLabel(depth, fmt.Sprintf("chainTerm%d->tag = L_TERM_CHAIN_TAG;\n", currChainNum))
+				f.PrintLabel(depth, fmt.Sprintf("chainTerm%d->chain = (struct l_term_chain_t*)malloc(struct l_term_chain_t);\n", currChainNum))
+
+				if termNumberInChain == 0 {
+					f.PrintLabel(depth, fmt.Sprintf("chainTerm%d->chain->begin = chainTerm%d;\n", currChainNum-1, currChainNum))
+					f.PrintLabel(depth, fmt.Sprintf("chainTerm%d->prev = 0;\n", currChainNum))
+				} else {
+					f.PrintLabel(depth, fmt.Sprintf("chainTerm%d->prev = currTerm;\n", currChainNum))
+					f.PrintLabel(depth, fmt.Sprintf("currTerm->next = chainTerm%d;\n", currChainNum))
+				}
+
+				termNumberInChain = 0
+
+				if len(stack) <= stackSize {
+					stack = append(stack, len(term.Exprs[0].Terms))
+				} else {
+					stack[stackSize] = len(term.Exprs[0].Terms)
+				}
+
+				stackSize++
+
+				tmpTerms := append(make([]*syntax.Term, 0, len(term.Exprs[0].Terms)+len(terms)), term.Exprs[0].Terms...)
+				tmpTerms = append(tmpTerms, terms...)
+				terms = tmpTerms
+				break
+
+			case syntax.EVAL:
+				//TO DO
+				break
+
+			case syntax.FUNC:
+				//TO DO
+				break
+
+			case syntax.BRACED_EXPR:
+			case syntax.BRACKETED_EXPR:
+			case syntax.ANGLED_EXPR:
+				//Пока считаем, что тут не может быть литералов
+				break
+
+			case syntax.VAR:
+			case syntax.L:
+			case syntax.R:
+				//Не литералы
+				break
+			}
+
+			// If prev term was last term in expr
+			for termNumberInChain > 0 && stackSize > 0 {
+
+				stack[stackSize-1]--
+
+				if stack[stackSize-1] > 0 {
+					break
+				}
+
+				if fragmentLength > 0 {
+					f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = %d;\n", fragmentOffset))
+					f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->length = %d;\n", fragmentLength))
+					fragmentLength = 0
+				}
+
+				f.PrintLabel(depth, fmt.Sprintf("chainTerm%d->chain->end = currTerm;\n", currChainNum))
+				f.PrintLabel(depth, fmt.Sprintf("currTerm = chainTerm%d;\n", currChainNum))
+				currChainNum--
+				stackSize--
+			}
+		}
+	}
+
+	f.PrintLabel(depth, fmt.Sprintf("chainTerm%d->end = currTerm;\n", currChainNum))
+}
+
+func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 	currEntryPoint := 0
 
 	f.funcHeader(currFunc.FuncName)
-	f.FuncDataMemoryAllocation(1, currFunc)
+	f.PrintLabel(depth, "struct fresult_t result;\n")
+	f.FuncDataMemoryAllocation(depth, currFunc)
 
-	f.PrintLabel(1, "switch (entryPoint)\n") //case begin
-	f.PrintLabel(1, "{\n")                   //case block begin
-	f.PrintLabel(2, fmt.Sprintf("case %d: \n", currEntryPoint))
+	f.PrintLabel(depth, "switch (entryPoint)\n") //case begin
+	f.PrintLabel(depth, "{\n")                   //case block begin
 
 	for _, s := range currFunc.Sentences {
-		f.releaseOkVar(genTabs(1))
-		f.processPattern(&s.Pattern)
+
+		f.PrintLabel(depth+1, fmt.Sprintf("case %d: \n", currEntryPoint))
+		f.processPattern(depth+2, &s.Pattern)
+
 		for _, a := range s.Actions {
 			switch a.ActionOp {
 
-			case syntax.COMMA: // ','
-
 			case syntax.REPLACE: // '='
-				f.processAction(a)
+				f.ConstructResult(depth+2, a.Expr)
+				currEntryPoint++
 				break
 
+			case syntax.COLON: // ':'
+				currEntryPoint++
+				f.PrintLabel(depth+2, fmt.Sprintf("break;\n"))
+				f.PrintLabel(depth+1, fmt.Sprintf("case %d: \n", currEntryPoint))
+				break
+
+			case syntax.COMMA: // ','
 			case syntax.TARROW: // '->'
 			case syntax.ARROW: // '=>'
-			case syntax.COLON: // ':'
 			case syntax.DCOLON: // '::'
 			}
 		}
 	}
 
-	f.PrintLabel(1, "} // case block end\n") //case block end
+	f.PrintLabel(depth+1, fmt.Sprintf("break;\n")) // last case break
+	f.PrintLabel(1, "} // case block end\n")       //case block end
 	f.FuncDataMemoryFree(1)
 	f.PrintLabel(0, fmt.Sprintf("} // %s\n\n", currFunc.FuncName)) // func block end
 }
@@ -164,7 +306,7 @@ func processFile(currFileData Data) {
 	currFileData.PrintHeaders()
 
 	for _, currFunc := range unit.GlobMap {
-		currFileData.processFuncSentences(currFunc)
+		currFileData.processFuncSentences(1, currFunc)
 	}
 
 	currFileData.initLiteralDataFunc(0)
