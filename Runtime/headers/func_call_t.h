@@ -49,7 +49,7 @@ struct func_call_t
 	int entryPoint;
 
 	//Указатель на след. запрос на вызов функции
-	struct l_term* nextFuncCall;
+	struct l_term* next;
 };
 
 #endif

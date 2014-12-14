@@ -47,7 +47,7 @@ static struct func_call_t* ConstructStartFunc(struct func_result_t (*firstFuncPt
 
 	goCall->entryPoint = 0;
 
-	goCall->nextFuncCall = 0;
+	goCall->next = 0;
 
 	return goCall;
 }
@@ -109,7 +109,7 @@ static void insertTermChainToFieldOfView(struct l_term* mainChain, struct l_term
 
 static struct l_term* insertFuncCallToCallChain(struct l_term* mainChain, struct l_term_chain_t* insertChain)
 {
-	insertChain->end->funcCall->nextFuncCall = mainChain->funcCall->nextFuncCall;
+	insertChain->end->funcCall->next = mainChain->funcCall->next;
 
 	//TO FIX: Пока так.
 	free(mainChain);
@@ -121,8 +121,8 @@ static void printChainOfCalls(struct l_term* callTerm)
 {
 	while (callTerm)
 	{
-		printf("%s%s", callTerm->funcCall->funcName, callTerm->funcCall->nextFuncCall ? "->" : "");
-		callTerm = callTerm->funcCall->nextFuncCall;
+		printf("%s%s", callTerm->funcCall->funcName, callTerm->funcCall->next ? "->" : "");
+		callTerm = callTerm->funcCall->next;
 	}
 
 	printf("\n");

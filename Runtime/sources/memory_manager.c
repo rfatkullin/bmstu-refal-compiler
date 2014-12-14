@@ -99,6 +99,8 @@ void initHeaps(uint32_t newSegmentLen)
 	memMngr.ltermsOffset = 0;
 
 	printf("Total used memory:                    %.2f Kb\n", byte2KByte(usedMemory));
+
+	memMngr.literalTermsHeap = (struct v_term*)memMngr.mainHeap;
 }
 
 static struct l_term* allocateLTerm(uint32_t offset, uint32_t len)
