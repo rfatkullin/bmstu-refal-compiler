@@ -7,8 +7,20 @@
 #IncludeRegexTransform: 
 
 /home/rustam/Diploma/Project/main.c
+stdlib.h
+-
 memory_manager.h
 -
+v_machine.h
+-
+
+/home/rustam/Diploma/Runtime/headers/fresult_t.h
+l_term.h
+/home/rustam/Diploma/Runtime/headers/l_term.h
+
+/home/rustam/Diploma/Runtime/headers/func_call_t.h
+fresult_t.h
+/home/rustam/Diploma/Runtime/headers/fresult_t.h
 
 /home/rustam/Diploma/Runtime/headers/l_term.h
 stdint.h
@@ -27,6 +39,12 @@ segment_tree.h
 /home/rustam/Diploma/Runtime/headers/segment_tree.h
 memory_manager.h
 /home/rustam/Diploma/Runtime/headers/memory_manager.h
+
+/home/rustam/Diploma/Runtime/headers/v_machine.h
+l_term.h
+/home/rustam/Diploma/Runtime/headers/l_term.h
+func_call_t.h
+/home/rustam/Diploma/Runtime/headers/func_call_t.h
 
 /home/rustam/Diploma/Runtime/headers/v_term.h
 

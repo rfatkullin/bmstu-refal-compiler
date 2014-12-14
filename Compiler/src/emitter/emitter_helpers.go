@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	tab = " "
+	tab = "\t"
 )
 
 func genTabs(depth int) string {
@@ -159,7 +159,9 @@ func (f *Data) initLiteralDataFunc(depth int) {
 
 func (f *Data) PrintHeaders() {
 
+	f.PrintLabel(0, "#include <stdlib.h>\n\n")
 	f.PrintLabel(0, "#include <memory_manager.h>\n")
 	f.PrintLabel(0, "#include <v_machine.h>\n")
+
 	f.PrintLabel(0, "\n")
 }

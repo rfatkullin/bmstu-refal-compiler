@@ -107,10 +107,10 @@ static struct l_term* allocateLTerm(uint32_t offset, uint32_t len)
 {
 	struct l_term* term = (struct l_term*)malloc(sizeof(struct l_term));
 
-	term->tag = L_TERM_RANGE_TAG;
-	term->range = (struct fragment*)malloc(sizeof(struct fragment));
-	term->range->offset = offset;
-	term->range->length = len;
+	term->tag = L_TERM_FRAGMENT_TAG;
+	term->fragment = (struct fragment*)malloc(sizeof(struct fragment));
+	term->fragment->offset = offset;
+	term->fragment->length = len;
 
 	return term;
 }
@@ -260,8 +260,8 @@ static void markVTerms(struct l_term* expr)
 	{
 		switch (currTerm->tag)
 		{
-			case L_TERM_RANGE_TAG:
-				markInSegmentTree(currTerm->range->offset, currTerm->range->offset + currTerm->range->length - 1);
+			case L_TERM_FRAGMENT_TAG:
+				markInSegmentTree(currTerm->fragment->offset, currTerm->fragment->offset + currTerm->fragment->length - 1);
 				break;
 
 			case L_TERM_CHAIN_TAG:

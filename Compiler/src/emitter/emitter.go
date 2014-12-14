@@ -30,20 +30,21 @@ func (f *Data) mainFunc(depth int) {
 func (f *Data) FuncDataMemoryAllocation(depth int, funcInfo *syntax.Function) {
 	tabs := genTabs(depth)
 
+	fmt.Fprintf(f, "%sstruct func_result_t funcRes;\n", tabs)
 	fmt.Fprintf(f, "%sif (entryPoint == 0)\n", tabs)
 	fmt.Fprintf(f, "%s{\n", tabs)
-	fmt.Fprintf(f, "%s%senv.locals = (struct l_term*)malloc(%d * sizeof(struct l_term));\n", tabs, tab, 1)
-	fmt.Fprintf(f, "%s%sfieldOfView.backups = (struct l_term_chain_t*)malloc(%d * sizeof(struct l_term_chain_t));\n", tabs, tab, 1)
+	fmt.Fprintf(f, "%s%senv->locals = (struct l_term*)malloc(%d * sizeof(struct l_term));\n", tabs, tab, 1)
+	fmt.Fprintf(f, "%s%sfieldOfView->backups = (struct l_term_chain_t*)malloc(%d * sizeof(struct l_term_chain_t));\n", tabs, tab, 1)
 	fmt.Fprintf(f, "%s}\n", tabs)
 }
 
 func (f *Data) FuncDataMemoryFree(depth int) {
 	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%sif (res != CALL_RESULT)\n", tabs)
+	fmt.Fprintf(f, "%sif (funcRes.status != CALL_RESULT)\n", tabs)
 	fmt.Fprintf(f, "%s{\n", tabs)
-	fmt.Fprintf(f, "%s%sfree(env.locals);\n", tabs, tab)
-	fmt.Fprintf(f, "%s%sfree(fieldOfView.backups);\n", tabs, tab)
+	fmt.Fprintf(f, "%s%sfree(env->locals);\n", tabs, tab)
+	fmt.Fprintf(f, "%s%sfree(fieldOfView->backups);\n", tabs, tab)
 	fmt.Fprintf(f, "%s}\n", tabs)
 }
 
@@ -108,9 +109,9 @@ func (f *Data) processPattern(depth int, p *syntax.Expr) {
 				break
 			}
 		}
-	}
 
-	fmt.Fprintf(f, "\n")
+		fmt.Fprintf(f, "\n")
+	}
 }
 
 func (f *Data) processAction(act *syntax.Action) {
@@ -194,26 +195,25 @@ func (f *Data) ConstructFragmentLTerm(depth int, firstTerm bool, exprIndex int, 
 	}
 }
 
-
 func (f *Data) ConstructFuncCall(depth int, funcName string, exprIndex int) {
-		f.PrintLabel(depth, "funcCall = (struct func_call_t*)malloc(sizeof(struct func_call_t));\n")
-		f.PrintLabel(depth, fmt.Sprintf("funcCall->funcName = memMngr.literlTermsHeap[helper[%d]->begin->fragment->offset]->str;\n" exprIndex))
-		f.PrintLabel(depth, fmt.Sprintf("funcCall->funcPtr = %s;\n", funcName[exprIndex]))
-		f.PrintLabel(depth, "funcCall->entryPoint = 0;\n")
-		f.PrintLabel(depth, fmt.Sprintf("helper[%d]->begin->fragment->offset += 1;\n", exprIndex))					
+	f.PrintLabel(depth, "funcCall = (struct func_call_t*)malloc(sizeof(struct func_call_t));\n")
+	f.PrintLabel(depth, fmt.Sprintf("funcCall->funcName = memMngr.literlTermsHeap[helper[%d]->begin->fragment->offset]->str;\n", exprIndex))
+	f.PrintLabel(depth, fmt.Sprintf("funcCall->funcPtr = %s;\n", funcName[exprIndex]))
+	f.PrintLabel(depth, "funcCall->entryPoint = 0;\n")
+	f.PrintLabel(depth, fmt.Sprintf("helper[%d]->begin->fragment->offset += 1;\n", exprIndex))
 }
 
 func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 
 	if len(resultExpr.Terms) == 0 {
-		f.PrintLabel(depth, "return (func_result_t){.status = OK_RESULT, .mainChain = 0, .callChain = 0};\n")
+		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .mainChain = 0, .callChain = 0};\n")
 	} else {
 
 		exprsDepth := f.MaxDepth(resultExpr)
 
 		f.PrintLabel(depth, "struct l_term_chain_t* funcCallChain = (struct l_term_chain_t*)malloc(sizeof(struct l_term_chain_t));\n")
 		f.PrintLabel(depth, "struct func_call_t* funcCall;\n")
-		f.PrintLabel(depth, fmt.Sprintf("struct l_term* helper = (struct l_term*)malloc(%d * sizeof(struct l_term));\n", exprsDepth))
+		f.PrintLabel(depth, fmt.Sprintf("struct l_term** helper = (struct l_term**)malloc(%d * sizeof(struct l_term*));\n", exprsDepth))
 		f.PrintLabel(depth, "int i;\n")
 		f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; ++i)\n", exprsDepth))
 		f.PrintLabel(depth, "{\n")
@@ -231,7 +231,7 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 
 		exprLen := make([]int, exprsDepth, exprsDepth)
 		exprCurrTermNum := make([]int, exprsDepth, exprsDepth)
-		exprType := make([]TermTag, exprsDepth, exprsDepth)
+		exprType := make([]syntax.TermTag, exprsDepth, exprsDepth)
 		funcName := make([]string, exprsDepth, exprsDepth)
 
 		exprLen[0] = len(terms)
@@ -269,8 +269,8 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 				if fragmentLength > 0 {
 					f.ConstructFragmentLTerm(depth, exprCurrTermNum[exprIndex] == 1, exprIndex, fragmentOffset, fragmentLength)
 					fragmentLength = 0
-				}				
-				
+				}
+
 				tmpTerms := append(make([]*syntax.Term, 0, len(term.Exprs[0].Terms)+len(terms)), term.Exprs[0].Terms...)
 				tmpTerms = append(tmpTerms, terms...)
 				terms = tmpTerms
@@ -279,11 +279,11 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 				exprType[exprIndex] = term.TermTag
 				exprLen[exprIndex] = len(term.Exprs[0].Terms)
 				exprCurrTermNum[exprIndex] = 0
-				
-				if (term.TermTag == syntax.EVAL) {
+
+				if term.TermTag == syntax.EVAL {
 					funcName[exprIndex] = term.Exprs[0].Terms[0].Value.Name
 				}
-				
+
 				break
 
 			case syntax.FUNC, syntax.BRACED_EXPR, syntax.BRACKETED_EXPR, syntax.ANGLED_EXPR,
@@ -304,22 +304,20 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 
 				exprCurrTermNum[exprIndex] = 0
 				exprLen[exprIndex] = 0
-				
-				if (exprType[exprIndex] == syntax.EVAL)
-				{	
+
+				if exprType[exprIndex] == syntax.EVAL {
 					f.PrintLabel(depth, fmt.Sprintf("helper[%d]->tag = L_TERM_FUNC_CALL;\n", exprIndex))
-								
-					if !isThereEvalTerm
-					{	
-						f.PrintLabel(depth, fmt.Sprintf("funcCallChain->begin = helper[%d];\n", exprIndex))					
-						f.PrintLabel(depth, fmt.Sprintf("funcCallChain->end = helper[%d];\n", exprIndex))					
-						isThereEvalTerm := true
+
+					if !isThereEvalTerm {
+						f.PrintLabel(depth, fmt.Sprintf("funcCallChain->begin = helper[%d];\n", exprIndex))
+						f.PrintLabel(depth, fmt.Sprintf("funcCallChain->end = helper[%d];\n", exprIndex))
+						isThereEvalTerm = true
 					} else {
-						f.PrintLabel(depth, fmt.Sprintf("funcCallChain->chain->end->funcCall->next = helper[%d];\n", exprIndex))											
+						f.PrintLabel(depth, fmt.Sprintf("funcCallChain->chain->end->funcCall->next = helper[%d];\n", exprIndex))
 					}
-					
-					f.ConstructFuncCall(depth, funcName[exprIndex], exprIndex)					
-					
+
+					f.ConstructFuncCall(depth, funcName[exprIndex], exprIndex)
+
 				} else {
 					f.PrintLabel(depth, fmt.Sprintf("helper[%d]->tag = L_TERM_CHAIN_TAG;\n", exprIndex))
 				}
@@ -348,8 +346,8 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 		f.PrintLabel(depth, "helper[0]->tag = L_TERM_CHAIN_TAG;\n")
 		f.PrintLabel(depth, "helper[0]->chain->begin->prev = 0;\n")
 		f.PrintLabel(depth, "helper[0]->chain->end->next = 0;\n")
-		
-		f.PrintLabel(depth, "return (fucn_result_t){.status = OK_RESULT, .mainChain = helper[0], .callChain = funcCallChain};\n")
+
+		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .mainChain = helper[0]->chain, .callChain = funcCallChain};\n")
 	}
 }
 
@@ -357,7 +355,6 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 	currEntryPoint := 0
 
 	f.funcHeader(currFunc.FuncName)
-	f.PrintLabel(depth, "struct fresult_t result;\n")
 	f.FuncDataMemoryAllocation(depth, currFunc)
 
 	f.PrintLabel(depth, "switch (entryPoint)\n") //case begin
@@ -366,6 +363,7 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 	for _, s := range currFunc.Sentences {
 
 		f.PrintLabel(depth+1, fmt.Sprintf("case %d: \n", currEntryPoint))
+		f.PrintLabel(depth+1, fmt.Sprintf("{\n"))
 		f.processPattern(depth+2, &s.Pattern)
 
 		for _, a := range s.Actions {
@@ -380,6 +378,7 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 				currEntryPoint++
 				f.PrintLabel(depth+2, fmt.Sprintf("break;\n"))
 				f.PrintLabel(depth+1, fmt.Sprintf("case %d: \n", currEntryPoint))
+				f.PrintLabel(depth+1, fmt.Sprintf("{\n"))
 				break
 
 			case syntax.COMMA: // ','
@@ -390,8 +389,9 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 		}
 	}
 
-	f.PrintLabel(depth+1, fmt.Sprintf("break;\n")) // last case break
-	f.PrintLabel(1, "} // case block end\n")       //case block end
+	f.PrintLabel(depth+2, fmt.Sprintf("break;\n")) // last case break
+	f.PrintLabel(depth+1, fmt.Sprintf("}\n"))      // last case }
+	f.PrintLabel(1, "} // switch block end\n")     //switch block end
 	f.FuncDataMemoryFree(1)
 	f.PrintLabel(0, fmt.Sprintf("} // %s\n\n", currFunc.FuncName)) // func block end
 }

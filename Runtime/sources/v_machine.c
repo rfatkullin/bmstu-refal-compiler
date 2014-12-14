@@ -79,7 +79,7 @@ void mainLoop(struct func_result_t (*firstFuncPtr)(int entryPoint, struct env_t*
 		switch (funcRes.status)
 		{
 			case OK_RESULT:
-				insertTermChainToFieldOfView(fieldOfView, funcRes.resChain);
+				insertTermChainToFieldOfView(fieldOfView, funcRes.mainChain);
 
 				if (funcRes.callChain != 0)
 					fcTerm = insertFuncCallToCallChain(fcTerm, funcRes.callChain);

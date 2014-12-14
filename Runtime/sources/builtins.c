@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "l_term.h"
 #include "builtins.h"
-#include "memory_manager.h"
 
 #define N 256
 
@@ -25,25 +23,29 @@ struct l_term* card(struct l_term* expr)
 	}
 }
 
-struct l_term* prout(struct l_term* expr)
+struct func_result_t prout(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView)
 {
-	struct l_term* currTerm = expr;
+	struct l_term* currExpr = fieldOfView->current->begin;
 
-	while (currTerm != NULL)
+	while (currExpr != 0)
 	{
-		if (expr->tag == L_TERM_RANGE_TAG)
+		if (currExpr->tag == L_TERM_FRAGMENT_TAG)
 		{
-			printRange(expr->range);
+			printRange(currExpr->fragment);
 		}
-		else
+		else if (currExpr->tag == L_TERM_CHAIN_TAG)
 		{
-			printf("(");
-			prout(expr->chain);
-			printf(")");
+			printf("[Error] !!!\n");
 		}
+
+		currExpr = currExpr->next;
 	}
 
-	return NULL;
+	struct l_term_chain_t* mainChain = (struct l_term_chain_t*)malloc(sizeof(struct l_term_chain_t));
+	mainChain->begin = 0;
+	mainChain->end = 0;
+
+	return (struct func_result_t){.status = OK_RESULT, .mainChain = mainChain, .callChain = 0};
 }
 
 static void printRange(struct fragment* frag)

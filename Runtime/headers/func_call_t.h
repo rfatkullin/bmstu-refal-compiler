@@ -25,7 +25,7 @@ struct field_view_t
 
 	//Список всех полей видимости. Необходим для восстановления
 	//текущего поля видимости при откатах.
-	struct l_term* backups;
+	struct l_term_chain_t* backups;
 };
 
 /*

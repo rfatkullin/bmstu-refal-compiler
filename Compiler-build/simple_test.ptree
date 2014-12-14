@@ -1,4 +1,33 @@
  Builtins: 
+Func
+ IsEntry: false
+ IsIdent: true
+ IsSe: false
+ Rollback: false
+
+ Nested funcs num: 0
+ Parent scope is not exists
+ Vars: 
+  e: 
+  v: 
+  t: 
+  s: 
+
+ <---Sentence #0--->
+  Nested funcs num: 0
+  Parent scope is not exists
+  Vars: 
+   e: 
+   v: 
+   t: 
+   s: 
+
+  Pattern:
+
+  Actions:
+   '=':
+
+
 Go
  IsEntry: true
  IsIdent: true
@@ -29,32 +58,3 @@ Go
       (
         1
       )
-
-Func
- IsEntry: false
- IsIdent: true
- IsSe: false
- Rollback: false
-
- Nested funcs num: 0
- Parent scope is not exists
- Vars: 
-  e: 
-  v: 
-  t: 
-  s: 
-
- <---Sentence #0--->
-  Nested funcs num: 0
-  Parent scope is not exists
-  Vars: 
-   e: 
-   v: 
-   t: 
-   s: 
-
-  Pattern:
-
-  Actions:
-   '=':
-
