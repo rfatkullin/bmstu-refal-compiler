@@ -32,10 +32,11 @@ static struct l_term_chain_t* ConstructEmptyLTermChain()
 	return chain;
 }
 
-static struct func_call_t* ConstructStartFunc(struct func_result_t (*firstFuncPtr)(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView))
+static struct func_call_t* ConstructStartFunc(const char* funcName, struct func_result_t (*firstFuncPtr)(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView))
 {
 	struct func_call_t* goCall = (struct func_call_t*)malloc(sizeof(struct func_call_t));
 
+	goCall->funcName = funcName;
 	goCall->funcPtr = firstFuncPtr;
 
 	goCall->env = (struct env_t*)malloc(sizeof(struct env_t));
@@ -57,7 +58,7 @@ static struct l_term* ConstructStartFieldOfView(struct func_result_t (*firstFunc
 	struct l_term* term = (struct l_term*)malloc(sizeof(struct l_term));
 
 	term->tag = L_TERM_FUNC_CALL;
-	term->funcCall = ConstructStartFunc(firstFuncPtr);
+	term->funcCall = ConstructStartFunc("Go", firstFuncPtr);
 	term->prev = 0;
 	term->next = 0;
 
@@ -81,8 +82,10 @@ void mainLoop(struct func_result_t (*firstFuncPtr)(int entryPoint, struct env_t*
 			case OK_RESULT:
 				insertTermChainToFieldOfView(fieldOfView, funcRes.mainChain);
 
-				if (funcRes.callChain != 0)
+				if (funcRes.callChain->begin != 0)
 					fcTerm = insertFuncCallToCallChain(fcTerm, funcRes.callChain);
+				else
+					fcTerm = fcTerm->next;
 
 				break;
 
@@ -100,11 +103,17 @@ void mainLoop(struct func_result_t (*firstFuncPtr)(int entryPoint, struct env_t*
 
 static void insertTermChainToFieldOfView(struct l_term* mainChain, struct l_term_chain_t* insertChain)
 {
-	mainChain->prev->next = insertChain->begin;
-	insertChain->begin->prev = mainChain->prev;
+	if (mainChain->prev)
+	{
+		mainChain->prev->next = insertChain->begin;
+		insertChain->begin->prev = mainChain->prev;
+	}
 
-	insertChain->end->next = mainChain->next;
-	mainChain->next->prev = insertChain->end;
+	if (mainChain->next)
+	{
+		insertChain->end->next = mainChain->next;
+		mainChain->next->prev = insertChain->end;
+	}
 }
 
 static struct l_term* insertFuncCallToCallChain(struct l_term* mainChain, struct l_term_chain_t* insertChain)

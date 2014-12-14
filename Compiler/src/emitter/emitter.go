@@ -39,13 +39,13 @@ func (f *Data) FuncDataMemoryAllocation(depth int, funcInfo *syntax.Function) {
 }
 
 func (f *Data) FuncDataMemoryFree(depth int) {
-	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%sif (funcRes.status != CALL_RESULT)\n", tabs)
-	fmt.Fprintf(f, "%s{\n", tabs)
-	fmt.Fprintf(f, "%s%sfree(env->locals);\n", tabs, tab)
-	fmt.Fprintf(f, "%s%sfree(fieldOfView->backups);\n", tabs, tab)
-	fmt.Fprintf(f, "%s}\n", tabs)
+	f.PrintLabel(depth, "if (funcRes.status != CALL_RESULT)\n")
+	f.PrintLabel(depth, "{\n")
+	f.PrintLabel(depth+1, "free(env->locals);\n")
+	f.PrintLabel(depth+1, "free(fieldOfView->backups);\n")
+	f.PrintLabel(depth, "}\n")
+	f.PrintLabel(depth, "return funcRes;\n")
 }
 
 func (f *Data) releaseOkVar(tabs string) {
@@ -212,11 +212,14 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 		exprsDepth := f.MaxDepth(resultExpr)
 
 		f.PrintLabel(depth, "struct l_term_chain_t* funcCallChain = (struct l_term_chain_t*)malloc(sizeof(struct l_term_chain_t));\n")
+		f.PrintLabel(depth, "funcCallChain->begin = 0;\n")
+		f.PrintLabel(depth, "funcCallChain->end = 0;\n")
 		f.PrintLabel(depth, "struct func_call_t* funcCall;\n")
 		f.PrintLabel(depth, fmt.Sprintf("struct l_term** helper = (struct l_term**)malloc(%d * sizeof(struct l_term*));\n", exprsDepth))
 		f.PrintLabel(depth, "int i;\n")
 		f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; ++i)\n", exprsDepth))
 		f.PrintLabel(depth, "{\n")
+		f.PrintLabel(depth+1, "helper[i] = (struct l_term*)malloc(sizeof(struct l_term));\n")
 		f.PrintLabel(depth+1, "helper[i]->chain = (struct l_term_chain_t*)malloc(sizeof(struct l_term_chain_t));\n")
 		f.PrintLabel(depth, "}\n")
 
@@ -230,12 +233,12 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 		fragmentLength := 0
 
 		exprLen := make([]int, exprsDepth, exprsDepth)
-		exprCurrTermNum := make([]int, exprsDepth, exprsDepth)
+		exprCurrLTermNum := make([]int, exprsDepth, exprsDepth)
 		exprType := make([]syntax.TermTag, exprsDepth, exprsDepth)
 		funcName := make([]string, exprsDepth, exprsDepth)
 
 		exprLen[0] = len(terms)
-		exprCurrTermNum[0] = 0
+		exprCurrLTermNum[0] = 0
 		exprIndex := 0
 
 		for exprLen[0] > 0 {
@@ -260,15 +263,15 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 
 				fragmentLength++
 				exprLen[exprIndex]--
-				exprCurrTermNum[exprIndex]++
 
 				break
 			case syntax.EXPR, syntax.EVAL:
 
 				f.PrintLabel(depth, fmt.Sprintf("/*Start expr %d with %d terms*/;\n", exprIndex+1, len(term.Exprs[0].Terms)))
 				if fragmentLength > 0 {
-					f.ConstructFragmentLTerm(depth, exprCurrTermNum[exprIndex] == 1, exprIndex, fragmentOffset, fragmentLength)
+					f.ConstructFragmentLTerm(depth, exprCurrLTermNum[exprIndex] == 0, exprIndex, fragmentOffset, fragmentLength)
 					fragmentLength = 0
+					exprCurrLTermNum[exprIndex]++
 				}
 
 				tmpTerms := append(make([]*syntax.Term, 0, len(term.Exprs[0].Terms)+len(terms)), term.Exprs[0].Terms...)
@@ -278,7 +281,7 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 				exprIndex++
 				exprType[exprIndex] = term.TermTag
 				exprLen[exprIndex] = len(term.Exprs[0].Terms)
-				exprCurrTermNum[exprIndex] = 0
+				exprCurrLTermNum[exprIndex] = 0
 
 				if term.TermTag == syntax.EVAL {
 					funcName[exprIndex] = term.Exprs[0].Terms[0].Value.Name
@@ -296,13 +299,14 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 			for exprIndex >= 0 && exprLen[exprIndex] == 0 {
 
 				if fragmentLength > 0 {
-					f.ConstructFragmentLTerm(depth, exprCurrTermNum[exprIndex] == 1, exprIndex, fragmentOffset, fragmentLength)
+					f.ConstructFragmentLTerm(depth, exprCurrLTermNum[exprIndex] == 0, exprIndex, fragmentOffset, fragmentLength)
 					fragmentLength = 0
+					exprCurrLTermNum[exprIndex]++
 				}
 
 				f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->end->next = 0;\n", exprIndex))
 
-				exprCurrTermNum[exprIndex] = 0
+				exprCurrLTermNum[exprIndex] = 0
 				exprLen[exprIndex] = 0
 
 				if exprType[exprIndex] == syntax.EVAL {
@@ -327,9 +331,9 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 				if exprIndex >= 0 {
 					exprLen[exprIndex]--
 
-					exprCurrTermNum[exprIndex]++
+					exprCurrLTermNum[exprIndex]++
 
-					if exprCurrTermNum[exprIndex] == 1 {
+					if exprCurrLTermNum[exprIndex] == 1 {
 						f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->begin = helper[%d];\n", exprIndex, exprIndex+1))
 						f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->end = helper[%d];\n", exprIndex, exprIndex+1))
 					} else {
