@@ -195,12 +195,46 @@ func (f *Data) ConstructFragmentLTerm(depth int, firstTerm bool, exprIndex int, 
 	}
 }
 
-func (f *Data) ConstructFuncCall(depth int, funcName string, exprIndex int) {
+func (f *Data) ConstructFuncCall(depth int, firstFuncCall bool, funcName string, exprIndex int) {
+
+	f.PrintLabel(depth, fmt.Sprintf("helper[%d]->tag = L_TERM_FUNC_CALL;\n", exprIndex))
+
+	if firstFuncCall {
+		f.PrintLabel(depth, fmt.Sprintf("funcCallChain->begin = helper[%d];\n", exprIndex))
+		f.PrintLabel(depth, fmt.Sprintf("funcCallChain->end = helper[%d];\n", exprIndex))
+	} else {
+		f.PrintLabel(depth, fmt.Sprintf("funcCallChain->end->funcCall->next = helper[%d];\n", exprIndex))
+	}
+
 	f.PrintLabel(depth, "funcCall = (struct func_call_t*)malloc(sizeof(struct func_call_t));\n")
-	f.PrintLabel(depth, fmt.Sprintf("funcCall->funcName = memMngr.literlTermsHeap[helper[%d]->begin->fragment->offset]->str;\n", exprIndex))
-	f.PrintLabel(depth, fmt.Sprintf("funcCall->funcPtr = %s;\n", funcName[exprIndex]))
+	f.PrintLabel(depth, fmt.Sprintf("funcCall->funcName = memMngr.literalTermsHeap[helper[%d]->chain->begin->fragment->offset].str;\n", exprIndex))
+	f.PrintLabel(depth, fmt.Sprintf("funcCall->funcPtr = %s;\n", funcName))
 	f.PrintLabel(depth, "funcCall->entryPoint = 0;\n")
-	f.PrintLabel(depth, fmt.Sprintf("helper[%d]->begin->fragment->offset += 1;\n", exprIndex))
+	f.PrintLabel(depth, "funcCall->fieldOfView = (struct field_view_t*)malloc(sizeof(struct field_view_t));\n")
+	f.PrintLabel(depth, fmt.Sprintf("funcCall->fieldOfView->current = helper[%d]->chain;\n", exprIndex))
+	f.PrintLabel(depth, fmt.Sprintf("helper[%d]->funcCall = funcCall;\n", exprIndex))
+}
+
+func IsLiteral(termTag syntax.TermTag) bool {
+
+	switch termTag {
+	case syntax.STR, syntax.COMP, syntax.INT, syntax.FLOAT:
+		return true
+	}
+
+	return false
+}
+
+func (f *Data) ConstructRelationships(depth int, firstTerm bool, prevIndex int, nextIndex int) {
+
+	if firstTerm {
+		f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->begin = helper[%d];\n", prevIndex, nextIndex))
+		f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->end = helper[%d];\n", prevIndex, nextIndex))
+	} else {
+		f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->end->next = helper[%d];\n", prevIndex, nextIndex))
+		f.PrintLabel(depth, fmt.Sprintf("helper[%d]->prev = helper[%d]->chain->end;\n", nextIndex, prevIndex))
+		f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->end = helper[%d];\n", prevIndex, nextIndex))
+	}
 }
 
 func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
@@ -243,13 +277,6 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 
 		for exprLen[0] > 0 {
 
-			for _, val := range exprLen {
-
-				fmt.Printf("%d ", val)
-			}
-
-			fmt.Printf("\t|%d\n", len(terms))
-
 			term := terms[0]
 			terms = terms[1:]
 
@@ -257,22 +284,22 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 
 			case syntax.STR, syntax.COMP, syntax.INT, syntax.FLOAT:
 
-				if fragmentLength == 0 {
-					fragmentOffset = term.Index
+				fragmentLength = 1
+				fragmentOffset = term.Index
+				for _, val := range terms {
+					if IsLiteral(val.TermTag) {
+						fragmentLength++
+					}
 				}
 
-				fragmentLength++
-				exprLen[exprIndex]--
-
+				exprLen[exprIndex] -= fragmentLength
+				terms = terms[fragmentLength-1:]
+				exprCurrLTermNum[exprIndex]++
+				firstTerm := exprCurrLTermNum[exprIndex] == 1
+				f.ConstructFragmentLTerm(depth, firstTerm, exprIndex, fragmentOffset, fragmentLength)
 				break
-			case syntax.EXPR, syntax.EVAL:
 
-				f.PrintLabel(depth, fmt.Sprintf("/*Start expr %d with %d terms*/;\n", exprIndex+1, len(term.Exprs[0].Terms)))
-				if fragmentLength > 0 {
-					f.ConstructFragmentLTerm(depth, exprCurrLTermNum[exprIndex] == 0, exprIndex, fragmentOffset, fragmentLength)
-					fragmentLength = 0
-					exprCurrLTermNum[exprIndex]++
-				}
+			case syntax.EXPR, syntax.EVAL:
 
 				tmpTerms := append(make([]*syntax.Term, 0, len(term.Exprs[0].Terms)+len(terms)), term.Exprs[0].Terms...)
 				tmpTerms = append(tmpTerms, terms...)
@@ -296,60 +323,31 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 
 			} //switch
 
-			for exprIndex >= 0 && exprLen[exprIndex] == 0 {
+			//Обработали последний элемент в подвыражении(Например: термы в скобках, термы внутри скобок вычисления)
+			for exprLen[exprIndex] == 0 {
 
-				if fragmentLength > 0 {
-					f.ConstructFragmentLTerm(depth, exprCurrLTermNum[exprIndex] == 0, exprIndex, fragmentOffset, fragmentLength)
-					fragmentLength = 0
-					exprCurrLTermNum[exprIndex]++
-				}
-
-				f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->end->next = 0;\n", exprIndex))
-
-				exprCurrLTermNum[exprIndex] = 0
-				exprLen[exprIndex] = 0
-
-				if exprType[exprIndex] == syntax.EVAL {
-					f.PrintLabel(depth, fmt.Sprintf("helper[%d]->tag = L_TERM_FUNC_CALL;\n", exprIndex))
-
-					if !isThereEvalTerm {
-						f.PrintLabel(depth, fmt.Sprintf("funcCallChain->begin = helper[%d];\n", exprIndex))
-						f.PrintLabel(depth, fmt.Sprintf("funcCallChain->end = helper[%d];\n", exprIndex))
-						isThereEvalTerm = true
-					} else {
-						f.PrintLabel(depth, fmt.Sprintf("funcCallChain->chain->end->funcCall->next = helper[%d];\n", exprIndex))
-					}
-
-					f.ConstructFuncCall(depth, funcName[exprIndex], exprIndex)
-
-				} else {
+				switch exprType[exprIndex] {
+				case syntax.EVAL:
+					f.ConstructFuncCall(depth, !isThereEvalTerm, funcName[exprIndex], exprIndex)
+					isThereEvalTerm = true
+					break
+				case syntax.EXPR:
 					f.PrintLabel(depth, fmt.Sprintf("helper[%d]->tag = L_TERM_CHAIN_TAG;\n", exprIndex))
+					break
 				}
 
 				exprIndex--
-
-				if exprIndex >= 0 {
-					exprLen[exprIndex]--
-
-					exprCurrLTermNum[exprIndex]++
-
-					if exprCurrLTermNum[exprIndex] == 1 {
-						f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->begin = helper[%d];\n", exprIndex, exprIndex+1))
-						f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->end = helper[%d];\n", exprIndex, exprIndex+1))
-					} else {
-						f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->end->next = helper[%d];\n", exprIndex, exprIndex+1))
-						f.PrintLabel(depth, fmt.Sprintf("helper[%d]->prev = helper[%d]->chain->end;\n", exprIndex+1, exprIndex))
-						f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->end = helper[%d];\n", exprIndex, exprIndex+1))
-					}
+				if exprIndex < 0 {
+					break
 				}
 
-				f.PrintLabel(depth, fmt.Sprintf("/*End expr %d*/;\n", exprIndex+1))
-			}
-		} //for
+				exprLen[exprIndex]--
+				exprCurrLTermNum[exprIndex]++
+				firstTerm := exprCurrLTermNum[exprIndex] == 1
 
-		f.PrintLabel(depth, "helper[0]->tag = L_TERM_CHAIN_TAG;\n")
-		f.PrintLabel(depth, "helper[0]->chain->begin->prev = 0;\n")
-		f.PrintLabel(depth, "helper[0]->chain->end->next = 0;\n")
+				f.ConstructRelationships(depth, firstTerm, exprIndex, exprIndex+1)
+			}
+		}
 
 		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .mainChain = helper[0]->chain, .callChain = funcCallChain};\n")
 	}

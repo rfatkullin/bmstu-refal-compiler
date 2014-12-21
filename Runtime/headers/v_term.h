@@ -8,6 +8,8 @@
 #define V_CLOSURE_TAG	4
 #define V_BRACKET		5
 
+#include <stdint.h>
+
 struct v_closure
 {
 	//struct v_symbol* func_name;
@@ -28,5 +30,7 @@ struct v_term
 		uint32_t inBracketLength;
 	};
 };
+
+void printSymbol(struct v_term* term);
 
 #endif

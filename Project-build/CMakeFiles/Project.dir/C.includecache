@@ -13,6 +13,16 @@ memory_manager.h
 -
 v_machine.h
 -
+builtins.h
+-
+
+/home/rustam/Diploma/Runtime/headers/builtins.h
+l_term.h
+/home/rustam/Diploma/Runtime/headers/l_term.h
+memory_manager.h
+/home/rustam/Diploma/Runtime/headers/memory_manager.h
+func_call_t.h
+/home/rustam/Diploma/Runtime/headers/func_call_t.h
 
 /home/rustam/Diploma/Runtime/headers/fresult_t.h
 l_term.h
@@ -47,4 +57,6 @@ func_call_t.h
 /home/rustam/Diploma/Runtime/headers/func_call_t.h
 
 /home/rustam/Diploma/Runtime/headers/v_term.h
+stdint.h
+-
 

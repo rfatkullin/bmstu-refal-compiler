@@ -6,7 +6,8 @@
 
 static void printChainOfCalls(struct l_term* callTerm);
 static void insertTermChainToFieldOfView(struct l_term* mainChain, struct l_term_chain_t* insertChain);
-static struct l_term* insertFuncCallToCallChain(struct l_term* mainChain, struct l_term_chain_t* insertChain);
+static void insertFuncCallToCallChain(struct l_term* mainChain, struct l_term_chain_t* insertChain);
+static struct l_term* ToNextFuncCall(struct l_term* funcCallTerm);
 
 //struct l_term* createLTermFuncCall(const char* funcName, struct l_term* prev, struct l_term* (*func)(void* args), struct l_term* args, void* stackArgs)
 //{
@@ -80,12 +81,14 @@ void mainLoop(struct func_result_t (*firstFuncPtr)(int entryPoint, struct env_t*
 		switch (funcRes.status)
 		{
 			case OK_RESULT:
-				insertTermChainToFieldOfView(fieldOfView, funcRes.mainChain);
 
-				if (funcRes.callChain->begin != 0)
-					fcTerm = insertFuncCallToCallChain(fcTerm, funcRes.callChain);
-				else
-					fcTerm = fcTerm->next;
+				if (funcRes.mainChain)
+					insertTermChainToFieldOfView(fieldOfView, funcRes.mainChain);
+
+				if (funcRes.callChain)
+					insertFuncCallToCallChain(fcTerm, funcRes.callChain);
+
+				fcTerm = ToNextFuncCall(fcTerm);
 
 				break;
 
@@ -99,6 +102,21 @@ void mainLoop(struct func_result_t (*firstFuncPtr)(int entryPoint, struct env_t*
 				break;
 		}
 	}
+}
+
+static struct l_term* ToNextFuncCall(struct l_term* funcCallTerm)
+{
+	if (funcCallTerm->prev)
+		funcCallTerm->prev->next = funcCallTerm->next;
+
+	if (funcCallTerm->next)
+		funcCallTerm->next->prev = funcCallTerm->prev;
+
+	struct l_term* newFuncCall = funcCallTerm->funcCall->next;
+
+	free(funcCallTerm);
+
+	return newFuncCall;
 }
 
 static void insertTermChainToFieldOfView(struct l_term* mainChain, struct l_term_chain_t* insertChain)
@@ -116,22 +134,26 @@ static void insertTermChainToFieldOfView(struct l_term* mainChain, struct l_term
 	}
 }
 
-static struct l_term* insertFuncCallToCallChain(struct l_term* mainChain, struct l_term_chain_t* insertChain)
+static void insertFuncCallToCallChain(struct l_term* mainChain, struct l_term_chain_t* insertChain)
 {
 	insertChain->end->funcCall->next = mainChain->funcCall->next;
-
-	//TO FIX: Пока так.
-	free(mainChain);
-
-	return insertChain->begin;
+	mainChain->funcCall->next = insertChain->begin;
 }
 
 static void printChainOfCalls(struct l_term* callTerm)
 {
 	while (callTerm)
 	{
-		printf("%s%s", callTerm->funcCall->funcName, callTerm->funcCall->next ? "->" : "");
-		callTerm = callTerm->funcCall->next;
+		if (callTerm->funcCall)
+		{
+			printf("%s%s", callTerm->funcCall->funcName, callTerm->funcCall->next ? "->" : "");
+			callTerm = callTerm->funcCall->next;
+		}
+		else
+		{
+			printf("[Error]: Bad func call term!\n");
+			break;
+		}
 	}
 
 	printf("\n");

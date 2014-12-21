@@ -1,4 +1,4 @@
- Builtins: 
+ Builtins: Prout
 Go
  IsEntry: true
  IsIdent: true
@@ -26,6 +26,9 @@ Go
 
   Actions:
    '=':
-     1
-     2
-     3
+      <
+        Prout
+        1
+        2
+        3
+      >

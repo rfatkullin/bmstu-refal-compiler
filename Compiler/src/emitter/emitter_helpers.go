@@ -80,7 +80,9 @@ func (f *Data) initActionData(depth int, expr syntax.Expr) {
 			break
 
 		case syntax.EVAL:
-			//TO DO
+			tmpTerms := append(make([]*syntax.Term, 0, len(term.Exprs[0].Terms)+len(terms)), term.Exprs[0].Terms...)
+			tmpTerms = append(tmpTerms, terms...)
+			terms = tmpTerms
 			break
 
 		case syntax.FUNC:
@@ -154,6 +156,7 @@ func (f *Data) initLiteralDataFunc(depth int) {
 	fmt.Fprintf(f, "%sinitAllocator(1024 * 1024 * 1024);\n", tabs)
 	f.initData(depth + 1)
 	fmt.Fprintf(f, "%sinitHeaps(2);\n", tabs)
+	fmt.Fprintf(f, "%sdebugLiteralsPrint();\n", tabs)
 	fmt.Fprintf(f, "} // __initLiteralData()\n\n")
 }
 
@@ -162,6 +165,7 @@ func (f *Data) PrintHeaders() {
 	f.PrintLabel(0, "#include <stdlib.h>\n\n")
 	f.PrintLabel(0, "#include <memory_manager.h>\n")
 	f.PrintLabel(0, "#include <v_machine.h>\n")
+	f.PrintLabel(0, "#include <builtins.h>\n")
 
 	f.PrintLabel(0, "\n")
 }

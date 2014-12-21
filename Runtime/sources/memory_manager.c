@@ -38,6 +38,16 @@ struct v_term* allocate(struct l_term* expr)
 
 }
 
+//TO FIX: сделать проверку переполнения памяти.
+uint32_t allocateSymbol(char ch)
+{
+	struct v_term* term = memMngr.activeTermsHeap + memMngr.vtermsOffset;
+	term->tag =V_CHAR_TAG;
+	term->ch = ch;
+
+	return memMngr.vtermsOffset++;
+}
+
 struct l_term* allocateVector(int strLen, char* str)
 {
 	uint32_t i = 0;
@@ -100,7 +110,20 @@ void initHeaps(uint32_t newSegmentLen)
 
 	printf("Total used memory:                    %.2f Kb\n", byte2KByte(usedMemory));
 
+	memMngr.literalVTermsNumber = memMngr.literalTermsHeap - (struct v_term*)memMngr.mainHeap;
 	memMngr.literalTermsHeap = (struct v_term*)memMngr.mainHeap;
+}
+
+void debugLiteralsPrint()
+{
+	printf("vterms debug print:\n\t");
+	int i;
+	for (i = 0; i < memMngr.literalVTermsNumber; ++i)
+	{
+		printSymbol(memMngr.literalTermsHeap + i);
+	}
+
+	printf("\n");
 }
 
 static struct l_term* allocateLTerm(uint32_t offset, uint32_t len)

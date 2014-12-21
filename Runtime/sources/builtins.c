@@ -5,25 +5,44 @@
 
 #define N 256
 
-static void printSymbol(struct v_term* term);
 static void printRange(struct fragment* frag);
 
-struct l_term* card(struct l_term* expr)
+struct func_result_t Card(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView)
 {
-	static char buff[N];
+	char ch;
+	uint32_t lastOffset;
+	uint32_t firstOffset;
+	struct l_term_chain_t* mainChain;
 
-	if (fgets(buff, N, stdin) != NULL)
+
+	if((ch = getchar()) != EOF)
 	{
-		int len = strlen(buff) - 1;
-		return allocateVector(len, buff);
+		firstOffset = lastOffset = allocateSymbol(ch);
+
+		while ((ch = getchar()) != EOF)
+		{
+			lastOffset = allocateSymbol(ch);
+		}
+
+		mainChain = (struct l_term_chain_t*)malloc(sizeof(struct l_term_chain_t));
+		mainChain->begin = (struct l_term*)malloc(sizeof(struct l_term));
+		mainChain->end = mainChain->begin;
+
+		mainChain->begin->tag = L_TERM_FRAGMENT_TAG;
+		mainChain->begin->fragment = (struct fragment*)malloc(sizeof(struct fragment));
+		mainChain->begin->fragment->offset = firstOffset;
+		mainChain->begin->fragment->length = lastOffset - firstOffset;
 	}
 	else
 	{
-		return NULL;
+		mainChain = 0;
 	}
+
+
+	return (struct func_result_t){.status = OK_RESULT, .mainChain = 0, .callChain = 0};
 }
 
-struct func_result_t prout(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView)
+struct func_result_t Prout(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView)
 {
 	struct l_term* currExpr = fieldOfView->current->begin;
 
@@ -55,26 +74,4 @@ static void printRange(struct fragment* frag)
 
 	for (i = 0; i < frag->length; ++i)
 		printSymbol(currTerm + i);
-}
-
-static void printSymbol(struct v_term* term)
-{
-	switch (term->tag)
-	{
-	case V_CHAR_TAG:
-		printf("%c ", term->str[0]);
-		break;
-	case V_IDENT_TAG:
-		printf("%s ", term->str);
-		break;
-	case V_INT_NUM_TAG:
-		printf("%d ", term->intNum);
-		break;
-	case V_CLOSURE_TAG:
-		//TO DO
-			break;
-	case V_BRACKET:
-		printf("%c", term->inBracketLength > 0 ? '(' : ')');
-		break;
-	}
 }

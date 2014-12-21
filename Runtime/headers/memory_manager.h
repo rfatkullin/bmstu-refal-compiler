@@ -44,6 +44,7 @@ struct memory_manager
 	uint32_t ltermsOffset;
 
 	uint32_t vtermsCount;
+	uint32_t literalVTermsNumber;
 
 	//Количество элементов в листе дерева отрезков
 	uint32_t segmentLen;
@@ -71,5 +72,11 @@ void collectGarbage(struct l_term* expr);
 
 /// Выделяет память под строку и возвращает результат.
 struct l_term* allocateVector(int strLen, char* str);
+
+/// Выделяет память под один символ и возвращает смещение для v_term
+uint32_t allocateSymbol(char str);
+
+/// Дебажный вывод vterm
+void debugLiteralsPrint();
 
 #endif

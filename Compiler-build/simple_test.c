@@ -1,32 +1,9 @@
-// file:../Compiler-build/../Compiler-build/simple_test.ref
+// file:/home/rustam/Diploma/Compiler-build/simple_test.ref
 
 #include <stdlib.h>
 
 #include <memory_manager.h>
 #include <v_machine.h>
-
-struct func_result_t Func(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView) 
-{
-	struct func_result_t funcRes;
-	if (entryPoint == 0)
-	{
-		env->locals = (struct l_term*)malloc(1 * sizeof(struct l_term));
-		fieldOfView->backups = (struct l_term_chain_t*)malloc(1 * sizeof(struct l_term_chain_t));
-	}
-	switch (entryPoint)
-	{
-		case 0: 
-		{
-			funcRes = (struct func_result_t){.status = OK_RESULT, .mainChain = 0, .callChain = 0};
-			break;
-		}
-	} // switch block end
-	if (funcRes.status != CALL_RESULT)
-	{
-		free(env->locals);
-		free(fieldOfView->backups);
-	}
-} // Func
 
 struct func_result_t Go(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView) 
 {
@@ -41,11 +18,14 @@ struct func_result_t Go(int entryPoint, struct env_t* env, struct field_view_t* 
 		case 0: 
 		{
 			struct l_term_chain_t* funcCallChain = (struct l_term_chain_t*)malloc(sizeof(struct l_term_chain_t));
+			funcCallChain->begin = 0;
+			funcCallChain->end = 0;
 			struct func_call_t* funcCall;
 			struct l_term** helper = (struct l_term**)malloc(2 * sizeof(struct l_term*));
 			int i;
 			for (i = 0; i < 2; ++i)
 			{
+				helper[i] = (struct l_term*)malloc(sizeof(struct l_term));
 				helper[i]->chain = (struct l_term_chain_t*)malloc(sizeof(struct l_term_chain_t));
 			}
 			struct l_term* currTerm = 0;
@@ -78,7 +58,32 @@ struct func_result_t Go(int entryPoint, struct env_t* env, struct field_view_t* 
 		free(env->locals);
 		free(fieldOfView->backups);
 	}
+	return funcRes;
 } // Go
+
+struct func_result_t Func(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView) 
+{
+	struct func_result_t funcRes;
+	if (entryPoint == 0)
+	{
+		env->locals = (struct l_term*)malloc(1 * sizeof(struct l_term));
+		fieldOfView->backups = (struct l_term_chain_t*)malloc(1 * sizeof(struct l_term_chain_t));
+	}
+	switch (entryPoint)
+	{
+		case 0: 
+		{
+			funcRes = (struct func_result_t){.status = OK_RESULT, .mainChain = 0, .callChain = 0};
+			break;
+		}
+	} // switch block end
+	if (funcRes.status != CALL_RESULT)
+	{
+		free(env->locals);
+		free(fieldOfView->backups);
+	}
+	return funcRes;
+} // Func
 
 void __initLiteralData()
 {

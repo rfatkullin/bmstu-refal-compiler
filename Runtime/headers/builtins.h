@@ -5,7 +5,7 @@
 #include "memory_manager.h"
 #include "func_call_t.h"
 
-struct func_result_t prout(int entryPoint, struct env_t* env, struct field_view_t* filedOfView);
-struct l_term* card(struct l_term* expr);
+struct func_result_t Prout(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView);
+struct func_result_t Card(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView);
 
 #endif

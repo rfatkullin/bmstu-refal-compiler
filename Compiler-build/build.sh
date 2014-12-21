@@ -13,7 +13,7 @@ function Fail
 	exit 1;
 }
 
-go install ../Compiler/src/refalc/refalc.go
+go install -compiler gccgo ../Compiler/src/refalc/refalc.go
 
 if [ "$?" != 0 ] ; then
 	Fail "Can't build compiler"

@@ -19,8 +19,16 @@ if [ "$?" != 0 ] ; then
 	Fail "Compiler-build error"
 fi
 
-cp ../Compiler-build/${sourceBaseName}.c ../Project/main.c
+#Собираем рантайм
+cd ../Runtime-build
+make
+if [ "$?" != 0 ] ; then
+	Fail "Runtime-build error"
+fi
 
+#Собираем весь проект
+cp ../Compiler-build/${sourceBaseName}.c ../Project/main.c
+cd -
 make
 
 if [ "$?" != 0 ] ; then
