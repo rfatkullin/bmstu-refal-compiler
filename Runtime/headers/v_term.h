@@ -6,7 +6,7 @@
 #define V_INT_NUM_TAG	2
 #define V_FLOAT_NUM_TAG	3
 #define V_CLOSURE_TAG	4
-#define V_BRACKET		5
+#define V_BRACKET_TAG	5
 
 #include <stdint.h>
 

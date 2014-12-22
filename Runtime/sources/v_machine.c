@@ -3,11 +3,13 @@
 
 #include "func_call_t.h"
 #include "v_machine.h"
+#include "memory_manager.h"
 
 static void printChainOfCalls(struct l_term* callTerm);
-static void insertTermChainToFieldOfView(struct l_term* mainChain, struct l_term_chain_t* insertChain);
-static void insertFuncCallToCallChain(struct l_term* mainChain, struct l_term_chain_t* insertChain);
+static void updateFieldOfView(struct l_term* mainChain, struct func_result_t* funcResult);
 static struct l_term* ToNextFuncCall(struct l_term* funcCallTerm);
+static void assemblyChain(struct l_term_chain_t* chain);
+static struct l_term_chain_t* getAssembliedChain(struct l_term_chain_t* oldChain);
 
 //struct l_term* createLTermFuncCall(const char* funcName, struct l_term* prev, struct l_term* (*func)(void* args), struct l_term* args, void* stackArgs)
 //{
@@ -76,18 +78,16 @@ void mainLoop(struct func_result_t (*firstFuncPtr)(int entryPoint, struct env_t*
 	{
 		printChainOfCalls(fcTerm);
 
+		if (fcTerm->funcCall->entryPoint == 0)
+			fcTerm->funcCall->fieldOfView->current = getAssembliedChain(fcTerm->funcCall->fieldOfView->current);
+
 		funcRes = fcTerm->funcCall->funcPtr(fcTerm->funcCall->entryPoint, fcTerm->funcCall->env, fcTerm->funcCall->fieldOfView);
 
 		switch (funcRes.status)
 		{
 			case OK_RESULT:
 
-				if (funcRes.mainChain)
-					insertTermChainToFieldOfView(fieldOfView, funcRes.mainChain);
-
-				if (funcRes.callChain)
-					insertFuncCallToCallChain(fcTerm, funcRes.callChain);
-
+				updateFieldOfView(fcTerm, &funcRes);
 				fcTerm = ToNextFuncCall(fcTerm);
 
 				break;
@@ -119,25 +119,36 @@ static struct l_term* ToNextFuncCall(struct l_term* funcCallTerm)
 	return newFuncCall;
 }
 
-static void insertTermChainToFieldOfView(struct l_term* mainChain, struct l_term_chain_t* insertChain)
+static void updateFieldOfView(struct l_term* mainChain, struct func_result_t* funcResult)
 {
-	if (mainChain->prev)
+	if (funcResult->mainChain)
 	{
-		mainChain->prev->next = insertChain->begin;
-		insertChain->begin->prev = mainChain->prev;
-	}
+		//Обновляем поле зрения
+		struct l_term_chain_t* insertChain = funcResult->mainChain;
+		if (mainChain->prev)
+		{
+			mainChain->prev->next = insertChain->begin;
+			insertChain->begin->prev = mainChain->prev;
+		}
+		if (mainChain->next)
+		{
+			insertChain->end->next = mainChain->next;
+			mainChain->next->prev = insertChain->end;
+		}
 
-	if (mainChain->next)
+		//Обновляем цепочку вызовов
+		struct l_term_chain_t* insertCallChain = funcResult->callChain;
+		insertCallChain->end->funcCall->next = mainChain->funcCall->next;
+		mainChain->funcCall->next = insertCallChain->begin;
+	}
+	else
 	{
-		insertChain->end->next = mainChain->next;
-		mainChain->next->prev = insertChain->end;
-	}
-}
+		if (mainChain->prev)
+			mainChain->prev->next = mainChain->next;
 
-static void insertFuncCallToCallChain(struct l_term* mainChain, struct l_term_chain_t* insertChain)
-{
-	insertChain->end->funcCall->next = mainChain->funcCall->next;
-	mainChain->funcCall->next = insertChain->begin;
+		if (mainChain->next)
+			mainChain->next->prev = mainChain->prev;
+	}
 }
 
 static void printChainOfCalls(struct l_term* callTerm)
@@ -158,3 +169,67 @@ static void printChainOfCalls(struct l_term* callTerm)
 
 	printf("\n");
 }
+
+static struct l_term_chain_t* getAssembliedChain(struct l_term_chain_t* chain)
+{
+	struct l_term_chain_t* newChain = (struct l_term_chain_t*)malloc(sizeof(struct l_term_chain_t));
+
+	if (chain != 0)
+	{
+		newChain->begin = newChain->end = (struct l_term*)malloc(sizeof(struct l_term));
+		newChain->begin->tag = L_TERM_FRAGMENT_TAG;
+		newChain->begin->fragment = (struct fragment*)malloc(sizeof(struct fragment));
+		newChain->begin->fragment->offset = memMngr.vtermsOffset;
+
+		assemblyChain(chain);
+
+		newChain->begin->fragment->length = memMngr.vtermsOffset - newChain->begin->fragment->offset;
+	}
+	else
+	{
+		newChain->begin = newChain->end = 0;
+	}
+
+	return newChain;
+}
+
+// TO FIX: Пока рекурсивно!
+static void assemblyChain(struct l_term_chain_t* chain)
+{
+	struct l_term* currTerm = chain->begin;
+
+	while (currTerm)
+	{
+		switch (currTerm->tag)
+		{
+			case L_TERM_FRAGMENT_TAG :
+				allocateVTerms(currTerm->fragment);
+				break;
+
+			case L_TERM_CHAIN_TAG:
+			{
+				uint32_t leftBracketOffset = allocateBracketVTerm(0);
+				assemblyChain(currTerm->chain);
+				changeBracketLength(leftBracketOffset, memMngr.vtermsOffset - leftBracketOffset);
+				allocateBracketVTerm(0);
+				break;
+			}
+		}
+
+		currTerm = currTerm->next;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

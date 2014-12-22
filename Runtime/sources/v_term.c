@@ -6,7 +6,7 @@ void printSymbol(struct v_term* term)
 	switch (term->tag)
 	{
 	case V_CHAR_TAG:
-		printf("%c ", term->str[0]);
+		printf("%c ", term->ch);
 		break;
 	case V_IDENT_TAG:
 		printf("%s ", term->str);
@@ -17,7 +17,7 @@ void printSymbol(struct v_term* term)
 	case V_CLOSURE_TAG:
 		//TO DO
 			break;
-	case V_BRACKET:
+	case V_BRACKET_TAG:
 		printf("%c ", term->inBracketLength > 0 ? '(' : ')');
 		break;
 	}

@@ -33,11 +33,6 @@ void collectGarbage(struct l_term* expr)
 	printf("End garbage collection. Time elapsed: %f\n", ((float)(end - start)) / CLOCKS_PER_SEC);
 }
 
-struct v_term* allocate(struct l_term* expr)
-{
-
-}
-
 //TO FIX: сделать проверку переполнения памяти.
 uint32_t allocateSymbol(char ch)
 {
@@ -47,6 +42,59 @@ uint32_t allocateSymbol(char ch)
 
 	return memMngr.vtermsOffset++;
 }
+
+//TO FIX: сделать проверку переполнения памяти.
+void allocateVTerms(struct fragment* frag)
+{
+	uint32_t i = 0;
+	for (i = 0; i < frag->length; ++i)
+	{
+		memMngr.activeTermsHeap[memMngr.vtermsOffset].tag = memMngr.activeTermsHeap[frag->offset + i].tag;
+
+		switch (memMngr.activeTermsHeap[frag->offset + i].tag)
+		{
+			case V_CHAR_TAG:
+				memMngr.activeTermsHeap[memMngr.vtermsOffset].ch = memMngr.activeTermsHeap[frag->offset + i].ch;
+				break;
+
+			case V_IDENT_TAG :
+				memMngr.activeTermsHeap[memMngr.vtermsOffset].str = memMngr.activeTermsHeap[frag->offset + i].str;
+				break;
+
+			case V_INT_NUM_TAG:
+				memMngr.activeTermsHeap[memMngr.vtermsOffset].intNum = memMngr.activeTermsHeap[frag->offset + i].intNum;
+				break;
+
+			case V_FLOAT_NUM_TAG:
+				memMngr.activeTermsHeap[memMngr.vtermsOffset].floatNum = memMngr.activeTermsHeap[frag->offset + i].floatNum;
+				break;
+
+			case V_CLOSURE_TAG:
+				//TO DO:
+				break;
+
+			case V_BRACKET_TAG:
+				memMngr.activeTermsHeap[memMngr.vtermsOffset].inBracketLength = memMngr.activeTermsHeap[frag->offset + i].inBracketLength;
+				break;
+		}
+		memMngr.vtermsOffset++;
+	}
+}
+
+//TO FIX: сделать проверку переполнения памяти.
+uint32_t allocateBracketVTerm(uint32_t length)
+{
+	memMngr.activeTermsHeap[memMngr.vtermsOffset].tag = V_BRACKET_TAG;
+	memMngr.activeTermsHeap[memMngr.vtermsOffset].inBracketLength = length;
+
+	return memMngr.vtermsOffset++;
+}
+
+void changeBracketLength(uint32_t offset, uint32_t newLength)
+{
+	memMngr.activeTermsHeap[offset].inBracketLength = newLength;
+}
+
 
 struct l_term* allocateVector(int strLen, char* str)
 {

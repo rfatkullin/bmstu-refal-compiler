@@ -64,7 +64,7 @@ struct func_result_t Prout(int entryPoint, struct env_t* env, struct field_view_
 	mainChain->begin = 0;
 	mainChain->end = 0;
 
-	return (struct func_result_t){.status = OK_RESULT, .mainChain = mainChain, .callChain = 0};
+	return (struct func_result_t){.status = OK_RESULT, .mainChain = 0, .callChain = 0};
 }
 
 static void printRange(struct fragment* frag)

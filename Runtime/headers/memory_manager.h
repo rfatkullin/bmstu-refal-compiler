@@ -64,11 +64,17 @@ void initAllocator(uint32_t size);
 /// т.е. инциализирует поля activeTermsHeap, inactiveTermsHeap и т.д.
 void initHeaps(uint32_t newSegmentLen);
 
-/// Собирает l_term и возвращает результат.
-struct v_term* allocate(struct l_term* expr);
-
 /// Собирает мусор.
 void collectGarbage(struct l_term* expr);
+
+/// Выделяет память под vterm'ы
+void allocateVTerms(struct fragment* fragment);
+
+/// Выдыляет память под vterm типа V_BRACKET_TAG
+uint32_t allocateBracketVTerm(uint32_t length);
+
+/// Изменяет длину выражения в скобках.
+void changeBracketLength(uint32_t offset, uint32_t newLength);
 
 /// Выделяет память под строку и возвращает результат.
 struct l_term* allocateVector(int strLen, char* str);
