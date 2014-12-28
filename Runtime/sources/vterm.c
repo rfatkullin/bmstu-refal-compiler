@@ -1,24 +1,24 @@
 #include <stdio.h>
-#include "v_term.h"
+#include "vterm.h"
 
 void printSymbol(struct v_term* term)
 {
 	switch (term->tag)
 	{
 	case V_CHAR_TAG:
-		printf("%c ", term->ch);
+		printf("%c", term->ch);
 		break;
 	case V_IDENT_TAG:
-		printf("%s ", term->str);
+		printf("%s", term->str);
 		break;
 	case V_INT_NUM_TAG:
-		printf("%d ", term->intNum);
+		printf("%d", term->intNum);
 		break;
 	case V_CLOSURE_TAG:
 		//TO DO
 			break;
 	case V_BRACKET_TAG:
-		printf("%c ", term->inBracketLength > 0 ? '(' : ')');
+		printf("%c", term->inBracketLength > 0 ? '(' : ')');
 		break;
 	}
 }

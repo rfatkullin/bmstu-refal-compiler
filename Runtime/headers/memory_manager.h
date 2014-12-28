@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#include "v_term.h"
-#include "l_term.h"
+#include "vterm.h"
+#include "lterm.h"
 #include "segment_tree.h"
 
 //Сколько процентов памяти выдялется тому или иному типу данных
@@ -26,7 +26,7 @@ struct memory_manager
 
 	/// Указатель на начало свободного места в куче для
 	/// литеральных v_term
-	struct v_term* literalTermsHeap;
+	struct v_term* termsHeap;
 
 	struct v_term* activeTermsHeap;
 	struct v_term* inactiveTermsHeap;
@@ -65,10 +65,10 @@ void initAllocator(uint32_t size);
 void initHeaps(uint32_t newSegmentLen);
 
 /// Собирает мусор.
-void collectGarbage(struct l_term* expr);
+void collectGarbage(struct lterm_t* expr);
 
 /// Выделяет память под vterm'ы
-void allocateVTerms(struct fragment* fragment);
+void allocateVTerms(struct fragment_t* fragment_t);
 
 /// Выдыляет память под vterm типа V_BRACKET_TAG
 uint32_t allocateBracketVTerm(uint32_t length);
@@ -77,7 +77,7 @@ uint32_t allocateBracketVTerm(uint32_t length);
 void changeBracketLength(uint32_t offset, uint32_t newLength);
 
 /// Выделяет память под строку и возвращает результат.
-struct l_term* allocateVector(int strLen, char* str);
+struct lterm_t* allocateVector(int strLen, char* str);
 
 /// Выделяет память под один символ и возвращает смещение для v_term
 uint32_t allocateSymbol(char str);

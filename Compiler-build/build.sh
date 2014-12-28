@@ -26,4 +26,4 @@ if [ "$?" != 0 ] ; then
 fi
 
 #cat ${sourceBaseName}.ptree
-cat ${sourceBaseName}.c
+#cat ${sourceBaseName}.c

@@ -1,7 +1,7 @@
 #ifndef __F_CALL_H__
 #define __F_CALL_H__
 
-#include "fresult_t.h"
+#include "func_result.h"
 
 /*
 	Хранит окружение функции.
@@ -9,10 +9,10 @@
 struct env_t
 {
 	//Переменные внешних функций.
-	struct l_term* params;
+	struct lterm_t* params;
 
 	//Локальные переменные. Содержимое постоянно изменяется.
-	struct l_term* locals;
+	struct lterm_t* locals;
 };
 
 /*
@@ -21,11 +21,11 @@ struct env_t
 struct field_view_t
 {
 	//Текущее поле видимости.
-	struct l_term_chain_t* current;
+	struct lterm_chain_t* current;
 
 	//Список всех полей видимости. Необходим для восстановления
 	//текущего поля видимости при откатах.
-	struct l_term_chain_t* backups;
+	struct lterm_chain_t* backups;
 };
 
 /*
@@ -49,7 +49,7 @@ struct func_call_t
 	int entryPoint;
 
 	//Указатель на след. запрос на вызов функции
-	struct l_term* next;
+	struct lterm_t* next;
 };
 
 #endif

@@ -8,32 +8,32 @@
 #define L_TERM_FUNC_CALL	2
 
 
-struct l_term;
-struct l_term_chain_t;
+struct lterm_t;
+struct lterm_chain_t;
 
-struct fragment
+struct fragment_t
 {
 	uint32_t offset;
 	uint32_t length;
 };
 
-struct l_term_chain_t
+struct lterm_chain_t
 {
-	struct l_term* begin;
-	struct l_term* end;
+	struct lterm_t* begin;
+	struct lterm_t* end;
 };
 
-struct l_term
+struct lterm_t
 {
-	struct l_term* prev;
-	struct l_term* next;
+	struct lterm_t* prev;
+	struct lterm_t* next;
 
 	int tag;
 
 	union
 	{
-		struct fragment* fragment;
-		struct l_term_chain_t* chain;
+		struct fragment_t* fragment;
+		struct lterm_chain_t* chain;
 		struct func_call_t* funcCall;
 	};
 };

@@ -58,28 +58,22 @@ func (f *Data) initActionData(depth int, expr syntax.Expr) {
 		switch term.TermTag {
 
 		case syntax.STR:
-			f.initStrVTerm(depth, *term)
+			f.initStrVTerm(depth, term)
 			break
 
 		case syntax.COMP:
-			f.initIdentVTerm(depth, *term)
+			f.initIdentVTerm(depth, term)
 			break
 
 		case syntax.INT:
-			f.initIntNumVTerm(depth, *term)
+			f.initIntNumVTerm(depth, term)
 			break
 
 		case syntax.FLOAT:
-			f.initFloatVTerm(depth, *term)
+			f.initFloatVTerm(depth, term)
 			break
 
-		case syntax.EXPR:
-			tmpTerms := append(make([]*syntax.Term, 0, len(term.Exprs[0].Terms)+len(terms)), term.Exprs[0].Terms...)
-			tmpTerms = append(tmpTerms, terms...)
-			terms = tmpTerms
-			break
-
-		case syntax.EVAL:
+		case syntax.EXPR, syntax.EVAL:
 			tmpTerms := append(make([]*syntax.Term, 0, len(term.Exprs[0].Terms)+len(terms)), term.Exprs[0].Terms...)
 			tmpTerms = append(tmpTerms, terms...)
 			terms = tmpTerms
@@ -106,44 +100,44 @@ func (f *Data) initActionData(depth int, expr syntax.Expr) {
 
 // Инициализация vterm_t строкового литерала
 // Пока только ASCII символы
-func (f *Data) initStrVTerm(depth int, term syntax.Term) {
+func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 	tabs := genTabs(depth)
 	str := string(term.Value.Str)
 	strLen := len(str)
 
 	for i := 0; i < strLen; i++ {
-		fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_CHAR_TAG, .ch = '%c'};\n", tabs, str[i])
+		fmt.Fprintf(f, "%s*(memMngr.termsHeap++) = (struct v_term){.tag = V_CHAR_TAG, .ch = %q};\n", tabs, str[i])
 	}
 
 	term.Index = f.CurrTermNum
-	f.CurrTermNum += strLen
+	f.CurrTermNum++
 }
 
 // Инициализация vterm_t для литералов целого типа
 // Пока только обычные
-func (f *Data) initIntNumVTerm(depth int, term syntax.Term) {
+func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
 	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = %d};\n", tabs, term.Value.Int)
+	fmt.Fprintf(f, "%s*(memMngr.termsHeap++) = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = %d};\n", tabs, term.Value.Int)
 	term.Index = f.CurrTermNum
 	f.CurrTermNum++
 }
 
 // Инициализация vterm_t для литералов вещественного типа
-func (f *Data) initFloatVTerm(depth int, term syntax.Term) {
+func (f *Data) initFloatVTerm(depth int, term *syntax.Term) {
 	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_FLOAT_NUM_TAG, .floatNum = %f};\n", tabs, term.Value.Float)
+	fmt.Fprintf(f, "%s*(memMngr.termsHeap++) = (struct v_term){.tag = V_FLOAT_NUM_TAG, .floatNum = %f};\n", tabs, term.Value.Float)
 	term.Index = f.CurrTermNum
 	f.CurrTermNum++
 }
 
 // Инициализация vterm_t для идентификатора
 // Пока только ASCII символы
-func (f *Data) initIdentVTerm(depth int, term syntax.Term) {
+func (f *Data) initIdentVTerm(depth int, term *syntax.Term) {
 	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%s*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_IDENT_TAG, .str = \"%s\"};\n", tabs, string(term.Value.Name))
+	fmt.Fprintf(f, "%s*(memMngr.termsHeap++) = (struct v_term){.tag = V_IDENT_TAG, .str = %q};\n", tabs, string(term.Value.Name))
 
 	term.Index = f.CurrTermNum
 	f.CurrTermNum++
@@ -156,7 +150,7 @@ func (f *Data) initLiteralDataFunc(depth int) {
 	fmt.Fprintf(f, "%sinitAllocator(1024 * 1024 * 1024);\n", tabs)
 	f.initData(depth + 1)
 	fmt.Fprintf(f, "%sinitHeaps(2);\n", tabs)
-	fmt.Fprintf(f, "%sdebugLiteralsPrint();\n", tabs)
+	//fmt.Fprintf(f, "%sdebugLiteralsPrint();\n", tabs)
 	fmt.Fprintf(f, "} // __initLiteralData()\n\n")
 }
 
@@ -164,7 +158,7 @@ func (f *Data) PrintHeaders() {
 
 	f.PrintLabel(0, "#include <stdlib.h>\n\n")
 	f.PrintLabel(0, "#include <memory_manager.h>\n")
-	f.PrintLabel(0, "#include <v_machine.h>\n")
+	f.PrintLabel(0, "#include <vmachine.h>\n")
 	f.PrintLabel(0, "#include <builtins.h>\n")
 
 	f.PrintLabel(0, "\n")

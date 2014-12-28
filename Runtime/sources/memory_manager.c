@@ -8,15 +8,15 @@
 
 static float byte2KByte(uint32_t bytes);
 static void swapBuffers();
-static void markVTerms(struct l_term* expr);
+static void markVTerms(struct lterm_t* expr);
 
 static uint32_t allocateMemoryForSegmentTree(uint32_t size);
 static uint32_t allocateMemoryForVTerms(uint32_t size);
 static uint32_t allocateMemoryForData(uint32_t size);
 static uint32_t allocateMemoryForLTerms(uint32_t size);
-static struct l_term* allocateLTerm(uint32_t offset, uint32_t len);
+static struct lterm_t* allocateLTerm(uint32_t offset, uint32_t len);
 
-void collectGarbage(struct l_term* expr)
+void collectGarbage(struct lterm_t* expr)
 {
 	clock_t start, end;
 	printf("Start garbage collection.\n");
@@ -44,29 +44,29 @@ uint32_t allocateSymbol(char ch)
 }
 
 //TO FIX: сделать проверку переполнения памяти.
-void allocateVTerms(struct fragment* frag)
+void allocateVTerms(struct fragment_t* frag)
 {
 	uint32_t i = 0;
 	for (i = 0; i < frag->length; ++i)
 	{
-		memMngr.activeTermsHeap[memMngr.vtermsOffset].tag = memMngr.activeTermsHeap[frag->offset + i].tag;
+		memMngr.activeTermsHeap[memMngr.vtermsOffset].tag = memMngr.termsHeap[frag->offset + i].tag;
 
-		switch (memMngr.activeTermsHeap[frag->offset + i].tag)
+		switch (memMngr.termsHeap[frag->offset + i].tag)
 		{
 			case V_CHAR_TAG:
-				memMngr.activeTermsHeap[memMngr.vtermsOffset].ch = memMngr.activeTermsHeap[frag->offset + i].ch;
+				memMngr.activeTermsHeap[memMngr.vtermsOffset].ch = memMngr.termsHeap[frag->offset + i].ch;
 				break;
 
 			case V_IDENT_TAG :
-				memMngr.activeTermsHeap[memMngr.vtermsOffset].str = memMngr.activeTermsHeap[frag->offset + i].str;
+				memMngr.activeTermsHeap[memMngr.vtermsOffset].str = memMngr.termsHeap[frag->offset + i].str;
 				break;
 
 			case V_INT_NUM_TAG:
-				memMngr.activeTermsHeap[memMngr.vtermsOffset].intNum = memMngr.activeTermsHeap[frag->offset + i].intNum;
+				memMngr.activeTermsHeap[memMngr.vtermsOffset].intNum = memMngr.termsHeap[frag->offset + i].intNum;
 				break;
 
 			case V_FLOAT_NUM_TAG:
-				memMngr.activeTermsHeap[memMngr.vtermsOffset].floatNum = memMngr.activeTermsHeap[frag->offset + i].floatNum;
+				memMngr.activeTermsHeap[memMngr.vtermsOffset].floatNum = memMngr.termsHeap[frag->offset + i].floatNum;
 				break;
 
 			case V_CLOSURE_TAG:
@@ -74,7 +74,7 @@ void allocateVTerms(struct fragment* frag)
 				break;
 
 			case V_BRACKET_TAG:
-				memMngr.activeTermsHeap[memMngr.vtermsOffset].inBracketLength = memMngr.activeTermsHeap[frag->offset + i].inBracketLength;
+				memMngr.activeTermsHeap[memMngr.vtermsOffset].inBracketLength = memMngr.termsHeap[frag->offset + i].inBracketLength;
 				break;
 		}
 		memMngr.vtermsOffset++;
@@ -96,7 +96,7 @@ void changeBracketLength(uint32_t offset, uint32_t newLength)
 }
 
 
-struct l_term* allocateVector(int strLen, char* str)
+struct lterm_t* allocateVector(int strLen, char* str)
 {
 	uint32_t i = 0;
 
@@ -127,12 +127,12 @@ void initAllocator(uint32_t size)
 	memMngr.mainHeap = (uint8_t*)malloc(size);
 	memMngr.currHeapPointer = memMngr.mainHeap;
 	memMngr.totalSize = size;
-	memMngr.literalTermsHeap = (struct v_term*)memMngr.mainHeap;
+	memMngr.termsHeap = (struct v_term*)memMngr.mainHeap;
 }
 
 void initHeaps(uint32_t newSegmentLen)
 {
-	uint32_t size = memMngr.totalSize - (memMngr.literalTermsHeap - (struct v_term*)memMngr.mainHeap);
+	uint32_t size = memMngr.totalSize - (memMngr.termsHeap - (struct v_term*)memMngr.mainHeap);
 	uint32_t dataHeapSize = DATA_HEAP_SIZE_FACTOR * size;
 	uint32_t vtermsHeapSize = V_TERMS_HEAP_SIZE_FACTOR * size;
 	uint32_t ltermsHeapSize = size - dataHeapSize - vtermsHeapSize;
@@ -158,8 +158,8 @@ void initHeaps(uint32_t newSegmentLen)
 
 	printf("Total used memory:                    %.2f Kb\n", byte2KByte(usedMemory));
 
-	memMngr.literalVTermsNumber = memMngr.literalTermsHeap - (struct v_term*)memMngr.mainHeap;
-	memMngr.literalTermsHeap = (struct v_term*)memMngr.mainHeap;
+	memMngr.literalVTermsNumber = memMngr.termsHeap - (struct v_term*)memMngr.mainHeap;
+	memMngr.termsHeap = (struct v_term*)memMngr.mainHeap;
 }
 
 void debugLiteralsPrint()
@@ -168,18 +168,18 @@ void debugLiteralsPrint()
 	int i;
 	for (i = 0; i < memMngr.literalVTermsNumber; ++i)
 	{
-		printSymbol(memMngr.literalTermsHeap + i);
+		printSymbol(memMngr.termsHeap + i);
 	}
 
 	printf("\n");
 }
 
-static struct l_term* allocateLTerm(uint32_t offset, uint32_t len)
+static struct lterm_t* allocateLTerm(uint32_t offset, uint32_t len)
 {
-	struct l_term* term = (struct l_term*)malloc(sizeof(struct l_term));
+	struct lterm_t* term = (struct lterm_t*)malloc(sizeof(struct lterm_t));
 
 	term->tag = L_TERM_FRAGMENT_TAG;
-	term->fragment = (struct fragment*)malloc(sizeof(struct fragment));
+	term->fragment = (struct fragment_t*)malloc(sizeof(struct fragment_t));
 	term->fragment->offset = offset;
 	term->fragment->length = len;
 
@@ -323,9 +323,9 @@ static void swapBuffers()
 	memMngr.dataOffset = dataOffset;
 }
 
-static void markVTerms(struct l_term* expr)
+static void markVTerms(struct lterm_t* expr)
 {
-	struct l_term* currTerm = expr;
+	struct lterm_t* currTerm = expr;
 
 	while (currTerm)
 	{

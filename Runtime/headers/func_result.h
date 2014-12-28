@@ -1,7 +1,7 @@
 #ifndef __F_RESULT_H__
 #define __F_RESULT_H__
 
-#include "l_term.h"
+#include "lterm.h"
 
 #define OK_RESULT			0
 #define CALL_RESULT			1
@@ -19,11 +19,11 @@ struct func_result_t
 	int status;
 
 	// Результат работы - цепочка l_term'ов
-	struct l_term_chain_t* mainChain;
+	struct lterm_chain_t* mainChain;
 
 	// Если результом является вызов функции, то
 	// в этом поле хранится цепочка вызовов функций.
-	struct l_term_chain_t* callChain;
+	struct lterm_chain_t* callChain;
 };
 
 #endif

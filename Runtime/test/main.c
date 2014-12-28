@@ -7,7 +7,7 @@ int main(int argc, char** argv)
 {
 	initAllocator(1024 * 1024 * 1024);
 
-	*(memMngr.literalTermsHeap++) = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = 100};
+	*(memMngr.termsHeap++) = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = 100};
 
 	initHeaps(2);
 
