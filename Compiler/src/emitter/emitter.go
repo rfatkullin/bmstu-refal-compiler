@@ -284,11 +284,9 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 				for _, val := range terms {
 					if IsLiteral(val.TermTag) && termsNumber < chainInfo[chainIndex].length {
 
-						//fmt.Printf("Ind: %d TermTag: %s\n", ind, val.TermTag.String())
 						termsNumber++
 
 						if val.TermTag == syntax.STR {
-							//fmt.Printf("Str: %s\n", string(val.Value.Str))
 							fragmentLength += len(val.Value.Str)
 						} else {
 							fragmentLength++
@@ -298,19 +296,11 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 					}
 				}
 
-				//fmt.Printf("Curr len: %d, Terms: %d, Fragment length: %d\n", chainInfo[chainIndex].length, termsNumber, fragmentLength)
-				fmt.Printf("Offset: %d, Length: %d\n", fragmentOffset, fragmentLength)
-
 				terms = terms[termsNumber:]
 				chainInfo[chainIndex].length -= termsNumber
 				chainInfo[chainIndex].termNum++
 				firstTerm := chainInfo[chainIndex].termNum == 1
 				f.ConstructFragmentLTerm(depth, firstTerm, chainInfo[chainIndex].orderNum, fragmentOffset, fragmentLength)
-
-				//for _, val := range chainInfo {
-				//	fmt.Printf("%d ", val.length)
-				//}
-				//fmt.Printf("\n")
 
 				break
 
@@ -329,12 +319,6 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 				chainInfo[chainIndex].length = len(terms[0].Exprs[0].Terms)
 				terms = concatTerms(terms[0].Exprs[0].Terms, terms[1:])
 
-				//fmt.Printf("Add expr!!!!\n")
-				//for _, val := range chainInfo {
-				//	fmt.Printf("%d ", val.length)
-				//}
-				//fmt.Printf("\n")
-
 				break
 
 			case syntax.FUNC, syntax.BRACED_EXPR, syntax.BRACKETED_EXPR, syntax.ANGLED_EXPR,
@@ -347,7 +331,6 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 			//Обработали последний элемент в подвыражении(Например: термы в скобках, термы внутри скобок вычисления)
 			for chainInfo[chainIndex].length == 0 {
 
-				//fmt.Printf("Close expr! %d\n", chainInfo[chainIndex].orderNum)
 				switch chainInfo[chainIndex].TermTag {
 				case syntax.EVAL:
 					f.ConstructFuncCall(depth, !isThereEvalTerm, chainInfo[chainIndex].funcName, chainInfo[chainIndex].orderNum)

@@ -18,7 +18,7 @@ int printSymbol(struct v_term* term)
 		break;
 	case V_CLOSURE_TAG:
 		//TO DO
-			break;
+		break;
 	case V_BRACKET_TAG:
 		printf("%c", term->inBracketLength > 0 ? '(' : ')');
 		res = 0;

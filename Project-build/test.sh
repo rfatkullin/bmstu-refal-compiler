@@ -1,39 +1,44 @@
 #!/bin/bash
+#Run from build directory
+
+TestsDir="../Tests"
+TmpRefSourceFile="source.ref"
+TmpCSourceFile="source.c"
 
 red='\e[0;31m'
 green='\e[0;32m'
 NC='\e[0m' # No Color
 
-refalSource=${1}
-sourceBaseName=${refalSource%.*}
-
-function Fail
+function AssertSuccess
 {
-	echo -e "${red}[FAIL]: ${refalSource}${NC}"
-	exit 1;
+	if [ "$?" != 0 ] ; then
+		echo -e "${red}[FAIL] $1${NC}"
+		exit 1;
+	fi
 }
 
-../Compiler-build/build.sh ../Compiler-build/${refalSource}
+#Собираем библиотеку рантайма.
+cd ../Runtime-build 
+make 1>/dev/null 
+AssertSuccess "Runtime-build error" 
+cd - 1>/dev/null
 
-if [ "$?" != 0 ] ; then
-	Fail "Compiler-build error"
-fi
+#Компилируем компилятор! В итоге получаем исполняемый файл refalc, который кладется в папку, прописанную в переменной PATH.
+go install -compiler gccgo ../Compiler/src/refalc/refalc.go 
+AssertSuccess "Can't build compiler"
 
-#Собираем рантайм
-cd ../Runtime-build
-make
-if [ "$?" != 0 ] ; then
-	Fail "Runtime-build error"
-fi
+cp ${1} ${TmpRefSourceFile}
 
-#Собираем весь проект
-cp ../Compiler-build/${sourceBaseName}.c ../Project/main.c
-cd -
-make
+#Компилируем рефал программу
+refalc ${TmpRefSourceFile} 1>/dev/null 
+AssertSuccess "Can't compile refal source ${1}"
 
-if [ "$?" != 0 ] ; then
-	Fail "Can't build project!"
-fi
+#Собираем весь проект - линкуем сгенерированный файл с библиотекой исполнения.
+cp ${TmpCSourceFile} ../Project/main.c
+make 1>/dev/null
+AssertSuccess "Can't build project!"
 
+#Запускаем испольняемый файл.
 ./Project
+
 
