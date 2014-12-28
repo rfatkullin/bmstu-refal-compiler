@@ -1,4 +1,4 @@
 $ENTRY Go
 {
-	= <Prout (('c' "asdasd") ("asdasd") (23 (123) () (1 "Ha-ha-ha" 2 3)) (12 3 ) () ())>
+	= <Prout A S D Daasd 'check' (('c' "asdasd") 'sdas' (1 "Ha-ha-ha" 2 3)) (12 3 ) () () () "Hello" Aaa>
 }

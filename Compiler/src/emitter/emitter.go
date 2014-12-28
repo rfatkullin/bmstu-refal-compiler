@@ -224,15 +224,24 @@ type ChainInfo struct {
 	funcName string
 }
 
+func concatTerms(a []*syntax.Term, b []*syntax.Term) []*syntax.Term {
+
+	aLen := len(a)
+	bLen := len(b)
+	newTerms := make([]*syntax.Term, 0, aLen+bLen)
+
+	newTerms = append(newTerms, a...)
+	newTerms = append(newTerms, b...)
+
+	return newTerms
+}
+
 func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 
 	if len(resultExpr.Terms) == 0 {
 		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .mainChain = 0, .callChain = 0};\n")
 	} else {
-
 		chainsCount := f.CalcChainsCount(resultExpr)
-
-		fmt.Printf("Chains count: %d\n", chainsCount)
 
 		f.PrintLabel(depth, "struct lterm_chain_t* funcCallChain = (struct lterm_chain_t*)malloc(sizeof(struct lterm_chain_t));\n")
 		f.PrintLabel(depth, "funcCallChain->begin = 0;\n")
@@ -252,8 +261,6 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 		copy(terms, resultExpr.Terms)
 
 		isThereEvalTerm := false
-		fragmentOffset := 0
-		fragmentLength := 0
 
 		chainInfo := make([]ChainInfo, chainsCount, chainsCount)
 
@@ -266,45 +273,67 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 
 		for chainInfo[0].length > 0 {
 
-			term := terms[0]
-			terms = terms[1:]
-
-			switch term.TermTag {
+			switch terms[0].TermTag {
 
 			case syntax.STR, syntax.COMP, syntax.INT, syntax.FLOAT:
 
-				fragmentLength = 1
-				fragmentOffset = term.Index
+				termsNumber := 0
+				fragmentLength := 0
+				fragmentOffset := terms[0].Index
+
 				for _, val := range terms {
-					if IsLiteral(val.TermTag) {
-						fragmentLength++
+					if IsLiteral(val.TermTag) && termsNumber < chainInfo[chainIndex].length {
+
+						//fmt.Printf("Ind: %d TermTag: %s\n", ind, val.TermTag.String())
+						termsNumber++
+
+						if val.TermTag == syntax.STR {
+							//fmt.Printf("Str: %s\n", string(val.Value.Str))
+							fragmentLength += len(val.Value.Str)
+						} else {
+							fragmentLength++
+						}
+					} else {
+						break
 					}
 				}
 
-				terms = terms[fragmentLength-1:]
+				//fmt.Printf("Curr len: %d, Terms: %d, Fragment length: %d\n", chainInfo[chainIndex].length, termsNumber, fragmentLength)
+				fmt.Printf("Offset: %d, Length: %d\n", fragmentOffset, fragmentLength)
 
-				chainInfo[chainIndex].length -= fragmentLength
+				terms = terms[termsNumber:]
+				chainInfo[chainIndex].length -= termsNumber
 				chainInfo[chainIndex].termNum++
 				firstTerm := chainInfo[chainIndex].termNum == 1
 				f.ConstructFragmentLTerm(depth, firstTerm, chainInfo[chainIndex].orderNum, fragmentOffset, fragmentLength)
+
+				//for _, val := range chainInfo {
+				//	fmt.Printf("%d ", val.length)
+				//}
+				//fmt.Printf("\n")
+
 				break
 
 			case syntax.EXPR, syntax.EVAL:
 
-				tmpTerms := append(make([]*syntax.Term, 0, len(term.Exprs[0].Terms)+len(terms)), term.Exprs[0].Terms...)
-				tmpTerms = append(tmpTerms, terms...)
-				terms = tmpTerms
-
 				chainIndex++
 				chainOrder++
-				chainInfo[chainIndex].TermTag = term.TermTag
-				chainInfo[chainIndex].length = len(term.Exprs[0].Terms)
+				chainInfo[chainIndex].TermTag = terms[0].TermTag
 				chainInfo[chainIndex].termNum = 0
 				chainInfo[chainIndex].orderNum = chainOrder
 
-				if term.TermTag == syntax.EVAL {
-					chainInfo[chainIndex].funcName = term.Exprs[0].Terms[0].Value.Name
+				if terms[0].TermTag == syntax.EVAL {
+					chainInfo[chainIndex].funcName = terms[0].Exprs[0].Terms[0].Value.Name
 				}
+
+				chainInfo[chainIndex].length = len(terms[0].Exprs[0].Terms)
+				terms = concatTerms(terms[0].Exprs[0].Terms, terms[1:])
+
+				//fmt.Printf("Add expr!!!!\n")
+				//for _, val := range chainInfo {
+				//	fmt.Printf("%d ", val.length)
+				//}
+				//fmt.Printf("\n")
 
 				break
 
@@ -318,6 +347,7 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 			//Обработали последний элемент в подвыражении(Например: термы в скобках, термы внутри скобок вычисления)
 			for chainInfo[chainIndex].length == 0 {
 
+				//fmt.Printf("Close expr! %d\n", chainInfo[chainIndex].orderNum)
 				switch chainInfo[chainIndex].TermTag {
 				case syntax.EVAL:
 					f.ConstructFuncCall(depth, !isThereEvalTerm, chainInfo[chainIndex].funcName, chainInfo[chainIndex].orderNum)

@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include "vterm.h"
 
-void printSymbol(struct v_term* term)
+int printSymbol(struct v_term* term)
 {
+	int res = 1;
+
 	switch (term->tag)
 	{
 	case V_CHAR_TAG:
@@ -19,6 +21,9 @@ void printSymbol(struct v_term* term)
 			break;
 	case V_BRACKET_TAG:
 		printf("%c", term->inBracketLength > 0 ? '(' : ')');
+		res = 0;
 		break;
 	}
+
+	return res;
 }

@@ -110,7 +110,7 @@ func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 	}
 
 	term.Index = f.CurrTermNum
-	f.CurrTermNum++
+	f.CurrTermNum += strLen
 }
 
 // Инициализация vterm_t для литералов целого типа
