@@ -343,8 +343,11 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 
 		f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; ++i)\n", chainsCount))
 		f.PrintLabel(depth, "{\n")
-		f.PrintLabel(depth+1, "helper[i]->chain->begin->prev = 0;\n")
-		f.PrintLabel(depth+1, "helper[i]->chain->end->next = 0;\n")
+		f.PrintLabel(depth+1, "if(helper[i]->chain->begin)\n")
+		f.PrintLabel(depth+1, "{\n")
+		f.PrintLabel(depth+2, "helper[i]->chain->begin->prev = 0;\n")
+		f.PrintLabel(depth+2, "helper[i]->chain->end->next = 0;\n")
+		f.PrintLabel(depth+1, "}\n")
 		f.PrintLabel(depth, "}\n")
 
 		f.PrintLabel(depth, "funcCallChain->begin->prev = 0;\n")
