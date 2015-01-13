@@ -187,7 +187,7 @@ func (f *Data) ConstructFuncCall(depth int, firstFuncCall bool, funcName string,
 		f.PrintLabel(depth, "funcCallChain->begin = funcTerm;\n")
 		f.PrintLabel(depth, "funcCallChain->end = funcTerm;\n")
 	} else {
-		f.PrintLabel(depth, fmt.Sprintf("funcCallChain->end->funcCall->next = helper[%d];\n", chainNumber))
+		f.PrintLabel(depth, "funcCallChain->end->funcCall->next = funcTerm;\n")
 		f.PrintLabel(depth, "funcCallChain->end->next = funcTerm;\n")
 		f.PrintLabel(depth, "funcTerm->prev = funcCallChain->end;\n")
 		f.PrintLabel(depth, "funcCallChain->end = funcTerm;\n")

@@ -139,6 +139,7 @@ static void updateFieldOfView(struct lterm_t* mainChain, struct func_result_t* f
 
 static void printChainOfCalls(struct lterm_t* callTerm)
 {
+	printf("[Debug]Call chain: ");
 	while (callTerm)
 	{
 		if (callTerm->funcCall)
