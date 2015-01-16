@@ -106,7 +106,7 @@ func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 	strLen := len(str)
 
 	for i := 0; i < strLen; i++ {
-		fmt.Fprintf(f, "%s*(memMngr.termsHeap++) = (struct v_term){.tag = V_CHAR_TAG, .ch = %q};\n", tabs, str[i])
+		fmt.Fprintf(f, "%smemMngr.vterms[%d] = (struct v_term){.tag = V_CHAR_TAG, .ch = %q};\n", tabs, f.CurrTermNum, str[i])
 	}
 
 	term.Index = f.CurrTermNum
@@ -118,7 +118,7 @@ func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
 	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%s*(memMngr.termsHeap++) = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = %d};\n", tabs, term.Value.Int)
+	fmt.Fprintf(f, "%smemMngr.vterms[%d] = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = %d};\n", tabs, f.CurrTermNum, term.Value.Int)
 	term.Index = f.CurrTermNum
 	f.CurrTermNum++
 }
@@ -127,7 +127,7 @@ func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
 func (f *Data) initFloatVTerm(depth int, term *syntax.Term) {
 	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%s*(memMngr.termsHeap++) = (struct v_term){.tag = V_FLOAT_NUM_TAG, .floatNum = %f};\n", tabs, term.Value.Float)
+	fmt.Fprintf(f, "%smemMngr.vterms[%d] = (struct v_term){.tag = V_FLOAT_NUM_TAG, .floatNum = %f};\n", tabs, f.CurrTermNum, term.Value.Float)
 	term.Index = f.CurrTermNum
 	f.CurrTermNum++
 }
@@ -137,7 +137,7 @@ func (f *Data) initFloatVTerm(depth int, term *syntax.Term) {
 func (f *Data) initIdentVTerm(depth int, term *syntax.Term) {
 	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%s*(memMngr.termsHeap++) = (struct v_term){.tag = V_IDENT_TAG, .str = %q};\n", tabs, string(term.Value.Name))
+	fmt.Fprintf(f, "%smemMngr.vterms[%d] = (struct v_term){.tag = V_IDENT_TAG, .str = %q};\n", tabs, f.CurrTermNum, string(term.Value.Name))
 
 	term.Index = f.CurrTermNum
 	f.CurrTermNum++
@@ -149,7 +149,7 @@ func (f *Data) initLiteralDataFunc(depth int) {
 	fmt.Fprintf(f, "void __initLiteralData()\n{\n")
 	fmt.Fprintf(f, "%sinitAllocator(1024 * 1024 * 1024);\n", tabs)
 	f.initData(depth + 1)
-	fmt.Fprintf(f, "%sinitHeaps(2);\n", tabs)
+	fmt.Fprintf(f, "%sinitHeaps(2, %d);\n", tabs, f.CurrTermNum)
 	//fmt.Fprintf(f, "%sdebugLiteralsPrint();\n", tabs)
 	fmt.Fprintf(f, "} // __initLiteralData()\n\n")
 }

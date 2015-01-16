@@ -19,7 +19,7 @@ struct func_result_t
 	int status;
 
 	// Результат работы - цепочка l_term'ов
-	struct lterm_chain_t* mainChain;
+	struct lterm_chain_t* fieldChain;
 
 	// Если результом является вызов функции, то
 	// в этом поле хранится цепочка вызовов функций.

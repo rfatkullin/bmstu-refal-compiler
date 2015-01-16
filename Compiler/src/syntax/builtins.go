@@ -77,5 +77,6 @@ var Builtins = map[int]map[string]bool{
 		"Sub":   false,
 		"-":     false,
 		"Prout": true,
+		"Card":  true,
 	},
 }

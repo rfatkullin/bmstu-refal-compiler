@@ -15,21 +15,15 @@
 
 struct memory_manager
 {
-	/// Указатель на выделенный участок памяти
-	uint8_t* mainHeap;
-
-	/// Указатель на начало свободного места в куче.
-	uint8_t*  currHeapPointer;
+	// Указатель на начало vterm'ов
+	// Структура: |литеры|n термов|n термов|
+	struct v_term* vterms;
 
 	/// Размер выделенного участка
 	uint32_t totalSize;
 
-	/// Указатель на начало свободного места в куче для
-	/// литеральных v_term
-	struct v_term* termsHeap;
-
-	struct v_term* activeTermsHeap;
-	struct v_term* inactiveTermsHeap;
+	uint32_t activeOffset;
+	uint32_t inactiveOffset;
 
 	struct segment_tree* segmentTree;
 
@@ -43,14 +37,13 @@ struct memory_manager
 	uint32_t dataOffset;
 	uint32_t ltermsOffset;
 
-	uint32_t vtermsCount;
-	uint32_t literalVTermsNumber;
+	uint32_t literalsNumber;
 
 	//Количество элементов в листе дерева отрезков
 	uint32_t segmentLen;
 
 	//На какое число v_term'ов хватит памяти
-	uint32_t maxVTermCount;
+	uint32_t maxTermsNumber;
 };
 
 struct memory_manager memMngr;
@@ -62,7 +55,7 @@ void initAllocator(uint32_t size);
 
 /// Распределеяет память для типов данных
 /// т.е. инциализирует поля activeTermsHeap, inactiveTermsHeap и т.д.
-void initHeaps(uint32_t newSegmentLen);
+void initHeaps(uint32_t segmentLen, uint32_t literalsNumber);
 
 /// Собирает мусор.
 void collectGarbage(struct lterm_t* expr);

@@ -6,8 +6,7 @@
 #include "memory_manager.h"
 
 static void printChainOfCalls(struct lterm_t* callTerm);
-static void updateFieldOfView(struct lterm_t* mainChain, struct func_result_t* funcResult);
-static struct lterm_t* ToNextFuncCall(struct lterm_t* funcCallTerm);
+static struct lterm_t* updateFieldOfView(struct lterm_t* mainChain, struct func_result_t* funcResult);
 static void assemblyChain(struct lterm_chain_t* chain);
 static struct lterm_chain_t* getAssembliedChain(struct lterm_chain_t* oldChain);
 
@@ -21,7 +20,8 @@ static struct lterm_chain_t* ConstructEmptyLTermChain()
 	return chain;
 }
 
-static struct func_call_t* ConstructStartFunc(const char* funcName, struct func_result_t (*firstFuncPtr)(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView))
+static struct func_call_t* ConstructStartFunc(const char* funcName, struct func_result_t (*firstFuncPtr)(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView),
+	struct lterm_chain_t* chain)
 {
 	struct func_call_t* goCall = (struct func_call_t*)malloc(sizeof(struct func_call_t));
 
@@ -32,11 +32,10 @@ static struct func_call_t* ConstructStartFunc(const char* funcName, struct func_
 	goCall->env->params = 0;
 
 	goCall->fieldOfView = (struct field_view_t*)malloc(sizeof(struct field_view_t));
-	goCall->fieldOfView->current = 0;
+	goCall->fieldOfView->current = chain;
 	goCall->fieldOfView->backups = 0;
-
+	goCall->inField = chain;
 	goCall->entryPoint = 0;
-
 	goCall->next = 0;
 
 	return goCall;
@@ -44,10 +43,14 @@ static struct func_call_t* ConstructStartFunc(const char* funcName, struct func_
 
 static struct lterm_t* ConstructStartFieldOfView(struct func_result_t (*firstFuncPtr)(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView))
 {
+	struct lterm_chain_t* fieldOfView = (struct lterm_chain_t*)malloc(sizeof(struct lterm_chain_t));
 	struct lterm_t* term = (struct lterm_t*)malloc(sizeof(struct lterm_t));
 
+	fieldOfView->begin = term;
+	fieldOfView->end = term;
+
 	term->tag = L_TERM_FUNC_CALL;
-	term->funcCall = ConstructStartFunc("Go", firstFuncPtr);
+	term->funcCall = ConstructStartFunc("Go", firstFuncPtr, fieldOfView);
 	term->prev = 0;
 	term->next = 0;
 
@@ -57,25 +60,23 @@ static struct lterm_t* ConstructStartFieldOfView(struct func_result_t (*firstFun
 void mainLoop(struct func_result_t (*firstFuncPtr)(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView))
 {
 	struct lterm_t* fieldOfView = ConstructStartFieldOfView(firstFuncPtr);
-	struct lterm_t* fcTerm = fieldOfView;
+	struct lterm_t* callTerm = fieldOfView;
 	struct func_result_t funcRes;
 
-	while (fcTerm)
+	while (callTerm)
 	{
-		printChainOfCalls(fcTerm);
+		printChainOfCalls(callTerm);
 
-		if (fcTerm->funcCall->entryPoint == 0)
-			fcTerm->funcCall->fieldOfView->current = getAssembliedChain(fcTerm->funcCall->fieldOfView->current);
+		if (callTerm->funcCall->entryPoint == 0)
+			callTerm->funcCall->fieldOfView->current = getAssembliedChain(callTerm->funcCall->fieldOfView->current);
 
-		funcRes = fcTerm->funcCall->funcPtr(fcTerm->funcCall->entryPoint, fcTerm->funcCall->env, fcTerm->funcCall->fieldOfView);
+		funcRes = callTerm->funcCall->funcPtr(callTerm->funcCall->entryPoint, callTerm->funcCall->env, callTerm->funcCall->fieldOfView);
 
 		switch (funcRes.status)
 		{
 			case OK_RESULT:
 
-				updateFieldOfView(fcTerm, &funcRes);
-				fcTerm = ToNextFuncCall(fcTerm);
-
+				callTerm = updateFieldOfView(callTerm, &funcRes);
 				break;
 
 			case CALL_RESULT:
@@ -90,51 +91,38 @@ void mainLoop(struct func_result_t (*firstFuncPtr)(int entryPoint, struct env_t*
 	}
 }
 
-static struct lterm_t* ToNextFuncCall(struct lterm_t* funcCallTerm)
+static struct lterm_t* updateFieldOfView(struct lterm_t* callNode, struct func_result_t* funcResult)
 {
-	if (funcCallTerm->prev)
-		funcCallTerm->prev->next = funcCallTerm->next;
-
-	if (funcCallTerm->next)
-		funcCallTerm->next->prev = funcCallTerm->prev;
-
-	struct lterm_t* newFuncCall = funcCallTerm->funcCall->next;
-
-	free(funcCallTerm);
-
-	return newFuncCall;
-}
-
-static void updateFieldOfView(struct lterm_t* mainChain, struct func_result_t* funcResult)
-{
-	if (funcResult->mainChain)
+	if (funcResult->fieldChain)
 	{
+		struct lterm_t* currNode = callNode->funcCall->inField;
+
 		//Обновляем поле зрения
-		struct lterm_chain_t* insertChain = funcResult->mainChain;
-		if (mainChain->prev)
-		{
-			mainChain->prev->next = insertChain->begin;
-			insertChain->begin->prev = mainChain->prev;
-		}
-		if (mainChain->next)
-		{
-			insertChain->end->next = mainChain->next;
-			mainChain->next->prev = insertChain->end;
-		}
+		struct lterm_chain_t* insertChain = funcResult->fieldChain;
+
+		insertChain->begin->prev = currNode->prev;
+		if (currNode->prev)
+			currNode->prev->next = insertChain->begin;
+
+		insertChain->end->next = currNode->next;
+		if (currNode->next)
+			currNode->next->prev = insertChain->end;
 
 		//Обновляем цепочку вызовов
-		struct lterm_chain_t* insertCallChain = funcResult->callChain;
-		insertCallChain->end->funcCall->next = mainChain->funcCall->next;
-		mainChain->funcCall->next = insertCallChain->begin;
-	}
-	else
-	{
-		if (mainChain->prev)
-			mainChain->prev->next = mainChain->next;
+		if (funcResult->callChain)
+		{
+			insertChain = funcResult->callChain;
+			insertChain->end->funcCall->next = currNode->funcCall->next;
+			currNode->funcCall->next = insertChain->begin;
+		}
 
-		if (mainChain->next)
-			mainChain->next->prev = mainChain->prev;
+		free(currNode);
 	}
+
+	struct lterm_t* newCallNode = callNode->funcCall->next;
+	free(callNode);
+
+	return newCallNode;
 }
 
 static void printChainOfCalls(struct lterm_t* callTerm)

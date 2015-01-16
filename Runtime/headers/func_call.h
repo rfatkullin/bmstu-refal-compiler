@@ -42,6 +42,9 @@ struct func_call_t
 	//Окружение.
 	struct env_t* env;
 
+	//Узел в поле видимости
+	struct lterm_t* inField;
+
 	//Содержит информацию о поле видимости.
 	struct field_view_t* fieldOfView;
 

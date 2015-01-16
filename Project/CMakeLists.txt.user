@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 3.2.2, 2014-12-29T02:57:07. -->
+<!-- Written by QtCreator 3.2.2, 2015-01-16T16:03:51. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -156,7 +156,7 @@
     </valuelist>
     <value type="QString" key="CMakeProjectManager.CMakeRunConfiguation.Title">Project</value>
     <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.Arguments">/home/rustam/Diploma/Compiler-build/memory_manager_test.txt</value>
-    <value type="bool" key="CMakeProjectManager.CMakeRunConfiguration.UseTerminal">false</value>
+    <value type="bool" key="CMakeProjectManager.CMakeRunConfiguration.UseTerminal">true</value>
     <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.UserWorkingDirectory"></value>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>

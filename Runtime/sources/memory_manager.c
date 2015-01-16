@@ -10,10 +10,10 @@ static float byte2KByte(uint32_t bytes);
 static void swapBuffers();
 static void markVTerms(struct lterm_t* expr);
 
-static uint32_t allocateMemoryForSegmentTree(uint32_t size);
-static uint32_t allocateMemoryForVTerms(uint32_t size);
-static uint32_t allocateMemoryForData(uint32_t size);
-static uint32_t allocateMemoryForLTerms(uint32_t size);
+static void allocateMemoryForSegmentTree(uint32_t termsNumber, uint8_t** pointer);
+static void allocateMemoryForVTerms(uint32_t size, uint8_t** pointer);
+static void allocateMemoryForData(uint32_t size, uint8_t** pointer);
+static void allocateMemoryForLTerms(uint32_t size, uint8_t** pointer);
 static struct lterm_t* allocateLTerm(uint32_t offset, uint32_t len);
 
 void collectGarbage(struct lterm_t* expr)
@@ -22,7 +22,7 @@ void collectGarbage(struct lterm_t* expr)
 	printf("Start garbage collection.\n");
 	start = clock();
 
-	buildSegmentTree(memMngr.vtermsCount);
+	buildSegmentTree(memMngr.vtermsOffset);
 
 	markVTerms(expr);
 
@@ -36,7 +36,7 @@ void collectGarbage(struct lterm_t* expr)
 //TO FIX: сделать проверку переполнения памяти.
 uint32_t allocateSymbol(char ch)
 {
-	struct v_term* term = memMngr.activeTermsHeap + memMngr.vtermsOffset;
+	struct v_term* term = memMngr.vterms + memMngr.vtermsOffset;
 	term->tag =V_CHAR_TAG;
 	term->ch = ch;
 
@@ -49,24 +49,24 @@ void allocateVTerms(struct fragment_t* frag)
 	uint32_t i = 0;
 	for (i = 0; i < frag->length; ++i)
 	{
-		memMngr.activeTermsHeap[memMngr.vtermsOffset].tag = memMngr.termsHeap[frag->offset + i].tag;
+		memMngr.vterms[memMngr.vtermsOffset].tag = memMngr.vterms[frag->offset + i].tag;
 
-		switch (memMngr.termsHeap[frag->offset + i].tag)
+		switch (memMngr.vterms[frag->offset + i].tag)
 		{
 			case V_CHAR_TAG:
-				memMngr.activeTermsHeap[memMngr.vtermsOffset].ch = memMngr.termsHeap[frag->offset + i].ch;
+				memMngr.vterms[memMngr.vtermsOffset].ch = memMngr.vterms[frag->offset + i].ch;
 				break;
 
 			case V_IDENT_TAG :
-				memMngr.activeTermsHeap[memMngr.vtermsOffset].str = memMngr.termsHeap[frag->offset + i].str;
+				memMngr.vterms[memMngr.vtermsOffset].str = memMngr.vterms[frag->offset + i].str;
 				break;
 
 			case V_INT_NUM_TAG:
-				memMngr.activeTermsHeap[memMngr.vtermsOffset].intNum = memMngr.termsHeap[frag->offset + i].intNum;
+				memMngr.vterms[memMngr.vtermsOffset].intNum = memMngr.vterms[frag->offset + i].intNum;
 				break;
 
 			case V_FLOAT_NUM_TAG:
-				memMngr.activeTermsHeap[memMngr.vtermsOffset].floatNum = memMngr.termsHeap[frag->offset + i].floatNum;
+				memMngr.vterms[memMngr.vtermsOffset].floatNum = memMngr.vterms[frag->offset + i].floatNum;
 				break;
 
 			case V_CLOSURE_TAG:
@@ -74,7 +74,7 @@ void allocateVTerms(struct fragment_t* frag)
 				break;
 
 			case V_BRACKET_TAG:
-				memMngr.activeTermsHeap[memMngr.vtermsOffset].inBracketLength = memMngr.termsHeap[frag->offset + i].inBracketLength;
+				memMngr.vterms[memMngr.vtermsOffset].inBracketLength = memMngr.vterms[frag->offset + i].inBracketLength;
 				break;
 		}
 		memMngr.vtermsOffset++;
@@ -84,28 +84,27 @@ void allocateVTerms(struct fragment_t* frag)
 //TO FIX: сделать проверку переполнения памяти.
 uint32_t allocateBracketVTerm(uint32_t length)
 {
-	memMngr.activeTermsHeap[memMngr.vtermsOffset].tag = V_BRACKET_TAG;
-	memMngr.activeTermsHeap[memMngr.vtermsOffset].inBracketLength = length;
+	memMngr.vterms[memMngr.vtermsOffset].tag = V_BRACKET_TAG;
+	memMngr.vterms[memMngr.vtermsOffset].inBracketLength = length;
 
 	return memMngr.vtermsOffset++;
 }
 
 void changeBracketLength(uint32_t offset, uint32_t newLength)
 {
-	memMngr.activeTermsHeap[offset].inBracketLength = newLength;
+	memMngr.vterms[offset].inBracketLength = newLength;
 }
-
 
 struct lterm_t* allocateVector(int strLen, char* str)
 {
 	uint32_t i = 0;
 
-	if (memMngr.vtermsOffset + strLen >= memMngr.maxVTermCount)
+	if (memMngr.vtermsOffset + strLen >= memMngr.maxTermsNumber)
 	{
 		//TO FIX: нельзя передавать нулевой указатель.
 		collectGarbage(NULL);
 
-		if (memMngr.vtermsOffset + strLen >= memMngr.maxVTermCount)
+		if (memMngr.vtermsOffset + strLen >= memMngr.maxTermsNumber)
 		{
 			printf("[Memory manager]Fatal error: Can't allocate memory!\n");
 			exit(1);
@@ -114,7 +113,7 @@ struct lterm_t* allocateVector(int strLen, char* str)
 
 	for (i = 0; i < strLen; ++i, ++memMngr.vtermsOffset)
 	{
-		struct v_term* term = memMngr.activeTermsHeap + memMngr.vtermsOffset;
+		struct v_term* term = memMngr.vterms + memMngr.vtermsOffset;
 		term->tag =V_CHAR_TAG;
 		term->ch = str[i];
 	}
@@ -124,20 +123,18 @@ struct lterm_t* allocateVector(int strLen, char* str)
 
 void initAllocator(uint32_t size)
 {
-	memMngr.mainHeap = (uint8_t*)malloc(size);
-	memMngr.currHeapPointer = memMngr.mainHeap;
+	memMngr.vterms = (struct v_term*)malloc(size);
 	memMngr.totalSize = size;
-	memMngr.termsHeap = (struct v_term*)memMngr.mainHeap;
 }
 
-void initHeaps(uint32_t newSegmentLen)
+void initHeaps(uint32_t segmentLen, uint32_t literalsNumber)
 {
-	uint32_t size = memMngr.totalSize - (memMngr.termsHeap - (struct v_term*)memMngr.mainHeap);
+	//TO FIX: Если инициализируем данные, то их тоже нужно тут учитывать.
+	uint32_t size = memMngr.totalSize - literalsNumber * sizeof(struct v_term);
 	uint32_t dataHeapSize = DATA_HEAP_SIZE_FACTOR * size;
 	uint32_t vtermsHeapSize = V_TERMS_HEAP_SIZE_FACTOR * size;
 	uint32_t ltermsHeapSize = size - dataHeapSize - vtermsHeapSize;
-	uint32_t usedMemory = 0;
-	memMngr.segmentLen = newSegmentLen;
+
 
 	printf("\nAllocation size:                      %.2f Kb\n", byte2KByte(size));
 	printf("\nAllocation ratios and sizes:         Ratio\t   Size\n");
@@ -145,30 +142,27 @@ void initHeaps(uint32_t newSegmentLen)
 	printf("\t For vterms:                  %.2f\t %.2f Kb\n", V_TERMS_HEAP_SIZE_FACTOR, byte2KByte(vtermsHeapSize));
 	printf("\t For lterms:                  %.2f\t %.2f Kb\n", 1.0f - (DATA_HEAP_SIZE_FACTOR + V_TERMS_HEAP_SIZE_FACTOR), byte2KByte(ltermsHeapSize));
 
-	usedMemory += allocateMemoryForData(dataHeapSize);
-	usedMemory += allocateMemoryForVTerms(vtermsHeapSize);
-	usedMemory += allocateMemoryForLTerms(ltermsHeapSize);
+	memMngr.segmentLen = segmentLen;
+	memMngr.literalsNumber = literalsNumber;
 
-	assert(usedMemory < size);
+	uint8_t* pointer = (uint8_t*)memMngr.vterms;
 
-	memMngr.vtermsCount = 0;
-	memMngr.vtermsOffset = 0;
+	allocateMemoryForVTerms(vtermsHeapSize, &pointer);
+	allocateMemoryForData(dataHeapSize, &pointer);
+	allocateMemoryForLTerms(ltermsHeapSize, &pointer);
+
+	memMngr.vtermsOffset = memMngr.activeOffset;
 	memMngr.dataOffset = 0;
 	memMngr.ltermsOffset = 0;
-
-	printf("Total used memory:                    %.2f Kb\n", byte2KByte(usedMemory));
-
-	memMngr.literalVTermsNumber = memMngr.termsHeap - (struct v_term*)memMngr.mainHeap;
-	memMngr.termsHeap = (struct v_term*)memMngr.mainHeap;
 }
 
 void debugLiteralsPrint()
 {
 	printf("vterms debug print:\n\t");
 	int i;
-	for (i = 0; i < memMngr.literalVTermsNumber; ++i)
+	for (i = 0; i < memMngr.literalsNumber; ++i)
 	{
-		printSymbol(memMngr.termsHeap + i);
+		printSymbol(memMngr.vterms + i);
 	}
 
 	printf("\n");
@@ -191,76 +185,58 @@ static float byte2KByte(uint32_t bytes)
 	return bytes / 1024.0f;
 }
 
-//Значение n выводится из формулы:
-//size = 2 * n * sizeof(struct v_term) + (4 * n / N + n) * sizeof(uint32_t)
-static uint32_t allocateMemoryForSegmentTree(uint32_t size)
+// Значение n выводится из формулы:
+// size = 2 * n * sizeof(struct v_term) + (4 * n / N + n) * sizeof(uint32_t)
+// где N - длина отрезка в листьях дерева.
+static uint32_t getTermsMaxNumber(uint32_t size)
+{
+	uint32_t memSizeWithoutHeader = size - sizeof(struct segment_tree);
+	uint32_t N = memMngr.segmentLen;
+	return (N * memSizeWithoutHeader) / (2 * N * sizeof(struct v_term) + (4 + N) * sizeof(uint32_t));
+}
+
+static void allocateMemoryForSegmentTree(uint32_t termsNumber, uint8_t** pointer)
 {
 	uint32_t chunck = memMngr.segmentLen;
-	uint32_t memSizeWithoutHeader = size - sizeof(struct segment_tree);
-	uint32_t n = (chunck * memSizeWithoutHeader) / (2 * chunck * sizeof(struct v_term) + (4 + chunck) * sizeof(uint32_t));
-	uint32_t memSizeForTree = 4 * n / chunck * sizeof(uint32_t);
-	uint32_t memSizeForElements = n * sizeof(uint32_t);
+	uint32_t memSizeForTree = 4 * termsNumber / chunck * sizeof(uint32_t);
+	uint32_t memSizeForElements = termsNumber * sizeof(uint32_t);
 
-	memMngr.segmentTree = (struct segment_tree*)(memMngr.currHeapPointer);
-	memMngr.segmentTree->tree = (int32_t*)(memMngr.currHeapPointer + sizeof(struct segment_tree));
-	memMngr.segmentTree->elements = (int32_t*)(memMngr.currHeapPointer + memSizeForTree + sizeof(struct segment_tree));
-	memMngr.maxVTermCount = n;
+	memMngr.segmentTree = (struct segment_tree*)(*pointer);
+	memMngr.segmentTree->tree = (int32_t*)(*pointer + sizeof(struct segment_tree));
+	memMngr.segmentTree->elements = (int32_t*)(*pointer + memSizeForTree + sizeof(struct segment_tree));
 
-	memMngr.currHeapPointer += memSizeForTree + memSizeForElements + sizeof(struct segment_tree);
-
-	return memSizeForTree + memSizeForElements + sizeof(struct segment_tree);
+	*pointer += memSizeForTree + memSizeForElements + sizeof(struct segment_tree);
 }
 
-static uint32_t allocateMemoryForVTerms(uint32_t size)
+static void allocateMemoryForVTerms(uint32_t size, uint8_t** pointer)
 {
-	uint32_t segmentTreeHeapSize = allocateMemoryForSegmentTree(size);
-	uint32_t termsHeapSize = memMngr.maxVTermCount * sizeof(struct v_term);
+	memMngr.maxTermsNumber = getTermsMaxNumber(size);
+	memMngr.activeOffset = memMngr.literalsNumber;
+	memMngr.inactiveOffset = memMngr.activeOffset + memMngr.maxTermsNumber;
 
-	uint32_t usedMemory = 2 * termsHeapSize + segmentTreeHeapSize;
+	*pointer += memMngr.literalsNumber * sizeof(struct v_term);
+	*pointer += 2 * memMngr.maxTermsNumber * sizeof(struct v_term);
 
-	assert(usedMemory <= size);
+	allocateMemoryForSegmentTree(memMngr.maxTermsNumber, pointer);
 
-	memMngr.activeTermsHeap = (struct v_term*)(memMngr.currHeapPointer);
-	memMngr.inactiveTermsHeap = (struct v_term*)(memMngr.currHeapPointer + termsHeapSize);
-
-	memMngr.currHeapPointer += 2 * termsHeapSize;
-
-	printf("\nMemory allocation for vterms:\n");
-	printf("\tMemory enough terms count:    %d \n", memMngr.maxVTermCount);
-	printf("\tActive vterms heap size:      %.2f Kb\n", byte2KByte(termsHeapSize));
-	printf("\tInactive vterms heap size:    %.2f Kb\n", byte2KByte(termsHeapSize));
-	printf("\tSegment tree size:            %.2f Kb\n", byte2KByte(segmentTreeHeapSize));
-	printf("\tUsed memory:                  %.2f Kb\n", byte2KByte(usedMemory));
-	printf("\tLost memory:                  %.2f Kb\n", byte2KByte(size - usedMemory));
-
-	return usedMemory;
+	printf("\tMax terms: %d\n", memMngr.maxTermsNumber);
 }
 
-static uint32_t allocateMemoryForData(uint32_t size)
+static void allocateMemoryForData(uint32_t size, uint8_t** pointer)
 {
 	uint32_t singleDataHeapSize = size / 2;
-	uint32_t usedMemory = 2 * singleDataHeapSize;
 
-	memMngr.activeDataHeap = memMngr.currHeapPointer;
-	memMngr.inactiveDataHeap = memMngr.currHeapPointer + singleDataHeapSize;
-	memMngr.currHeapPointer +=usedMemory;
+	memMngr.activeDataHeap = *pointer;
+	memMngr.inactiveDataHeap = *pointer + singleDataHeapSize;
 
-	printf("\nMemory allocation for data:\n");
-	printf("\tMemory for single data heap:  %.2f Kb\n", byte2KByte(singleDataHeapSize));
-	printf("\tUsed memory:                  %.2f Kb\n", byte2KByte(usedMemory));
-	printf("\tLost memory:                  %.2f Kb\n", byte2KByte(size - usedMemory));
-
-	return usedMemory;
+	*pointer += size;
 }
 
-static uint32_t allocateMemoryForLTerms(uint32_t size)
+static void allocateMemoryForLTerms(uint32_t size, uint8_t** pointer)
 {
-	memMngr.lTermsHeap = memMngr.currHeapPointer;
-	memMngr.currHeapPointer += size;
+	memMngr.lTermsHeap = *pointer;
 
-	printf("\nMemory allocated for lterms:          %.2f Kb\n", byte2KByte(size));
-
-	return size;
+	*pointer += size;
 }
 
 //Возвращает сколько байтов было использовано
@@ -296,31 +272,32 @@ static uint32_t copyVTerm(struct v_term* term)
 
 static void swapBuffers()
 {
-	struct v_term* vterms  = memMngr.inactiveTermsHeap;
 	uint32_t dataOffset = 0;
 	int i = 0;
 
-	for (i; i < memMngr.vtermsCount; ++i)
-	{
-		if (sumInSegmentTree(i, i + 1) > 0)
-		{
-			//Копируем vterm
-			memcpy((void*)(memMngr.activeTermsHeap + i),
-				(void*)vterms,
-				sizeof(struct v_term)
-			);
-			++vterms;
+//	for (i = memMngr.activeOffset; i < memMngr.vtermsOffset; ++i)
+//	{
+//		if (sumInSegmentTree(i, i + 1) > 0)
+//		{
+//			//Копируем vterm
+//			memcpy((void*)(memMngr.activeTermsHeap + i),
+//				(void*)vterms,
+//				sizeof(struct v_term)
+//			);
+//			++vterms;
 
-			//Копируем данные vterm'а
-			dataOffset += copyVTerm(memMngr.activeTermsHeap + i);
-		}
-	}
+//			//Копируем данные vterm'а
+//			dataOffset += copyVTerm(memMngr.activeTermsHeap + i);
+//		}
+//	}
 
-	memMngr.activeTermsHeap = memMngr.inactiveTermsHeap;
-	memMngr.activeDataHeap = memMngr.inactiveDataHeap;
-	memMngr.vtermsCount = vterms - memMngr.inactiveTermsHeap;
-	memMngr.vtermsOffset = vterms - memMngr.inactiveTermsHeap;
-	memMngr.dataOffset = dataOffset;
+//	memMngr.vtermsOffset = memMngr.activeOffset;
+
+//	memMngr.activeTermsHeap = memMngr.inactiveTermsHeap;
+//	memMngr.activeDataHeap = memMngr.inactiveDataHeap;
+//	memMngr.vtermsCount = vterms - memMngr.inactiveTermsHeap;
+//	memMngr.vtermsOffset = vterms - memMngr.inactiveTermsHeap;
+//	memMngr.dataOffset = dataOffset;
 }
 
 static void markVTerms(struct lterm_t* expr)

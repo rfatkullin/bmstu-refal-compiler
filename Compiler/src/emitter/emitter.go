@@ -161,8 +161,8 @@ func (f *Data) ConstructFragmentLTerm(depth int, firstTerm bool, chainNumber int
 	f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = %d;\n", fragmentOffset))
 	f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->length = %d;\n", fragmentLength))
 
-	//Самый первый терм в цепочке.
 	if firstTerm {
+		//Самый первый терм в цепочке.
 		f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->begin = currTerm;\n", chainNumber))
 		f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->end = currTerm;\n", chainNumber))
 	} else {
@@ -176,11 +176,12 @@ func (f *Data) ConstructFuncCall(depth int, firstFuncCall bool, funcName string,
 
 	f.PrintLabel(depth, "funcTerm = (struct lterm_t*)malloc(sizeof(struct lterm_t));\n")
 	f.PrintLabel(depth, "funcTerm->funcCall = (struct func_call_t*)malloc(sizeof(struct func_call_t));\n")
-	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->funcName = memMngr.termsHeap[helper[%d]->chain->begin->fragment->offset].str;\n", chainNumber))
+	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->funcName = memMngr.vterms[helper[%d]->chain->begin->fragment->offset].str;\n", chainNumber))
 	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->funcPtr = %s;\n", funcName))
 	f.PrintLabel(depth, "funcTerm->funcCall->entryPoint = 0;\n")
 	f.PrintLabel(depth, "funcTerm->funcCall->fieldOfView = (struct field_view_t*)malloc(sizeof(struct field_view_t));\n")
 	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->fieldOfView->current = helper[%d]->chain;\n", chainNumber))
+	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->inField = helper[%d];\n", chainNumber))
 	f.PrintLabel(depth, "funcTerm->tag = L_TERM_FUNC_CALL;\n")
 
 	if firstFuncCall {
@@ -189,7 +190,6 @@ func (f *Data) ConstructFuncCall(depth int, firstFuncCall bool, funcName string,
 	} else {
 		f.PrintLabel(depth, "funcCallChain->end->funcCall->next = funcTerm;\n")
 		f.PrintLabel(depth, "funcCallChain->end->next = funcTerm;\n")
-		f.PrintLabel(depth, "funcTerm->prev = funcCallChain->end;\n")
 		f.PrintLabel(depth, "funcCallChain->end = funcTerm;\n")
 	}
 }
@@ -239,7 +239,7 @@ func concatTerms(a []*syntax.Term, b []*syntax.Term) []*syntax.Term {
 func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 
 	if len(resultExpr.Terms) == 0 {
-		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .mainChain = 0, .callChain = 0};\n")
+		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = 0, .callChain = 0};\n")
 	} else {
 		chainsCount := f.CalcChainsCount(resultExpr)
 
@@ -329,7 +329,15 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 			} //switch
 
 			//Обработали последний элемент в подвыражении(Например: термы в скобках, термы внутри скобок вычисления)
-			for chainInfo[chainIndex].length == 0 {
+			for chainIndex >= 0 && chainInfo[chainIndex].length == 0 {
+
+				if chainIndex-1 >= 0 {
+					chainInfo[chainIndex-1].length--
+					chainInfo[chainIndex-1].termNum++
+					firstTerm := chainInfo[chainIndex-1].termNum == 1
+
+					f.ConstructRelationships(depth, firstTerm, chainInfo[chainIndex-1].orderNum, chainInfo[chainIndex].orderNum)
+				}
 
 				switch chainInfo[chainIndex].TermTag {
 				case syntax.EVAL:
@@ -342,31 +350,30 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 				}
 
 				chainIndex--
-				if chainIndex < 0 {
-					break
-				}
-
-				chainInfo[chainIndex].length--
-				chainInfo[chainIndex].termNum++
-				firstTerm := chainInfo[chainIndex].termNum == 1
-
-				f.ConstructRelationships(depth, firstTerm, chainInfo[chainIndex].orderNum, chainInfo[chainIndex+1].orderNum)
 			}
 		}
 
+		//"Обрезаем концы цепочек"
 		f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; ++i)\n", chainsCount))
 		f.PrintLabel(depth, "{\n")
 		f.PrintLabel(depth+1, "if(helper[i]->chain->begin)\n")
 		f.PrintLabel(depth+1, "{\n")
 		f.PrintLabel(depth+2, "helper[i]->chain->begin->prev = 0;\n")
 		f.PrintLabel(depth+2, "helper[i]->chain->end->next = 0;\n")
+		f.PrintLabel(depth+2, "helper[i]->tag = L_TERM_CHAIN_TAG;\n")
 		f.PrintLabel(depth+1, "}\n")
 		f.PrintLabel(depth, "}\n")
 
 		f.PrintLabel(depth, "funcCallChain->begin->prev = 0;\n")
 		f.PrintLabel(depth, "funcCallChain->end->next = 0;\n")
 
-		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .mainChain = helper[0]->chain, .callChain = funcCallChain};\n")
+		f.PrintLabel(depth, "if (funcCallChain->begin == 0)\n")
+		f.PrintLabel(depth, "{\n")
+		f.PrintLabel(depth+1, "free(funcCallChain);\n")
+		f.PrintLabel(depth+1, "funcCallChain = 0;\n")
+		f.PrintLabel(depth, "}\n")
+
+		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = helper[0]->chain, .callChain = funcCallChain};\n")
 	}
 }
 
