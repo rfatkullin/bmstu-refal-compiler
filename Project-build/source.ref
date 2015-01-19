@@ -1,4 +1,1 @@
-$ENTRY Go
-{
-	= <Prout <Card>> 
-}
+$ENTRY Go { = <Prout "Hello, World!">}

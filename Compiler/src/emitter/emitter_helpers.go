@@ -11,10 +11,6 @@ import (
 	//"tokens"
 )
 
-const (
-	tab = "\t"
-)
-
 func genTabs(depth int) string {
 	return strings.Repeat(tab, depth)
 }
