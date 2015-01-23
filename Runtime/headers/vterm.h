@@ -31,7 +31,6 @@ struct v_term
 	};
 };
 
-// Возвращает: нужно ли ставить пробел?
-int printSymbol(struct v_term* term);
+void printSymbol(struct v_term* term);
 
 #endif

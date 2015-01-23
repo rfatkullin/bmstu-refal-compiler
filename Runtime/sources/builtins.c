@@ -75,8 +75,7 @@ static void printRange(struct fragment_t* frag)
 	printf("Range: ");
 	for (i = 0; i < frag->length; ++i)
 	{
-		if(printSymbol(currTerm + i))
-			printf(" ");
+		printSymbol(currTerm + i);
 	}
 
 	printf("\n");

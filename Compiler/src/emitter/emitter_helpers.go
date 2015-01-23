@@ -100,13 +100,12 @@ func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 	tabs := genTabs(depth)
 	str := string(term.Value.Str)
 	strLen := len(str)
+	term.Index = f.CurrTermNum
 
 	for i := 0; i < strLen; i++ {
 		fmt.Fprintf(f, "%smemMngr.vterms[%d] = (struct v_term){.tag = V_CHAR_TAG, .ch = %q};\n", tabs, f.CurrTermNum, str[i])
+		f.CurrTermNum++
 	}
-
-	term.Index = f.CurrTermNum
-	f.CurrTermNum += strLen
 }
 
 // Инициализация vterm_t для литералов целого типа

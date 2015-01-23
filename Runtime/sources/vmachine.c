@@ -91,12 +91,10 @@ void mainLoop(struct func_result_t (*firstFuncPtr)(int entryPoint, struct env_t*
 	}
 }
 
-static struct lterm_t* updateFieldOfView(struct lterm_t* callNode, struct func_result_t* funcResult)
+static struct lterm_t* updateFieldOfView(struct lterm_t* currNode, struct func_result_t* funcResult)
 {
 	if (funcResult->fieldChain)
 	{
-		struct lterm_t* currNode = callNode->funcCall->inField;
-
 		//Обновляем поле зрения
 		struct lterm_chain_t* insertChain = funcResult->fieldChain;
 
@@ -115,14 +113,13 @@ static struct lterm_t* updateFieldOfView(struct lterm_t* callNode, struct func_r
 			insertChain->end->funcCall->next = currNode->funcCall->next;
 			currNode->funcCall->next = insertChain->begin;
 		}
-
-		free(currNode);
 	}
 
-	struct lterm_t* newCallNode = callNode->funcCall->next;
-	free(callNode);
+	struct lterm_t* newCurrNode = currNode->funcCall->next;
 
-	return newCallNode;
+	free(currNode);
+
+	return newCurrNode;
 }
 
 static void printChainOfCalls(struct lterm_t* callTerm)
