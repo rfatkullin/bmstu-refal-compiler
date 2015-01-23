@@ -1,1 +1,0 @@
-/home/rustam/Diploma/Project-build/CMakeFiles/Project.dir
