@@ -11,9 +11,9 @@ import (
 )
 
 import (
-	"chars"
-	"coords"
-	"messages"
+	"BMSTU-Refal-Compiler/chars"
+	"BMSTU-Refal-Compiler/coords"
+	"BMSTU-Refal-Compiler/messages"
 )
 
 type DomainTag int64

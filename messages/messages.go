@@ -7,7 +7,7 @@ import (
 	"sort"
 )
 
-import "coords"
+import "BMSTU-Refal-Compiler/coords"
 
 type Importance int
 

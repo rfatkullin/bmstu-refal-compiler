@@ -2,10 +2,10 @@
 package syntax
 
 import (
-	"coords"
+	"BMSTU-Refal-Compiler/coords"
 	//"encoding/json"
-	"messages"
-	"tokens"
+	"BMSTU-Refal-Compiler/messages"
+	"BMSTU-Refal-Compiler/tokens"
 )
 
 import (

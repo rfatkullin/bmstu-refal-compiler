@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-import "chars"
+import "BMSTU-Refal-Compiler/chars"
 
 // Variables bound to command line flags.
 var (

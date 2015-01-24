@@ -5,8 +5,8 @@ import (
 )
 
 import (
-	"coords"
-	"messages"
+	"BMSTU-Refal-Compiler/coords"
+	"BMSTU-Refal-Compiler/messages"
 )
 
 func analyse(ast chan<- *Unit, ms chan<- messages.Data,

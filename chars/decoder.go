@@ -9,8 +9,8 @@ import (
 )
 
 import (
-	"coords"
-	"messages"
+	"BMSTU-Refal-Compiler/coords"
+	"BMSTU-Refal-Compiler/messages"
 )
 
 const EOF = -1

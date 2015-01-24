@@ -5,8 +5,8 @@ import (
 )
 
 import (
-	"coords"
-	"tokens"
+	"BMSTU-Refal-Compiler/coords"
+	"BMSTU-Refal-Compiler/tokens"
 )
 
 type ActionOp int

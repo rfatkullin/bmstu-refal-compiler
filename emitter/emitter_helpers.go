@@ -2,13 +2,13 @@ package emitter
 
 import (
 	"fmt"
+	"strings"
 	//"io"
 )
 
 import (
-	"strings"
-	"syntax"
-	//"tokens"
+	
+	"BMSTU-Refal-Compiler/syntax"	
 )
 
 func genTabs(depth int) string {

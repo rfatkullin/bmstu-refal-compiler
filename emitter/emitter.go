@@ -6,8 +6,8 @@ import (
 )
 
 import (
-	"syntax"
-	"tokens"
+	"BMSTU-Refal-Compiler/syntax"
+	"BMSTU-Refal-Compiler/tokens"
 )
 
 type Data struct {
