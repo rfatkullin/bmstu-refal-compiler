@@ -18,33 +18,33 @@ type Data struct {
 }
 
 func (f *Data) mainFunc(depth int) {
-	tabs := genTabs(depth + 1)
 
-	fmt.Fprintf(f, "int main()\n{\n")
-	fmt.Fprintf(f, "%s__initLiteralData();\n", tabs)
-	fmt.Fprintf(f, "%smainLoop(Go);\n", tabs)
-	fmt.Fprintf(f, "%sreturn 0;\n}\n", tabs)
+	f.PrintLabel(depth, "int main()")
+	f.PrintLabel(depth, "{")
+	f.PrintLabel(depth+1, "__initLiteralData();")
+	f.PrintLabel(depth+1, "mainLoop(Go);")
+	f.PrintLabel(depth+1, "return 0;")
+	f.PrintLabel(depth, "}")
 }
 
 func (f *Data) FuncDataMemoryAllocation(depth int, funcInfo *syntax.Function) {
-	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%sstruct func_result_t funcRes;\n", tabs)
-	fmt.Fprintf(f, "%sif (entryPoint == 0)\n", tabs)
-	fmt.Fprintf(f, "%s{\n", tabs)
-	fmt.Fprintf(f, "%s%senv->locals = (struct lterm_t*)malloc(%d * sizeof(struct lterm_t));\n", tabs, tab, 1)
-	fmt.Fprintf(f, "%s%sfieldOfView->backups = (struct lterm_chain_t*)malloc(%d * sizeof(struct lterm_chain_t));\n", tabs, tab, 1)
-	fmt.Fprintf(f, "%s}\n", tabs)
+	f.PrintLabel(depth, "struct func_result_t funcRes;")
+	f.PrintLabel(depth, "if (entryPoint == 0)")
+	f.PrintLabel(depth, "{")
+	f.PrintLabel(depth+1, fmt.Sprintf("env->locals = (struct lterm_t*)malloc(%d * sizeof(struct lterm_t));", 1))
+	f.PrintLabel(depth+1, fmt.Sprintf("fieldOfView->backups = (struct lterm_chain_t*)malloc(%d * sizeof(struct lterm_chain_t));", 1))
+	f.PrintLabel(depth, "}")
 }
 
 func (f *Data) FuncDataMemoryFree(depth int) {
 
-	f.PrintLabel(depth, "if (funcRes.status != CALL_RESULT)\n")
-	f.PrintLabel(depth, "{\n")
-	f.PrintLabel(depth+1, "free(env->locals);\n")
-	f.PrintLabel(depth+1, "free(fieldOfView->backups);\n")
-	f.PrintLabel(depth, "}\n")
-	f.PrintLabel(depth, "return funcRes;\n")
+	f.PrintLabel(depth, "if (funcRes.status != CALL_RESULT)")
+	f.PrintLabel(depth, "{")
+	f.PrintLabel(depth+1, "free(env->locals);")
+	f.PrintLabel(depth+1, "free(fieldOfView->backups);")
+	f.PrintLabel(depth, "}")
+	f.PrintLabel(depth, "return funcRes;")
 }
 
 func (f *Data) releaseOkVar(tabs string) {
@@ -77,7 +77,7 @@ func (f *Data) processSymbol(termNumber, depth int) {
 	fmt.Fprintf(f, "%sint %s = %s = %s;\n", tabs, startVar, followVar, startValue)
 
 	fmt.Fprintf(f, "%sif (data[%s]->tag == V_TERM_SYMBOL_TAG) %s++;\n", tabs, startVar, followVar)
-	fmt.Fprintf(f, "%s\telse /*Откат*/;\n", tabs)
+	fmt.Fprintf(f, "%s\telse /*Откат*/;", tabs)
 
 	fmt.Fprintf(f, "//--------------------------------------\n")
 }
@@ -116,7 +116,7 @@ func (f *Data) processPattern(depth int, p *syntax.Expr) {
 func (f *Data) processAction(act *syntax.Action) {
 
 	f.checkOKVar(genTabs(1))
-	f.PrintLabel(1, "%s}\n") //end block
+	f.PrintLabel(1, "%s}") //end block
 }
 
 func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
@@ -125,13 +125,13 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 	f.funcHeader(currFunc.FuncName)
 	f.FuncDataMemoryAllocation(depth, currFunc)
 
-	f.PrintLabel(depth, "switch (entryPoint)\n") //case begin
-	f.PrintLabel(depth, "{\n")                   //case block begin
+	f.PrintLabel(depth, "switch (entryPoint)") //case begin
+	f.PrintLabel(depth, "{")                   //case block begin
 
 	for _, s := range currFunc.Sentences {
 
-		f.PrintLabel(depth+1, fmt.Sprintf("case %d: \n", currEntryPoint))
-		f.PrintLabel(depth+1, fmt.Sprintf("{\n"))
+		f.PrintLabel(depth+1, fmt.Sprintf("case %d:", currEntryPoint))
+		f.PrintLabel(depth+1, fmt.Sprintf("{"))
 		f.processPattern(depth+2, &s.Pattern)
 
 		for _, a := range s.Actions {
@@ -144,9 +144,9 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 
 			case syntax.COLON: // ':'
 				currEntryPoint++
-				f.PrintLabel(depth+2, fmt.Sprintf("break;\n"))
-				f.PrintLabel(depth+1, fmt.Sprintf("case %d: \n", currEntryPoint))
-				f.PrintLabel(depth+1, fmt.Sprintf("{\n"))
+				f.PrintLabel(depth+2, fmt.Sprintf("break;"))
+				f.PrintLabel(depth+1, fmt.Sprintf("case %d: ", currEntryPoint))
+				f.PrintLabel(depth+1, fmt.Sprintf("{"))
 				break
 
 			case syntax.COMMA: // ','
@@ -157,17 +157,17 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 		}
 	}
 
-	f.PrintLabel(depth+2, fmt.Sprintf("break;\n")) // last case break
-	f.PrintLabel(depth+1, fmt.Sprintf("}\n"))      // last case }
-	f.PrintLabel(1, "} // switch block end\n")     //switch block end
+	f.PrintLabel(depth+2, fmt.Sprintf("break;")) // last case break
+	f.PrintLabel(depth+1, fmt.Sprintf("}"))      // last case }
+	f.PrintLabel(1, "} // switch block end")     //switch block end
 	f.FuncDataMemoryFree(1)
-	f.PrintLabel(0, fmt.Sprintf("} // %s\n\n", currFunc.FuncName)) // func block end
+	f.PrintLabel(0, fmt.Sprintf("} // %s\n", currFunc.FuncName)) // func block end
 }
 
 func processFile(currFileData Data) {
 	unit := currFileData.Ast
 
-	currFileData.PrintLabel(0, fmt.Sprintf("// file:%s\n\n", currFileData.Name))
+	currFileData.PrintLabel(0, fmt.Sprintf("// file:%s\n", currFileData.Name))
 	currFileData.PrintHeaders()
 
 	currFileData.initLiteralDataFunc(0)

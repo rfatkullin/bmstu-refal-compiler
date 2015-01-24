@@ -7,24 +7,22 @@ import (
 )
 
 import (
-	
-	"BMSTU-Refal-Compiler/syntax"	
+	"BMSTU-Refal-Compiler/syntax"
 )
 
 func genTabs(depth int) string {
 	return strings.Repeat(tab, depth)
 }
 
-func (f *Data) Comment(s string) { fmt.Fprintf(f, "\t/* %s */\n", s) }
+//func (f *Data) Comment(s string) { fmt.Fprintf(f, "\t/* %s */\n", s) }
 
 func (f *Data) PrintLabel(depth int, label string) {
 	tabs := genTabs(depth)
-
-	fmt.Fprintf(f, "%s%s", tabs, label)
+	fmt.Fprintf(f, "%s%s\n", tabs, label)
 }
 
 func (f *Data) funcHeader(name string) {
-	fmt.Fprintf(f, "struct func_result_t %s(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView) \n{\n", name)
+	f.PrintLabel(0, fmt.Sprintf("struct func_result_t %s(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView) \n{", name))
 }
 
 func (f *Data) initData(depth int) {
@@ -97,13 +95,12 @@ func (f *Data) initActionData(depth int, expr syntax.Expr) {
 // Инициализация vterm_t строкового литерала
 // Пока только ASCII символы
 func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
-	tabs := genTabs(depth)
 	str := string(term.Value.Str)
 	strLen := len(str)
 	term.Index = f.CurrTermNum
 
 	for i := 0; i < strLen; i++ {
-		fmt.Fprintf(f, "%smemMngr.vterms[%d] = (struct v_term){.tag = V_CHAR_TAG, .ch = %q};\n", tabs, f.CurrTermNum, str[i])
+		f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_CHAR_TAG, .ch = %q};", f.CurrTermNum, str[i]))
 		f.CurrTermNum++
 	}
 }
@@ -111,18 +108,16 @@ func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 // Инициализация vterm_t для литералов целого типа
 // Пока только обычные
 func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
-	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%smemMngr.vterms[%d] = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = %d};\n", tabs, f.CurrTermNum, term.Value.Int)
+	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = %d};", f.CurrTermNum, term.Value.Int))
 	term.Index = f.CurrTermNum
 	f.CurrTermNum++
 }
 
 // Инициализация vterm_t для литералов вещественного типа
 func (f *Data) initFloatVTerm(depth int, term *syntax.Term) {
-	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%smemMngr.vterms[%d] = (struct v_term){.tag = V_FLOAT_NUM_TAG, .floatNum = %f};\n", tabs, f.CurrTermNum, term.Value.Float)
+	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_FLOAT_NUM_TAG, .floatNum = %f};", f.CurrTermNum, term.Value.Float))
 	term.Index = f.CurrTermNum
 	f.CurrTermNum++
 }
@@ -130,31 +125,29 @@ func (f *Data) initFloatVTerm(depth int, term *syntax.Term) {
 // Инициализация vterm_t для идентификатора
 // Пока только ASCII символы
 func (f *Data) initIdentVTerm(depth int, term *syntax.Term) {
-	tabs := genTabs(depth)
 
-	fmt.Fprintf(f, "%smemMngr.vterms[%d] = (struct v_term){.tag = V_IDENT_TAG, .str = %q};\n", tabs, f.CurrTermNum, string(term.Value.Name))
+	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_IDENT_TAG, .str = %q};", f.CurrTermNum, string(term.Value.Name)))
 
 	term.Index = f.CurrTermNum
 	f.CurrTermNum++
 }
 
 func (f *Data) initLiteralDataFunc(depth int) {
-	tabs := genTabs(depth + 1)
 
-	fmt.Fprintf(f, "void __initLiteralData()\n{\n")
-	fmt.Fprintf(f, "%sinitAllocator(1024 * 1024 * 1024);\n", tabs)
+	f.PrintLabel(depth, "void __initLiteralData()\n{")
+	f.PrintLabel(depth+1, "initAllocator(1024 * 1024 * 1024);")
 	f.initData(depth + 1)
-	fmt.Fprintf(f, "%sinitHeaps(2, %d);\n", tabs, f.CurrTermNum)
+	f.PrintLabel(depth+1, fmt.Sprintf("initHeaps(2, %d);", f.CurrTermNum))
 	//fmt.Fprintf(f, "%sdebugLiteralsPrint();\n", tabs)
-	fmt.Fprintf(f, "} // __initLiteralData()\n\n")
+	f.PrintLabel(depth, "} // __initLiteralData()\n")
 }
 
 func (f *Data) PrintHeaders() {
 
-	f.PrintLabel(0, "#include <stdlib.h>\n\n")
-	f.PrintLabel(0, "#include <memory_manager.h>\n")
-	f.PrintLabel(0, "#include <vmachine.h>\n")
-	f.PrintLabel(0, "#include <builtins.h>\n")
+	f.PrintLabel(0, "#include <stdlib.h>\n")
+	f.PrintLabel(0, "#include <memory_manager.h>")
+	f.PrintLabel(0, "#include <vmachine.h>")
+	f.PrintLabel(0, "#include <builtins.h>")
 
 	f.PrintLabel(0, "\n")
 }
