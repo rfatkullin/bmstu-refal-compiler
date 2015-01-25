@@ -133,9 +133,14 @@ type Term struct {
 	*Function
 }
 
+type ScopeVar struct {
+	tokens.VarType
+	Number int
+}
+
 type Scope struct {
-	VarMap         [tokens.VAR_TYPES_NUM]map[string]int
-	VarCount       int
+	VarMap         map[string]ScopeVar
+	VarsNumber     int
 	AnonymousCount int
 	FuncMap        map[string]int
 
@@ -171,12 +176,12 @@ func (t *Term) Add(e *Expr) {
 }
 
 func (s *Scope) AddVar(vt tokens.VarType, n string) {
-	if s.VarMap[vt] == nil {
-		s.VarMap[vt] = make(map[string]int, 8)
+	if s.VarMap == nil {
+		s.VarMap = make(map[string]ScopeVar, 8)
 	}
 
-	s.VarMap[vt][n] = s.VarCount
-	s.VarCount++
+	s.VarMap[n] = ScopeVar{vt, s.VarsNumber}
+	s.VarsNumber++
 }
 
 func (s *Scope) AddAnonymousVar(vt tokens.VarType) (n string) {
@@ -197,10 +202,8 @@ func (s *Scope) AddFunc(n string) {
 
 func (s *Scope) PropagateVar(vt tokens.VarType, n string, level int) {
 	for i := 0; i < level; i++ {
-		if s.VarMap[vt] != nil {
-			if _, ok := s.VarMap[vt][n]; ok {
-				return
-			}
+		if _, ok := s.VarMap[n]; ok {
+			return
 		}
 		s.AddVar(vt, n)
 		s = s.Parent
@@ -221,10 +224,8 @@ func (s *Scope) PropagateFunc(n string, level int) {
 
 func (s *Scope) FindVar(vt tokens.VarType, n string) (level int) {
 	for level = 0; s != nil; s, level = s.Parent, level+1 {
-		if s.VarMap[vt] != nil {
-			if _, ok := s.VarMap[vt][n]; ok {
-				return
-			}
+		if _, ok := s.VarMap[n]; ok {
+			return
 		}
 	}
 

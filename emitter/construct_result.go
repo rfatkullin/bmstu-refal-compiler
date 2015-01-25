@@ -180,7 +180,7 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 
 		f.PrintLabel(depth, "struct lterm_chain_t* funcCallChain = 0;")
 		f.PrintLabel(depth, fmt.Sprintf("struct lterm_t** helper = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", chainsCount))
-		f.PrintLabel(depth, "int i;")
+		//f.PrintLabel(depth, "int i;")
 		f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; ++i)", chainsCount))
 		f.PrintLabel(depth, "{")
 		f.PrintLabel(depth+1, "helper[i] = (struct lterm_t*)malloc(sizeof(struct lterm_t));")

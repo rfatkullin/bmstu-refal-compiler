@@ -91,18 +91,13 @@ func printScope(depth int, funcParams Scope) string {
 
 	scopeStr += fmt.Sprintf("%sParent scope is %s\n", tabs, exists)
 	scopeStr += fmt.Sprintf("%sVars: \n", tabs)
+	varPairs := make([]string, 0)
 
-	for varType, vars := range funcParams.VarMap {
-		scopeStr += fmt.Sprintf("%s%s%s: ", tabs, tab, tokens.VarType(varType).String())
-
-		varPairs := make([]string, 0)
-
-		for varName, varNum := range vars {
-			varPairs = append(varPairs, fmt.Sprintf("{%s.%s, %d}", tokens.VarType(varType).String(), varName, varNum))
-		}
-
-		scopeStr += fmt.Sprintf("%s\n", strings.Join(varPairs, ", "))
+	for varName, scopeVar := range funcParams.VarMap {
+		varPairs = append(varPairs, fmt.Sprintf("{%s, %d}", varName, scopeVar.Number))
 	}
+
+	scopeStr += fmt.Sprintf("%s\n", strings.Join(varPairs, ", "))
 
 	return scopeStr
 }

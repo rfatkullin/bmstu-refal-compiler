@@ -7,7 +7,6 @@ import (
 
 import (
 	"BMSTU-Refal-Compiler/syntax"
-	"BMSTU-Refal-Compiler/tokens"
 )
 
 type Data struct {
@@ -27,14 +26,14 @@ func (f *Data) mainFunc(depth int) {
 	f.PrintLabel(depth, "}")
 }
 
-func (f *Data) FuncDataMemoryAllocation(depth int, funcInfo *syntax.Function) {
+func (f *Data) funcDataMemoryAllocation(depth int, funcInfo *syntax.Function) {
 
 	f.PrintLabel(depth, "struct func_result_t funcRes;")
-	f.PrintLabel(depth, "if (entryPoint == 0)")
-	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, fmt.Sprintf("env->locals = (struct lterm_t*)malloc(%d * sizeof(struct lterm_t));", 1))
-	f.PrintLabel(depth+1, fmt.Sprintf("fieldOfView->backups = (struct lterm_chain_t*)malloc(%d * sizeof(struct lterm_chain_t));", 1))
-	f.PrintLabel(depth, "}")
+	//f.PrintLabel(depth, "if (entryPoint == 0)")
+	//f.PrintLabel(depth, "{")
+	//f.PrintLabel(depth+1, fmt.Sprintf("env->locals = (struct lterm_t*)malloc(%d * sizeof(struct lterm_t));", 1))
+	//f.PrintLabel(depth+1, fmt.Sprintf("fieldOfView->backups = (struct lterm_chain_t*)malloc(%d * sizeof(struct lterm_chain_t));", 1))
+	//f.PrintLabel(depth, "}")
 }
 
 func (f *Data) FuncDataMemoryFree(depth int) {
@@ -59,58 +58,8 @@ func (f *Data) checkOKVar(tabs string) {
 	fmt.Fprintf(f, "%sif (ok == 1)\n%s{", tabs)
 }
 
-func (f *Data) processSymbol(termNumber, depth int) {
-
-	var startVar = fmt.Sprintf("start_%d", termNumber)
-	var followVar = fmt.Sprintf("follow_%d", termNumber)
-	var startValue = "0"
-	var tabs = genTabs(depth)
-
-	if termNumber != 0 {
-		var prevFollow = fmt.Sprintf("follow_%d", termNumber-1)
-
-		fmt.Fprintf(f, "%sif (%s >= length) /*Откат*/;\n", tabs, prevFollow)
-
-		startValue = fmt.Sprintf("follow_%d", termNumber-1)
-	}
-
-	fmt.Fprintf(f, "%sint %s = %s = %s;\n", tabs, startVar, followVar, startValue)
-
-	fmt.Fprintf(f, "%sif (data[%s]->tag == V_TERM_SYMBOL_TAG) %s++;\n", tabs, startVar, followVar)
-	fmt.Fprintf(f, "%s\telse /*Откат*/;", tabs)
-
-	fmt.Fprintf(f, "//--------------------------------------\n")
-}
-
 func (f *Data) processExpr(termNumber, nestedDepth int) {
 
-}
-
-func (f *Data) processPattern(depth int, p *syntax.Expr) {
-
-	if len(p.Terms) != 0 {
-		for termIndex, term := range p.Terms {
-
-			switch term.TermTag {
-			case syntax.VAR:
-				switch term.Value.VarType {
-
-				case tokens.VT_S:
-					f.processSymbol(termIndex, termIndex+1)
-					break
-
-				case tokens.VT_E:
-					f.processExpr(termIndex, termIndex+1)
-					break
-				}
-
-				//fmt.Fprintf(f, "%s ", term.Value.VarType.String())
-				break
-			}
-		}
-
-		fmt.Fprintf(f, "\n")
-	}
 }
 
 func (f *Data) processAction(act *syntax.Action) {
@@ -119,34 +68,49 @@ func (f *Data) processAction(act *syntax.Action) {
 	f.PrintLabel(1, "%s}") //end block
 }
 
+func (f *Data) initSentenceLocalVariables(depth, varsNumber int) {
+
+	f.PrintLabel(depth, fmt.Sprintf("env->locals = (struct lterm_t*)malloc(%d * sizeof(struct lterm_t));", varsNumber))
+	f.PrintLabel(depth, "int i = 0;")
+	f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; i++)", varsNumber))
+	f.PrintLabel(depth, "{")
+	f.PrintLabel(depth+1, "env->locals[i].tag = L_TERM_FRAGMENT_TAG;")
+	f.PrintLabel(depth, "}")
+}
+
 func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 	currEntryPoint := 0
 
 	f.funcHeader(currFunc.FuncName)
-	f.FuncDataMemoryAllocation(depth, currFunc)
+	f.funcDataMemoryAllocation(depth, currFunc)
 
-	f.PrintLabel(depth, "switch (entryPoint)") //case begin
-	f.PrintLabel(depth, "{")                   //case block begin
+	f.PrintLabel(depth, "while(1)")
+	f.PrintLabel(depth, "{")
+	f.PrintLabel(depth+1, "switch (entryPoint)") //case begin
+	f.PrintLabel(depth+1, "{")                   //case block begin
 
 	for _, s := range currFunc.Sentences {
 
-		f.PrintLabel(depth+1, fmt.Sprintf("case %d:", currEntryPoint))
-		f.PrintLabel(depth+1, fmt.Sprintf("{"))
-		f.processPattern(depth+2, &s.Pattern)
+		f.PrintLabel(depth+2, fmt.Sprintf("case %d:", currEntryPoint))
+		f.PrintLabel(depth+2, fmt.Sprintf("{"))
+		f.initSentenceLocalVariables(depth+3, s.VarsNumber)
+
+		f.matchingPattern(depth+3, &s.Pattern, &s.Scope)
 
 		for _, a := range s.Actions {
 			switch a.ActionOp {
 
 			case syntax.REPLACE: // '='
-				f.ConstructResult(depth+2, a.Expr)
+				f.ConstructResult(depth+3, a.Expr)
 				currEntryPoint++
 				break
 
 			case syntax.COLON: // ':'
+				f.matchingPattern(depth+3, &a.Expr, &s.Scope)
 				currEntryPoint++
-				f.PrintLabel(depth+2, fmt.Sprintf("break;"))
-				f.PrintLabel(depth+1, fmt.Sprintf("case %d: ", currEntryPoint))
-				f.PrintLabel(depth+1, fmt.Sprintf("{"))
+				f.PrintLabel(depth+3, fmt.Sprintf("break;"))
+				f.PrintLabel(depth+2, fmt.Sprintf("case %d: ", currEntryPoint))
+				f.PrintLabel(depth+2, fmt.Sprintf("{"))
 				break
 
 			case syntax.COMMA: // ','
@@ -157,11 +121,12 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 		}
 	}
 
-	f.PrintLabel(depth+2, fmt.Sprintf("break;")) // last case break
-	f.PrintLabel(depth+1, fmt.Sprintf("}"))      // last case }
-	f.PrintLabel(1, "} // switch block end")     //switch block end
-	f.FuncDataMemoryFree(1)
-	f.PrintLabel(0, fmt.Sprintf("} // %s\n", currFunc.FuncName)) // func block end
+	f.PrintLabel(depth+3, fmt.Sprintf("break;")) // last case break
+	f.PrintLabel(depth+2, fmt.Sprintf("}"))      // last case }
+	f.PrintLabel(depth+1, "} // switch end")
+	f.PrintLabel(depth, "} // while end")
+	f.FuncDataMemoryFree(depth)
+	f.PrintLabel(depth, fmt.Sprintf("} // %s\n", currFunc.FuncName)) // func block end
 }
 
 func processFile(currFileData Data) {
