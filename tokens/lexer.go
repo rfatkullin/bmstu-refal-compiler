@@ -332,8 +332,8 @@ func Handle(ts chan<- Data, ms chan<- messages.Data, runes <-chan chars.Rune,
 	}
 
 	writeVar := func(vt VarType) {
-		s := cb.String()
-		data := newData(VAR, fmt.Sprintf("%v %v.%s", VAR, vt, s))
+		s := fmt.Sprintf("%s.%s", vt.String(), cb.String())
+		data := newData(VAR, fmt.Sprintf("%v %s", VAR, s))
 		data.VarType, data.Name = vt, s
 		ts <- data
 	}

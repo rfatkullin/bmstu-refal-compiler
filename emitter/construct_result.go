@@ -96,7 +96,6 @@ func (f *Data) ConstructFuncCall(depth int, chainNumber *int, firstFuncCall *boo
 	f.PrintLabel(depth, "currTerm->funcCall->entryPoint = 0;")
 	f.PrintLabel(depth, "currTerm->funcCall->fieldOfView = (struct field_view_t*)malloc(sizeof(struct field_view_t));")
 	f.PrintLabel(depth, fmt.Sprintf("currTerm->funcCall->fieldOfView->current = helper[%d]->chain;", currChainNumber))
-	f.PrintLabel(depth, fmt.Sprintf("currTerm->funcCall->inField = helper[%d];", currChainNumber))
 
 	return terms
 }

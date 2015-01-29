@@ -29,6 +29,7 @@ func (f *Data) mainFunc(depth int) {
 func (f *Data) funcDataMemoryAllocation(depth int, funcInfo *syntax.Function) {
 
 	f.PrintLabel(depth, "struct func_result_t funcRes;")
+	f.PrintLabel(depth, "struct fragment* currFrag = 0;")
 	//f.PrintLabel(depth, "if (entryPoint == 0)")
 	//f.PrintLabel(depth, "{")
 	//f.PrintLabel(depth+1, fmt.Sprintf("env->locals = (struct lterm_t*)malloc(%d * sizeof(struct lterm_t));", 1))
@@ -68,34 +69,62 @@ func (f *Data) processAction(act *syntax.Action) {
 	f.PrintLabel(1, "%s}") //end block
 }
 
-func (f *Data) initSentenceLocalVariables(depth, varsNumber int) {
+func (f *Data) allocateLocalVariables(depth, matchingNumber, varsNumber int) {
 
-	f.PrintLabel(depth, fmt.Sprintf("env->locals = (struct lterm_t*)malloc(%d * sizeof(struct lterm_t));", varsNumber))
+	f.PrintLabel(depth, fmt.Sprintf("env->locals = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", matchingNumber))
+	f.PrintLabel(depth, fmt.Sprintf("assembledFOVs = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", matchingNumber))
+	f.PrintLabel(depth, fmt.Sprintf("stretchVarsNumber = (int*)malloc(%d * sizeof(int));", matchingNumber))
 	f.PrintLabel(depth, "int i = 0;")
-	f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; i++)", varsNumber))
+	f.PrintLabel(depth, "int j = 0;")
+	f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; i++)", matchingNumber))
 	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, "env->locals[i].tag = L_TERM_FRAGMENT_TAG;")
+	f.PrintLabel(depth+1, "assembledFOVs[i] = 0;")
+	f.PrintLabel(depth+1, fmt.Sprintf("env->locals[i] = (struct lterm_t*)malloc(%d * sizeof(struct lterm_t);", varsNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("for (j = 0; j < %d; j++)", varsNumber))
+	f.PrintLabel(depth+2, "env->locals[i][j].tag = L_TERM_FRAGMENT_TAG;")
 	f.PrintLabel(depth, "}")
+}
+
+func (f *Data) calcPatternsAndVarsNumbers(currFunc *syntax.Function) (int, int) {
+	maxMatchingNumber := 0
+	maxVarNumber := 0
+
+	for _, s := range currFunc.Sentences {
+		matchingNumber := 0
+
+		for _, a := range s.Actions {
+			if a.ActionOp == syntax.COLON {
+				matchingNumber++
+			}
+		}
+
+		maxMatchingNumber = max(maxMatchingNumber, matchingNumber)
+		maxVarNumber = max(maxVarNumber, s.Scope.VarsNumber)
+	}
+
+	return maxMatchingNumber, maxVarNumber
 }
 
 func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 	currEntryPoint := 0
+	currPatternNumber := 0
+	allPatternsNumber, varsNumber := f.calcPatternsAndVarsNumbers(currFunc)
 
 	f.funcHeader(currFunc.FuncName)
 	f.funcDataMemoryAllocation(depth, currFunc)
+	f.allocateLocalVariables(depth, allPatternsNumber+1, varsNumber)
 
-	f.PrintLabel(depth, "while(1)")
+	f.initStretchVarNumbersArray(depth+1, allPatternsNumber)
+
+	f.PrintLabel(depth, "while(entryPoint >= 0)")
 	f.PrintLabel(depth, "{")
 	f.PrintLabel(depth+1, "switch (entryPoint)") //case begin
 	f.PrintLabel(depth+1, "{")                   //case block begin
 
 	for _, s := range currFunc.Sentences {
 
-		f.PrintLabel(depth+2, fmt.Sprintf("case %d:", currEntryPoint))
-		f.PrintLabel(depth+2, fmt.Sprintf("{"))
-		f.initSentenceLocalVariables(depth+3, s.VarsNumber)
-
-		f.matchingPattern(depth+3, &s.Pattern, &s.Scope)
+		f.matchingPattern(depth+1, currPatternNumber, allPatternsNumber, &s.Pattern, &s.Scope, &currEntryPoint)
+		currPatternNumber++
 
 		for _, a := range s.Actions {
 			switch a.ActionOp {
@@ -106,11 +135,12 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 				break
 
 			case syntax.COLON: // ':'
-				f.matchingPattern(depth+3, &a.Expr, &s.Scope)
+				f.matchingPattern(depth+1, currPatternNumber, allPatternsNumber, &a.Expr, &s.Scope, &currEntryPoint)
+				currPatternNumber++
 				currEntryPoint++
-				f.PrintLabel(depth+3, fmt.Sprintf("break;"))
-				f.PrintLabel(depth+2, fmt.Sprintf("case %d: ", currEntryPoint))
-				f.PrintLabel(depth+2, fmt.Sprintf("{"))
+				f.PrintLabel(depth+2, fmt.Sprintf("break;"))
+				f.PrintLabel(depth+1, fmt.Sprintf("case %d: ", currEntryPoint))
+				f.PrintLabel(depth+1, fmt.Sprintf("{"))
 				break
 
 			case syntax.COMMA: // ','

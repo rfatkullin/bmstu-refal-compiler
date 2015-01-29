@@ -151,3 +151,11 @@ func (f *Data) PrintHeaders() {
 
 	f.PrintLabel(0, "\n")
 }
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+
+	return b
+}
