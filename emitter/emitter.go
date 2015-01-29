@@ -16,6 +16,20 @@ type Data struct {
 	CurrTermNum int
 }
 
+type emitterContext struct {
+	currEntryPoint           int
+	currPatternNumber        int
+	inSentencePatternNumber  int
+	maxPatternNumber         int
+	nextSentenceEntryPoint   int
+	sentenceNumber           int
+	isFirstPatternInSentence bool
+	isLastPatternInSentence  bool
+	isLastSentence           bool
+	sentenceScope            *syntax.Scope
+	terms                    []*syntax.Term
+}
+
 func (f *Data) mainFunc(depth int) {
 
 	f.PrintLabel(depth, "int main()")
@@ -47,28 +61,6 @@ func (f *Data) FuncDataMemoryFree(depth int) {
 	f.PrintLabel(depth, "return funcRes;")
 }
 
-func (f *Data) releaseOkVar(tabs string) {
-	fmt.Fprintf(f, "%sok = 0;\n", tabs)
-}
-
-func (f *Data) setOkVar(tabs string) {
-	fmt.Fprintf(f, "%sok = 1;\n", tabs)
-}
-
-func (f *Data) checkOKVar(tabs string) {
-	fmt.Fprintf(f, "%sif (ok == 1)\n%s{", tabs)
-}
-
-func (f *Data) processExpr(termNumber, nestedDepth int) {
-
-}
-
-func (f *Data) processAction(act *syntax.Action) {
-
-	f.checkOKVar(genTabs(1))
-	f.PrintLabel(1, "%s}") //end block
-}
-
 func (f *Data) allocateLocalVariables(depth, matchingNumber, varsNumber int) {
 
 	f.PrintLabel(depth, fmt.Sprintf("env->locals = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", matchingNumber))
@@ -85,62 +77,76 @@ func (f *Data) allocateLocalVariables(depth, matchingNumber, varsNumber int) {
 	f.PrintLabel(depth, "}")
 }
 
-func (f *Data) calcPatternsAndVarsNumbers(currFunc *syntax.Function) (int, int) {
-	maxMatchingNumber := 0
+func (f *Data) calcMaxPatternsAndVarsNumbers(currFunc *syntax.Function) (int, int) {
+	maxPatternsNumber := 0
 	maxVarNumber := 0
 
 	for _, s := range currFunc.Sentences {
-		matchingNumber := 0
-
-		for _, a := range s.Actions {
-			if a.ActionOp == syntax.COLON {
-				matchingNumber++
-			}
-		}
-
-		maxMatchingNumber = max(maxMatchingNumber, matchingNumber)
+		maxPatternsNumber = max(maxPatternsNumber, f.calcPatternsNumber(s))
 		maxVarNumber = max(maxVarNumber, s.Scope.VarsNumber)
 	}
 
-	return maxMatchingNumber, maxVarNumber
+	return maxPatternsNumber, maxVarNumber
+}
+
+func (f *Data) calcPatternsNumber(s *syntax.Sentence) int {
+	// +1 s.Pattern
+	number := 1
+
+	for _, a := range s.Actions {
+		if a.ActionOp == syntax.COLON {
+			number++
+		}
+	}
+
+	return number
 }
 
 func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
-	currEntryPoint := 0
-	currPatternNumber := 0
-	allPatternsNumber, varsNumber := f.calcPatternsAndVarsNumbers(currFunc)
+	var ctx emitterContext
+	varsNumber := 0
+
+	ctx.currEntryPoint = 0
+	ctx.currPatternNumber = 0
+	ctx.maxPatternNumber, varsNumber = f.calcMaxPatternsAndVarsNumbers(currFunc)
 
 	f.funcHeader(currFunc.FuncName)
 	f.funcDataMemoryAllocation(depth, currFunc)
-	f.allocateLocalVariables(depth, allPatternsNumber+1, varsNumber)
+	f.allocateLocalVariables(depth, ctx.maxPatternNumber, varsNumber)
 
-	f.initStretchVarNumbersArray(depth+1, allPatternsNumber)
+	f.setToZeroStretchVarNumbers(depth, &ctx)
 
 	f.PrintLabel(depth, "while(entryPoint >= 0)")
 	f.PrintLabel(depth, "{")
 	f.PrintLabel(depth+1, "switch (entryPoint)") //case begin
 	f.PrintLabel(depth+1, "{")                   //case block begin
 
-	for _, s := range currFunc.Sentences {
+	for sentenceNumber, s := range currFunc.Sentences {
 
-		f.matchingPattern(depth+1, currPatternNumber, allPatternsNumber, &s.Pattern, &s.Scope, &currEntryPoint)
-		currPatternNumber++
+		ctx.sentenceNumber = sentenceNumber
+		ctx.sentenceScope = &s.Scope
+		ctx.terms = s.Pattern.Terms
+		ctx.inSentencePatternNumber = f.calcPatternsNumber(s)
+		ctx.isLastSentence = sentenceNumber == len(currFunc.Sentences)-1
+		ctx.isFirstPatternInSentence = true
+		ctx.isLastPatternInSentence = ctx.inSentencePatternNumber == 1
+		ctx.nextSentenceEntryPoint = ctx.currEntryPoint + ctx.inSentencePatternNumber
+
+		f.matchingPattern(depth+1, &ctx)
+
+		ctx.isFirstPatternInSentence = false
 
 		for _, a := range s.Actions {
 			switch a.ActionOp {
 
 			case syntax.REPLACE: // '='
-				f.ConstructResult(depth+3, a.Expr)
-				currEntryPoint++
+				f.ConstructResult(depth+2, a.Expr)
 				break
 
 			case syntax.COLON: // ':'
-				f.matchingPattern(depth+1, currPatternNumber, allPatternsNumber, &a.Expr, &s.Scope, &currEntryPoint)
-				currPatternNumber++
-				currEntryPoint++
-				f.PrintLabel(depth+2, fmt.Sprintf("break;"))
-				f.PrintLabel(depth+1, fmt.Sprintf("case %d: ", currEntryPoint))
-				f.PrintLabel(depth+1, fmt.Sprintf("{"))
+				f.PrintLabel(depth+1, "} // Pattern case end\n")
+				ctx.terms = a.Expr.Terms
+				f.matchingPattern(depth+1, &ctx)
 				break
 
 			case syntax.COMMA: // ','
@@ -151,10 +157,10 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 		}
 	}
 
-	f.PrintLabel(depth+3, fmt.Sprintf("break;")) // last case break
-	f.PrintLabel(depth+2, fmt.Sprintf("}"))      // last case }
-	f.PrintLabel(depth+1, "} // switch end")
-	f.PrintLabel(depth, "} // while end")
+	f.PrintLabel(depth+1, "} // Pattern case end")
+
+	f.PrintLabel(depth+1, "} // sentence switch end")
+	f.PrintLabel(depth, "} // sentence while end")
 	f.FuncDataMemoryFree(depth)
 	f.PrintLabel(depth, fmt.Sprintf("} // %s\n", currFunc.FuncName)) // func block end
 }
