@@ -40,40 +40,45 @@ func (f *Data) mainFunc(depth int) {
 	f.PrintLabel(depth, "}")
 }
 
-func (f *Data) funcDataMemoryAllocation(depth int, funcInfo *syntax.Function) {
+func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 
 	f.PrintLabel(depth, "struct func_result_t funcRes;")
-	f.PrintLabel(depth, "struct fragment* currFrag = 0;")
-	//f.PrintLabel(depth, "if (entryPoint == 0)")
-	//f.PrintLabel(depth, "{")
-	//f.PrintLabel(depth+1, fmt.Sprintf("env->locals = (struct lterm_t*)malloc(%d * sizeof(struct lterm_t));", 1))
-	//f.PrintLabel(depth+1, fmt.Sprintf("fieldOfView->backups = (struct lterm_chain_t*)malloc(%d * sizeof(struct lterm_chain_t));", 1))
-	//f.PrintLabel(depth, "}")
+	f.PrintLabel(depth, "struct fragment_t* currFrag = 0;")
+	f.PrintLabel(depth, "int fragmentOffset = 0;")
+	f.PrintLabel(depth, "int stretchingVarNumber = 0;")
+	f.PrintLabel(depth, "int stretching = 0;")
+	f.PrintLabel(depth, "int i = 0;")
+	f.PrintLabel(depth, "int j = 0;")
+	f.PrintLabel(depth, "if (entryPoint == 0)")
+	f.PrintLabel(depth, "{")
+	f.PrintLabel(depth+1, fmt.Sprintf("env->locals = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", maxPatternNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("env->assembledFOVs = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", maxPatternNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("env->stretchVarsNumber = (int*)malloc(%d * sizeof(int));", maxPatternNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("for (i = 0; i < %d; i++)", maxPatternNumber))
+	f.PrintLabel(depth+1, "{")
+	f.PrintLabel(depth+2, "env->assembledFOVs[i] = 0;")
+	f.PrintLabel(depth+2, fmt.Sprintf("env->locals[i] = (struct lterm_t*)malloc(%d * sizeof(struct lterm_t));", varsNumber))
+	f.PrintLabel(depth+2, fmt.Sprintf("for (j = 0; j < %d; j++)", varsNumber))
+	f.PrintLabel(depth+3, "env->locals[i][j].tag = L_TERM_FRAGMENT_TAG;")
+	f.PrintLabel(depth+1, "}")
+	f.initSretchVarNumbers(depth+1, maxPatternNumber)
+	f.PrintLabel(depth, "}")
 }
 
-func (f *Data) FuncDataMemoryFree(depth int) {
+func (f *Data) printFreeLocals(depth, matchingNumber, varsNumber int) {
 
 	f.PrintLabel(depth, "if (funcRes.status != CALL_RESULT)")
 	f.PrintLabel(depth, "{")
+
+	f.PrintLabel(depth+1, fmt.Sprintf("for (i = 0; i < %d; i++)", matchingNumber))
+	f.PrintLabel(depth+1, "{")
+	f.PrintLabel(depth+2, "free(env->locals[i]);")
+	f.PrintLabel(depth+1, "}")
+
 	f.PrintLabel(depth+1, "free(env->locals);")
-	f.PrintLabel(depth+1, "free(fieldOfView->backups);")
-	f.PrintLabel(depth, "}")
-	f.PrintLabel(depth, "return funcRes;")
-}
+	f.PrintLabel(depth+1, "free(env->stretchVarsNumber);")
+	f.PrintLabel(depth+1, "free(env->assembledFOVs);")
 
-func (f *Data) allocateLocalVariables(depth, matchingNumber, varsNumber int) {
-
-	f.PrintLabel(depth, fmt.Sprintf("env->locals = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", matchingNumber))
-	f.PrintLabel(depth, fmt.Sprintf("assembledFOVs = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", matchingNumber))
-	f.PrintLabel(depth, fmt.Sprintf("stretchVarsNumber = (int*)malloc(%d * sizeof(int));", matchingNumber))
-	f.PrintLabel(depth, "int i = 0;")
-	f.PrintLabel(depth, "int j = 0;")
-	f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; i++)", matchingNumber))
-	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, "assembledFOVs[i] = 0;")
-	f.PrintLabel(depth+1, fmt.Sprintf("env->locals[i] = (struct lterm_t*)malloc(%d * sizeof(struct lterm_t);", varsNumber))
-	f.PrintLabel(depth+1, fmt.Sprintf("for (j = 0; j < %d; j++)", varsNumber))
-	f.PrintLabel(depth+2, "env->locals[i][j].tag = L_TERM_FRAGMENT_TAG;")
 	f.PrintLabel(depth, "}")
 }
 
@@ -104,17 +109,13 @@ func (f *Data) calcPatternsNumber(s *syntax.Sentence) int {
 
 func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 	var ctx emitterContext
-	varsNumber := 0
+	maxVarsNumber := 0
 
 	ctx.currEntryPoint = 0
 	ctx.currPatternNumber = 0
-	ctx.maxPatternNumber, varsNumber = f.calcMaxPatternsAndVarsNumbers(currFunc)
+	ctx.maxPatternNumber, maxVarsNumber = f.calcMaxPatternsAndVarsNumbers(currFunc)
 
-	f.funcHeader(currFunc.FuncName)
-	f.funcDataMemoryAllocation(depth, currFunc)
-	f.allocateLocalVariables(depth, ctx.maxPatternNumber, varsNumber)
-
-	f.setToZeroStretchVarNumbers(depth, &ctx)
+	f.printInitLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
 
 	f.PrintLabel(depth, "while(entryPoint >= 0)")
 	f.PrintLabel(depth, "{")
@@ -158,26 +159,29 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 	}
 
 	f.PrintLabel(depth+1, "} // Pattern case end")
-
 	f.PrintLabel(depth+1, "} // sentence switch end")
 	f.PrintLabel(depth, "} // sentence while end")
-	f.FuncDataMemoryFree(depth)
-	f.PrintLabel(depth, fmt.Sprintf("} // %s\n", currFunc.FuncName)) // func block end
+	f.printFreeLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
+	f.PrintLabel(depth, "return funcRes;")
+
 }
 
-func processFile(currFileData Data) {
-	unit := currFileData.Ast
+func processFile(f Data) {
+	unit := f.Ast
+	depth := 0
 
-	currFileData.PrintLabel(0, fmt.Sprintf("// file:%s\n", currFileData.Name))
-	currFileData.PrintHeaders()
+	f.PrintLabel(depth, fmt.Sprintf("// file:%s\n", f.Name))
+	f.PrintHeaders()
 
-	currFileData.initLiteralDataFunc(0)
+	f.initLiteralDataFunc(depth)
 
 	for _, currFunc := range unit.GlobMap {
-		currFileData.processFuncSentences(1, currFunc)
+		f.printFuncHeader(depth, currFunc.FuncName)
+		f.processFuncSentences(depth+1, currFunc)
+		f.PrintLabel(depth, fmt.Sprintf("} // func %s\n", currFunc.FuncName)) // func block end
 	}
 
-	currFileData.mainFunc(0)
+	f.mainFunc(depth)
 }
 
 func Handle(done chan<- bool, fs <-chan Data) {

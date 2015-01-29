@@ -21,8 +21,8 @@ func (f *Data) PrintLabel(depth int, label string) {
 	fmt.Fprintf(f, "%s%s\n", tabs, label)
 }
 
-func (f *Data) funcHeader(name string) {
-	f.PrintLabel(0, fmt.Sprintf("struct func_result_t %s(int entryPoint, struct env_t* env, struct field_view_t* fieldOfView) \n{", name))
+func (f *Data) printFuncHeader(depth int, name string) {
+	f.PrintLabel(depth, fmt.Sprintf("struct func_result_t %s(int entryPoint, struct env_t* env, struct lterm_chain_t* fieldOfView) \n{", name))
 }
 
 func (f *Data) initData(depth int) {
