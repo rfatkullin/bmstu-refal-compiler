@@ -28,6 +28,7 @@ type emitterContext struct {
 	isLastSentence           bool
 	sentenceScope            *syntax.Scope
 	terms                    []*syntax.Term
+	fixedVars                map[string]bool
 }
 
 func (f *Data) mainFunc(depth int) {
@@ -59,7 +60,10 @@ func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 	f.PrintLabel(depth+2, "env->assembledFOVs[i] = 0;")
 	f.PrintLabel(depth+2, fmt.Sprintf("env->locals[i] = (struct lterm_t*)malloc(%d * sizeof(struct lterm_t));", varsNumber))
 	f.PrintLabel(depth+2, fmt.Sprintf("for (j = 0; j < %d; j++)", varsNumber))
+	f.PrintLabel(depth+2, "{")
 	f.PrintLabel(depth+3, "env->locals[i][j].tag = L_TERM_FRAGMENT_TAG;")
+	f.PrintLabel(depth+3, "env->locals[i][j].fragment = (struct fragment_t*)malloc(sizeof(struct fragment_t));")
+	f.PrintLabel(depth+2, "}")
 	f.PrintLabel(depth+1, "}")
 	f.initSretchVarNumbers(depth+1, maxPatternNumber)
 	f.PrintLabel(depth, "}")
@@ -119,11 +123,12 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 
 	f.PrintLabel(depth, "while(entryPoint >= 0)")
 	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, "switch (entryPoint)") //case begin
-	f.PrintLabel(depth+1, "{")                   //case block begin
+	f.PrintLabel(depth+1, "switch (entryPoint)")
+	f.PrintLabel(depth+1, "{")
 
 	for sentenceNumber, s := range currFunc.Sentences {
 
+		ctx.fixedVars = make(map[string]bool)
 		ctx.sentenceNumber = sentenceNumber
 		ctx.sentenceScope = &s.Scope
 		ctx.terms = s.Pattern.Terms
@@ -156,11 +161,14 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 			case syntax.DCOLON: // '::'
 			}
 		}
+
+		f.PrintLabel(depth+2, "entryPoint = -1;")
+		f.PrintLabel(depth+2, "break; //Successful end of sentence")
 	}
 
 	f.PrintLabel(depth+1, "} // Pattern case end")
-	f.PrintLabel(depth+1, "} // sentence switch end")
-	f.PrintLabel(depth, "} // sentence while end")
+	f.PrintLabel(depth+1, "} // Entry point switch end")
+	f.PrintLabel(depth, "} // Main while end")
 	f.printFreeLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
 	f.PrintLabel(depth, "return funcRes;")
 

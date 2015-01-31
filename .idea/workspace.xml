@@ -2,11 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9d09ac75-3452-466b-b2d3-a58ee9633032" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/emitter/construct_result.go" afterPath="$PROJECT_DIR$/emitter/construct_result.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/emitter/emitter.go" afterPath="$PROJECT_DIR$/emitter/emitter.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/emitter/emitter_helpers.go" afterPath="$PROJECT_DIR$/emitter/emitter_helpers.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tokens/lexer.go" afterPath="$PROJECT_DIR$/tokens/lexer.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/emitter/matching_pattern.go" afterPath="$PROJECT_DIR$/emitter/matching_pattern.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="BMSTU-Refal-Compiler.iws" />
@@ -35,30 +30,33 @@
       <file leaf-file-name="emitter_helpers.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/emitter/emitter_helpers.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="420" max-vertical-offset="2505">
+            <state vertical-scroll-proportion="0.0" vertical-offset="690" max-vertical-offset="2505">
               <caret line="46" column="24" selection-start-line="46" selection-start-column="24" selection-end-line="46" selection-end-column="24" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="emitter.go" pinned="false" current-in-tab="false">
+      <file leaf-file-name="emitter.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/emitter/emitter.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="540" max-vertical-offset="2685">
-              <caret line="61" column="0" selection-start-line="61" selection-start-column="0" selection-end-line="61" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.2542373" vertical-offset="825" max-vertical-offset="2985">
+              <caret line="70" column="28" selection-start-line="70" selection-start-column="28" selection-end-line="70" selection-end-column="28" />
               <folding>
-                <marker date="1422382257264" expanded="true" signature="2393:2499" placeholder="{ ... }" />
+                <marker date="1422568870050" expanded="true" signature="2317:2464" placeholder="{ ... }" />
+                <marker date="1422568870050" expanded="true" signature="3171:3239" placeholder="{ ... }" />
+                <marker date="1422568870050" expanded="true" signature="3219:3236" placeholder="{ ... }" />
+                <marker date="1422568870050" expanded="true" signature="4299:4739" placeholder="{ ... }" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="matching_pattern.go" pinned="false" current-in-tab="true">
+      <file leaf-file-name="matching_pattern.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/emitter/matching_pattern.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.33205375" vertical-offset="277" max-vertical-offset="2220">
-              <caret line="30" column="25" selection-start-line="30" selection-start-column="25" selection-end-line="30" selection-end-column="25" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3120">
+              <caret line="21" column="59" selection-start-line="21" selection-start-column="59" selection-end-line="21" selection-end-column="59" />
               <folding />
             </state>
           </provider>
@@ -105,6 +103,8 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Scope" />
+      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -181,8 +181,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
-      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -197,60 +195,26 @@
     <property name="project.structure.side.proportion" value="0.0" />
     <property name="recentsLimit" value="5" />
     <property name="restartRequiresConfirmation" value="true" />
-    <property name="options.lastSelected" value="reference.settingsdialog.project.go" />
+    <property name="options.lastSelected" value="preferences.pluginManager" />
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="options.splitter.details.proportions" value="0.2" />
     <property name="FullScreen" value="false" />
   </component>
   <component name="RunManager" selected="Go Application.BMSTU-Refal-Compiler">
-    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
-      <option name="name" value="Go application" />
-      <option name="saveOutputToFile" value="false" />
-      <option name="showConsoleOnStdErr" value="false" />
-      <option name="showConsoleOnStdOut" value="false" />
-      <option name="GDB_PATH" value="gdb" />
-      <option name="STARTUP_COMMANDS" value="" />
-      <option name="autoStartGdb" value="true" />
-      <option name="debugBuilderArguments" value="" />
-      <option name="scriptName" value="" />
-      <option name="packageDir" value="" />
-      <option name="runPackage" value="false" />
-      <option name="runDebugger" value="false" />
-      <option name="scriptArguments" value="" />
-      <option name="runBuilderArguments" value="" />
-      <option name="runExecutableName" value="" />
-      <option name="goBuildBeforeRun" value="false" />
-      <option name="goOutputDir" value="" />
-      <option name="workingDir" value="" />
-      <option name="envVars" value="" />
-      <module name="" />
-      <method />
-    </configuration>
     <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" factoryName="Plugin">
       <module name="" />
       <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
       <option name="PROGRAM_PARAMETERS" />
       <method />
     </configuration>
-    <configuration default="true" type="AndroidTestRunConfigurationType" factoryName="Android Tests">
+    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="" />
-      <option name="TESTING_TYPE" value="0" />
-      <option name="INSTRUMENTATION_RUNNER_CLASS" value="" />
-      <option name="METHOD_NAME" value="" />
-      <option name="CLASS_NAME" value="" />
-      <option name="PACKAGE_NAME" value="" />
-      <option name="TARGET_SELECTION_MODE" value="EMULATOR" />
-      <option name="USE_LAST_SELECTED_DEVICE" value="false" />
-      <option name="PREFERRED_AVD" value="" />
-      <option name="USE_COMMAND_LINE" value="true" />
-      <option name="COMMAND_LINE" value="" />
-      <option name="WIPE_USER_DATA" value="false" />
-      <option name="DISABLE_BOOT_ANIMATION" value="false" />
-      <option name="NETWORK_SPEED" value="full" />
-      <option name="NETWORK_LATENCY" value="none" />
-      <option name="CLEAR_LOGCAT" value="false" />
-      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="true" />
-      <option name="FILTER_LOGCAT_AUTOMATICALLY" value="true" />
+      <option name="filePath" value="" />
+      <option name="name" value="Go" />
+      <option name="params" value="" />
+      <option name="saveOutputToFile" value="false" />
+      <option name="showConsoleOnStdErr" value="false" />
+      <option name="showConsoleOnStdOut" value="false" />
       <method />
     </configuration>
     <configuration default="true" type="Remote" factoryName="Remote">
@@ -259,27 +223,6 @@
       <option name="SHMEM_ADDRESS" value="javadebug" />
       <option name="HOST" value="localhost" />
       <option name="PORT" value="5005" />
-      <method />
-    </configuration>
-    <configuration default="true" type="JarApplication" factoryName="JAR Application">
-      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <envs />
-      <method />
-    </configuration>
-    <configuration default="true" type="GradleRunConfiguration" factoryName="Gradle">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list />
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
       <method />
     </configuration>
     <configuration default="true" type="Applet" factoryName="Applet">
@@ -323,42 +266,6 @@
       <listeners />
       <method />
     </configuration>
-    <configuration default="true" type="GoTestConfiguration" factoryName="Go Test">
-      <option name="name" value="Go Test" />
-      <option name="saveOutputToFile" value="false" />
-      <option name="showConsoleOnStdErr" value="false" />
-      <option name="showConsoleOnStdOut" value="false" />
-      <option name="envVars" value="" />
-      <option name="testRunnerArgs" value="" />
-      <option name="testTargetType" value="Package" />
-      <option name="packageName" value="" />
-      <option name="packageDir" value="" />
-      <option name="testFile" value="" />
-      <option name="testArgs" value="" />
-      <option name="workingDir" value="" />
-      <option name="executeWhat" value="Test" />
-      <option name="filter" value="" />
-      <option name="useShortRun" value="false" />
-      <option name="testBeforeBenchmark" value="false" />
-      <option name="goVetEnabled" value="false" />
-      <module name="" />
-      <method />
-    </configuration>
-    <configuration default="true" type="Application" factoryName="Application">
-      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="VM_PARAMETERS" />
-      <option name="PROGRAM_PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <option name="ENABLE_SWING_INSPECTOR" value="false" />
-      <option name="ENV_VARIABLES" />
-      <option name="PASS_PARENT_ENVS" value="true" />
-      <module name="" />
-      <envs />
-      <method />
-    </configuration>
     <configuration default="true" type="JUnit" factoryName="JUnit">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <module name="" />
@@ -378,6 +285,99 @@
       </option>
       <envs />
       <patterns />
+      <method />
+    </configuration>
+    <configuration default="true" type="GoGdbRunConfigurationType" factoryName="Go GDB">
+      <module name="" />
+      <option name="name" value="" />
+      <option name="saveOutputToFile" value="false" />
+      <option name="showConsoleOnStdErr" value="false" />
+      <option name="showConsoleOnStdOut" value="false" />
+      <option name="GDB_PATH" value="gdb" />
+      <option name="APP_PATH" value="" />
+      <option name="STARTUP_COMMANDS" value="" />
+      <method />
+    </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="" />
+      <option name="directoryPath" value="" />
+      <option name="filePath" value="" />
+      <option name="kind" value="DIRECTORY" />
+      <option name="name" value="Go Test" />
+      <option name="package" value="" />
+      <option name="params" value="" />
+      <option name="pattern" value="" />
+      <option name="saveOutputToFile" value="false" />
+      <option name="showConsoleOnStdErr" value="false" />
+      <option name="showConsoleOnStdOut" value="false" />
+      <option name="workingDirectory" value="$PROJECT_DIR$" />
+      <method />
+    </configuration>
+    <configuration default="true" type="AndroidTestRunConfigurationType" factoryName="Android Tests">
+      <module name="" />
+      <option name="TESTING_TYPE" value="0" />
+      <option name="INSTRUMENTATION_RUNNER_CLASS" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="CLASS_NAME" value="" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TARGET_SELECTION_MODE" value="EMULATOR" />
+      <option name="USE_LAST_SELECTED_DEVICE" value="false" />
+      <option name="PREFERRED_AVD" value="" />
+      <option name="USE_COMMAND_LINE" value="true" />
+      <option name="COMMAND_LINE" value="" />
+      <option name="WIPE_USER_DATA" value="false" />
+      <option name="DISABLE_BOOT_ANIMATION" value="false" />
+      <option name="NETWORK_SPEED" value="full" />
+      <option name="NETWORK_LATENCY" value="none" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="true" />
+      <option name="FILTER_LOGCAT_AUTOMATICALLY" value="true" />
+      <method />
+    </configuration>
+    <configuration default="true" type="JarApplication" factoryName="JAR Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="true" type="GradleRunConfiguration" factoryName="Gradle">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list />
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <method />
+    </configuration>
+    <configuration default="true" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="VM_PARAMETERS" />
+      <option name="PROGRAM_PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="true" type="GoRunFileConfiguration" factoryName="Go Single File">
+      <module name="" />
+      <option name="filePath" value="" />
+      <option name="name" value="Go" />
+      <option name="params" value="" />
+      <option name="saveOutputToFile" value="false" />
+      <option name="showConsoleOnStdErr" value="false" />
+      <option name="showConsoleOnStdOut" value="false" />
       <method />
     </configuration>
     <configuration default="true" type="AndroidRunConfigurationType" factoryName="Android Application">
@@ -401,32 +401,33 @@
       <method />
     </configuration>
     <configuration default="false" name="BMSTU-Refal-Compiler" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="" />
+      <option name="filePath" value="$PROJECT_DIR$/" />
       <option name="name" value="BMSTU-Refal-Compiler" />
+      <option name="params" value="" />
+      <option name="saveOutputToFile" value="false" />
+      <option name="showConsoleOnStdErr" value="false" />
+      <option name="showConsoleOnStdOut" value="false" />
+      <RunnerSettings RunnerId="GoRunner" />
+      <ConfigurationWrapper RunnerId="GoRunner" />
+      <method>
+        <option name="Make" enabled="false" />
+      </method>
+    </configuration>
+    <configuration default="false" name="Unnamed" type="GoGdbRunConfigurationType" factoryName="Go GDB">
+      <module name="" />
+      <option name="name" value="Unnamed" />
       <option name="saveOutputToFile" value="false" />
       <option name="showConsoleOnStdErr" value="false" />
       <option name="showConsoleOnStdOut" value="false" />
       <option name="GDB_PATH" value="gdb" />
+      <option name="APP_PATH" value="" />
       <option name="STARTUP_COMMANDS" value="" />
-      <option name="autoStartGdb" value="true" />
-      <option name="debugBuilderArguments" value="-compiler gccgo -gcflags &quot;-N -l&quot;" />
-      <option name="scriptName" value="refalc/refalc.go" />
-      <option name="packageDir" value="" />
-      <option name="runPackage" value="false" />
-      <option name="runDebugger" value="true" />
-      <option name="scriptArguments" value="$USER_HOME$/CppProjects/BMSTU-Refal-Runtime/RoomOfTesting/source.ref" />
-      <option name="runBuilderArguments" value="" />
-      <option name="runExecutableName" value="" />
-      <option name="goBuildBeforeRun" value="true" />
-      <option name="goOutputDir" value="$PROJECT_DIR$/../../bin" />
-      <option name="workingDir" value="$PROJECT_DIR$" />
-      <option name="envVars" value="" />
-      <module name="" />
-      <RunnerSettings RunnerId="GoApplicationRunner" />
-      <ConfigurationWrapper RunnerId="GoApplicationRunner" />
       <method />
     </configuration>
-    <list size="1">
+    <list size="2">
       <item index="0" class="java.lang.String" itemvalue="Go Application.BMSTU-Refal-Compiler" />
+      <item index="1" class="java.lang.String" itemvalue="Go GDB.Unnamed" />
     </list>
   </component>
   <component name="ShelveChangesManager" show_recycled="false" />
@@ -444,7 +445,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-1" y="28" width="1922" height="1020" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -453,7 +454,6 @@
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Go" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3991228" sideWeight="0.46666667" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3991228" sideWeight="0.53333336" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -468,9 +468,10 @@
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Go" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.123903506" sideWeight="0.46666667" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -491,12 +492,6 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="gdb">
-          <url>file://$PROJECT_DIR$/emitter/matching_pattern.go</url>
-          <line>17</line>
-        </line-breakpoint>
-      </breakpoints>
       <option name="time" value="1" />
     </breakpoint-manager>
     <watches-manager />
@@ -506,6 +501,93 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/emitter/emitter_helpers.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="690" max-vertical-offset="2505">
+          <caret line="46" column="24" selection-start-line="46" selection-start-column="24" selection-end-line="46" selection-end-column="24" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/emitter/emitter.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="600" max-vertical-offset="2985">
+          <caret line="65" column="0" selection-start-line="65" selection-start-column="0" selection-end-line="65" selection-end-column="0" />
+          <folding>
+            <marker date="1422568870050" expanded="true" signature="2317:2464" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3171:3239" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3219:3236" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="4299:4739" placeholder="{ ... }" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/emitter/matching_pattern.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="100">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/emitter/emitter_helpers.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="690" max-vertical-offset="2505">
+          <caret line="46" column="24" selection-start-line="46" selection-start-column="24" selection-end-line="46" selection-end-column="24" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/emitter/emitter.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="600" max-vertical-offset="2985">
+          <caret line="65" column="0" selection-start-line="65" selection-start-column="0" selection-end-line="65" selection-end-column="0" />
+          <folding>
+            <marker date="1422568870050" expanded="true" signature="2317:2464" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3171:3239" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3219:3236" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="4299:4739" placeholder="{ ... }" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/emitter/matching_pattern.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="510" max-vertical-offset="3120">
+          <caret line="34" column="4" selection-start-line="34" selection-start-column="4" selection-end-line="34" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/emitter/emitter_helpers.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="420" max-vertical-offset="2505">
+          <caret line="46" column="24" selection-start-line="46" selection-start-column="24" selection-end-line="46" selection-end-column="24" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/emitter/emitter.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="540" max-vertical-offset="2685">
+          <caret line="61" column="0" selection-start-line="61" selection-start-column="0" selection-end-line="61" selection-end-column="0" />
+          <folding>
+            <marker date="1422568870050" expanded="true" signature="2317:2464" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3171:3239" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3219:3236" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="4299:4739" placeholder="{ ... }" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/emitter/matching_pattern.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2220">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/emitter/emitter_helpers.go">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="300" max-vertical-offset="2385">
@@ -519,7 +601,10 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="240" max-vertical-offset="2385">
           <caret line="41" column="28" selection-start-line="41" selection-start-column="28" selection-end-line="41" selection-end-column="28" />
           <folding>
-            <marker date="1422382257264" expanded="true" signature="2393:2499" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="2317:2464" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3171:3239" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3219:3236" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="4299:4739" placeholder="{ ... }" />
           </folding>
         </state>
       </provider>
@@ -545,7 +630,10 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="255" max-vertical-offset="2955">
           <caret line="17" column="1" selection-start-line="17" selection-start-column="1" selection-end-line="17" selection-end-column="1" />
           <folding>
-            <marker date="1422382257264" expanded="true" signature="2393:2499" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="2317:2464" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3171:3239" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3219:3236" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="4299:4739" placeholder="{ ... }" />
           </folding>
         </state>
       </provider>
@@ -563,7 +651,10 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="255" max-vertical-offset="2955">
           <caret line="17" column="1" selection-start-line="17" selection-start-column="1" selection-end-line="17" selection-end-column="1" />
           <folding>
-            <marker date="1422382257264" expanded="true" signature="2393:2499" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="2317:2464" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3171:3239" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3219:3236" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="4299:4739" placeholder="{ ... }" />
           </folding>
         </state>
       </provider>
@@ -581,7 +672,10 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="255" max-vertical-offset="2955">
           <caret line="17" column="1" selection-start-line="17" selection-start-column="1" selection-end-line="17" selection-end-column="1" />
           <folding>
-            <marker date="1422382257264" expanded="true" signature="2393:2499" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="2317:2464" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3171:3239" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3219:3236" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="4299:4739" placeholder="{ ... }" />
           </folding>
         </state>
       </provider>
@@ -602,21 +696,24 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/emitter/emitter.go">
+    <entry file="file://$PROJECT_DIR$/emitter/matching_pattern.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="540" max-vertical-offset="2685">
-          <caret line="61" column="0" selection-start-line="61" selection-start-column="0" selection-end-line="61" selection-end-column="0" />
-          <folding>
-            <marker date="1422382257264" expanded="true" signature="2393:2499" placeholder="{ ... }" />
-          </folding>
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3120">
+          <caret line="21" column="59" selection-start-line="21" selection-start-column="59" selection-end-line="21" selection-end-column="59" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/emitter/matching_pattern.go">
+    <entry file="file://$PROJECT_DIR$/emitter/emitter.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.33205375" vertical-offset="277" max-vertical-offset="2220">
-          <caret line="30" column="25" selection-start-line="30" selection-start-column="25" selection-end-line="30" selection-end-column="25" />
-          <folding />
+        <state vertical-scroll-proportion="0.2542373" vertical-offset="825" max-vertical-offset="2985">
+          <caret line="70" column="28" selection-start-line="70" selection-start-column="28" selection-end-line="70" selection-end-column="28" />
+          <folding>
+            <marker date="1422568870050" expanded="true" signature="2317:2464" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3171:3239" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="3219:3236" placeholder="{ ... }" />
+            <marker date="1422568870050" expanded="true" signature="4299:4739" placeholder="{ ... }" />
+          </folding>
         </state>
       </provider>
     </entry>
