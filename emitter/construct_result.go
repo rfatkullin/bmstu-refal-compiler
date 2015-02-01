@@ -81,21 +81,44 @@ func (f *Data) ConcatToParentChain(depth int, firstTerm bool, chainNumber int) {
 	}
 }
 
-func (f *Data) ConstructFuncCall(depth int, chainNumber *int, firstFuncCall *bool, terms []*syntax.Term) []*syntax.Term {
+func (f *Data) printFuncCallPointer(depth int, terms []*syntax.Term) (string, []*syntax.Term) {
+	funcName := ""
+	term := terms[0]
 
-	funcName := terms[0].Value.Name
+	switch term.TermTag {
+
+	case syntax.COMP:
+		terms = terms[1:]
+		funcName = term.Value.Name
+		break
+
+	case syntax.VAR:
+		//TO DO:
+		break
+
+	default:
+		f.printFailBlock(depth, -1, true)
+		break
+	}
+
+	return funcName, terms
+}
+
+func (f *Data) ConstructFuncCall(depth, entryPoint int, sentenceScope *syntax.Scope, chainNumber *int, firstFuncCall *bool, terms []*syntax.Term) []*syntax.Term {
+
+	funcName, terms := f.printFuncCallPointer(depth, terms)
 	currChainNumber := *chainNumber
 
-	terms = f.ConstructExprInParenthesis(depth, chainNumber, firstFuncCall, terms)
+	terms = f.ConstructExprInParenthesis(depth, entryPoint, sentenceScope, chainNumber, firstFuncCall, terms)
 
 	f.PrintLabel(depth, "currTerm = (struct lterm_t*)malloc(sizeof(struct lterm_t));")
 	f.PrintLabel(depth, "currTerm->tag = L_TERM_FUNC_CALL;")
 	f.PrintLabel(depth, "currTerm->funcCall = (struct func_call_t*)malloc(sizeof(struct func_call_t));")
+	f.PrintLabel(depth, "currTerm->funcCall->env = (struct env_t*)malloc(sizeof(struct env_t));")
 	f.PrintLabel(depth, fmt.Sprintf("currTerm->funcCall->funcName = %q;", funcName))
 	f.PrintLabel(depth, fmt.Sprintf("currTerm->funcCall->funcPtr = %s;", funcName))
 	f.PrintLabel(depth, "currTerm->funcCall->entryPoint = 0;")
-	f.PrintLabel(depth, "currTerm->funcCall->fieldOfView = (struct field_view_t*)malloc(sizeof(struct field_view_t));")
-	f.PrintLabel(depth, fmt.Sprintf("currTerm->funcCall->fieldOfView->current = helper[%d]->chain;", currChainNumber))
+	f.PrintLabel(depth, fmt.Sprintf("currTerm->funcCall->fieldOfView = helper[%d]->chain;", currChainNumber))
 
 	return terms
 }
@@ -111,14 +134,13 @@ func (f *Data) ConcatToCallChain(depth int, firstFuncCall *bool) {
 		*firstFuncCall = false
 	} else {
 		f.PrintLabel(depth, "funcCallChain->end->funcCall->next = currTerm;")
-		f.PrintLabel(depth, "funcCallChain->end->next = currTerm;")
 		f.PrintLabel(depth, "currTerm->prev = funcCallChain->end;")
 		f.PrintLabel(depth, "currTerm->next = 0;")
 		f.PrintLabel(depth, "funcCallChain->end = currTerm;")
 	}
 }
 
-func (f *Data) ConstructExprInParenthesis(depth int, chainNumber *int, firstFuncCall *bool, terms []*syntax.Term) []*syntax.Term {
+func (f *Data) ConstructExprInParenthesis(depth, entryPoint int, sentenceScope *syntax.Scope, chainNumber *int, firstFuncCall *bool, terms []*syntax.Term) []*syntax.Term {
 
 	firstTermInParenthesis := true
 	currChainNumber := *chainNumber
@@ -137,14 +159,19 @@ func (f *Data) ConstructExprInParenthesis(depth int, chainNumber *int, firstFunc
 		// Вызов функции
 		if term.TermTag == syntax.EVAL {
 			*chainNumber++
-			f.ConstructFuncCall(depth, chainNumber, firstFuncCall, term.Exprs[0].Terms)
+			f.ConstructFuncCall(depth, entryPoint, sentenceScope, chainNumber, firstFuncCall, term.Exprs[0].Terms)
 			f.ConcatToCallChain(depth, firstFuncCall)
 		}
 
 		// Выражение в скобках
 		if term.TermTag == syntax.EXPR {
 			*chainNumber++
-			f.ConstructExprInParenthesis(depth, chainNumber, firstFuncCall, term.Exprs[0].Terms)
+			f.ConstructExprInParenthesis(depth, entryPoint, sentenceScope, chainNumber, firstFuncCall, term.Exprs[0].Terms)
+		}
+
+		// Значение переменной
+		if term.TermTag == syntax.VAR {
+			f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->locals[%d][%d];", entryPoint, sentenceScope.VarMap[term.Value.Name].Number))
 		}
 
 		f.ConcatToParentChain(depth, firstTermInParenthesis, currChainNumber)
@@ -170,7 +197,7 @@ func (f *Data) ConstructExprInParenthesis(depth int, chainNumber *int, firstFunc
 	return terms
 }
 
-func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
+func (f *Data) ConstructResult(depth, entryPoint int, sentenceScope *syntax.Scope, resultExpr syntax.Expr) {
 
 	if len(resultExpr.Terms) == 0 {
 		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = 0, .callChain = 0};")
@@ -179,7 +206,6 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 
 		f.PrintLabel(depth, "struct lterm_chain_t* funcCallChain = 0;")
 		f.PrintLabel(depth, fmt.Sprintf("struct lterm_t** helper = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", chainsCount))
-		//f.PrintLabel(depth, "int i;")
 		f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; ++i)", chainsCount))
 		f.PrintLabel(depth, "{")
 		f.PrintLabel(depth+1, "helper[i] = (struct lterm_t*)malloc(sizeof(struct lterm_t));")
@@ -191,7 +217,7 @@ func (f *Data) ConstructResult(depth int, resultExpr syntax.Expr) {
 		firstFuncCall := true
 		chainNumber := 0
 
-		f.ConstructExprInParenthesis(depth, &chainNumber, &firstFuncCall, resultExpr.Terms)
+		f.ConstructExprInParenthesis(depth, entryPoint, sentenceScope, &chainNumber, &firstFuncCall, resultExpr.Terms)
 
 		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = currTerm->chain, .callChain = funcCallChain};")
 	}

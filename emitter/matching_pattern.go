@@ -15,14 +15,14 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext) {
 		return
 	}
 
-	f.PrintLabel(depth, fmt.Sprintf("//Sentence: %d, Pattern: %d", ctx.sentenceNumber, ctx.currPatternNumber))
-	f.PrintLabel(depth, fmt.Sprintf("case %d:", ctx.currEntryPoint))
+	f.PrintLabel(depth, fmt.Sprintf("//Sentence: %d, Pattern: %d", ctx.sentenceNumber, ctx.patternNumber))
+	f.PrintLabel(depth, fmt.Sprintf("case %d:", ctx.entryPoint))
 	f.PrintLabel(depth, fmt.Sprintf("{"))
 
-	f.checkAndAssemblyChain(depth+1, ctx.currPatternNumber)
+	f.checkAndAssemblyChain(depth+1, ctx.patternNumber)
 
 	f.PrintLabel(depth+1, "fragmentOffset = currFrag->offset;")
-	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = env->stretchVarsNumber[%d];", ctx.currPatternNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = env->stretchVarsNumber[%d];", ctx.patternNumber))
 	f.PrintLabel(depth+1, "stretching = 0;\n")
 
 	f.PrintLabel(depth+1, "while (stretchingVarNumber >= 0)")
@@ -44,10 +44,10 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext) {
 
 	f.PrintLabel(depth+2, "} //pattern switch\n")
 
-	f.PrintLabel(depth+2, "if (stretchingVarNumber >= 0)")
+	f.PrintLabel(depth+2, "if (!stretching)")
 	f.PrintLabel(depth+2, "{")
 	f.PrintLabel(depth+3, "if (fragmentOffset - currFrag->offset < currFrag->length)")
-	f.PrintLabel(depth+4, fmt.Sprintf("stretchingVarNumber = %d;", prevStretchVarNumber))
+	f.printFailBlock(depth+3, prevStretchVarNumber, false)
 	f.PrintLabel(depth+3, "else")
 	f.PrintLabel(depth+4, "break; // Success!")
 	f.PrintLabel(depth+2, "}")
@@ -60,8 +60,8 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext) {
 		f.initSretchVarNumbers(depth, ctx.maxPatternNumber)
 	}
 
-	ctx.currEntryPoint++
-	ctx.currPatternNumber++
+	ctx.entryPoint++
+	ctx.patternNumber++
 }
 
 func (f *Data) processPatternFail(depth int, ctx *emitterContext) {
@@ -70,10 +70,10 @@ func (f *Data) processPatternFail(depth int, ctx *emitterContext) {
 	f.PrintLabel(depth, "{")
 
 	//First pattern in current sentence
-	if ctx.currPatternNumber == 0 {
+	if ctx.patternNumber == 0 {
 		f.processFailOfFirstPattern(depth+1, ctx)
 	} else {
-		f.processFailOfCommonPattern(depth+1, ctx.currEntryPoint-1)
+		f.processFailOfCommonPattern(depth+1, ctx.entryPoint-1)
 	}
 
 	f.PrintLabel(depth+1, "break;")
@@ -119,25 +119,25 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 	switch value.VarType {
 	case tokens.VT_T:
 		if isFixedVar {
-			f.matchingFixedExprVar(depth+1, *prevStretchVarNumber, ctx.currPatternNumber, varNumber)
+			f.matchingFixedExprVar(depth+1, *prevStretchVarNumber, ctx.patternNumber, varNumber)
 		} else {
-			f.matchingFreeTermVar(depth+1, *prevStretchVarNumber, ctx.currPatternNumber, varNumber)
+			f.matchingFreeTermVar(depth+1, *prevStretchVarNumber, ctx.patternNumber, varNumber)
 		}
 		break
 
 	case tokens.VT_S:
 		if isFixedVar {
-			f.matchingFixedSymbolVar(depth+1, *prevStretchVarNumber, ctx.currPatternNumber, varNumber)
+			f.matchingFixedSymbolVar(depth+1, *prevStretchVarNumber, ctx.patternNumber, varNumber)
 		} else {
-			f.matchingFreeSymbolVar(depth+1, *prevStretchVarNumber, ctx.currPatternNumber, varNumber)
+			f.matchingFreeSymbolVar(depth+1, *prevStretchVarNumber, ctx.patternNumber, varNumber)
 		}
 		break
 
 	case tokens.VT_E:
 		if isFixedVar {
-			f.matchingFixedExprVar(depth+1, *prevStretchVarNumber, ctx.currPatternNumber, varNumber)
+			f.matchingFixedExprVar(depth+1, *prevStretchVarNumber, ctx.patternNumber, varNumber)
 		} else {
-			f.matchingFreeExprVar(depth+1, *prevStretchVarNumber, ctx.currPatternNumber, varNumber)
+			f.matchingFreeExprVar(depth+1, *prevStretchVarNumber, ctx.patternNumber, varNumber)
 			*prevStretchVarNumber = varNumber
 		}
 		break
@@ -147,12 +147,18 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 	ctx.fixedVars[value.Name] = true
 }
 
-func (f *Data) printFailBlock(depth, prevStretchVarNumber int) {
+func (f *Data) printFailBlock(depth, prevStretchVarNumber int, withBreakStatement bool) {
+
 	f.PrintLabel(depth, "{")
-	if prevStretchVarNumber >= 0 {
-		f.PrintLabel(depth+1, "stretching = 1;")
-	}
+	f.PrintLabel(depth+1, "stretching = 1;")
 	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = %d;", prevStretchVarNumber))
-	f.PrintLabel(depth+1, "break;")
+	if withBreakStatement {
+		f.PrintLabel(depth+1, "break;")
+	}
 	f.PrintLabel(depth, "}")
+}
+
+func (f *Data) printOffsetCheck(depth, prevStretchVarNumber int, optionalCond string) {
+	f.PrintLabel(depth, fmt.Sprintf("if (fragmentOffset >= currFrag->offset + currFrag->length%s)", optionalCond))
+	f.printFailBlock(depth, prevStretchVarNumber, true)
 }

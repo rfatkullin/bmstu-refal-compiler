@@ -17,8 +17,8 @@ type Data struct {
 }
 
 type emitterContext struct {
-	currEntryPoint           int
-	currPatternNumber        int
+	entryPoint               int
+	patternNumber            int
 	inSentencePatternNumber  int
 	maxPatternNumber         int
 	nextSentenceEntryPoint   int
@@ -73,16 +73,9 @@ func (f *Data) printFreeLocals(depth, matchingNumber, varsNumber int) {
 
 	f.PrintLabel(depth, "if (funcRes.status != CALL_RESULT)")
 	f.PrintLabel(depth, "{")
-
-	f.PrintLabel(depth+1, fmt.Sprintf("for (i = 0; i < %d; i++)", matchingNumber))
-	f.PrintLabel(depth+1, "{")
-	f.PrintLabel(depth+2, "free(env->locals[i]);")
-	f.PrintLabel(depth+1, "}")
-
 	f.PrintLabel(depth+1, "free(env->locals);")
 	f.PrintLabel(depth+1, "free(env->stretchVarsNumber);")
 	f.PrintLabel(depth+1, "free(env->assembledFOVs);")
-
 	f.PrintLabel(depth, "}")
 }
 
@@ -111,20 +104,34 @@ func (f *Data) calcPatternsNumber(s *syntax.Sentence) int {
 	return number
 }
 
+//func (f *Data) isTherePatternsExists(sentences []*syntax.Sentence) bool {
+
+//	for _, s := range sentences {
+
+//		if len(s.Pattern.Terms) > 0 {
+//			return true
+//		}
+//	}
+
+//	return false
+//}
+
 func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
+	//isTheresPatternsExists := f.isTherePatternsExists(currFunc.Sentences)
 	var ctx emitterContext
 	maxVarsNumber := 0
-
-	ctx.currEntryPoint = 0
-	ctx.currPatternNumber = 0
+	ctx.entryPoint = 0
+	ctx.patternNumber = 0
 	ctx.maxPatternNumber, maxVarsNumber = f.calcMaxPatternsAndVarsNumbers(currFunc)
 
 	f.printInitLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
 
+	//if isTheresPatternsExists {
 	f.PrintLabel(depth, "while(entryPoint >= 0)")
 	f.PrintLabel(depth, "{")
 	f.PrintLabel(depth+1, "switch (entryPoint)")
 	f.PrintLabel(depth+1, "{")
+	//}
 
 	for sentenceNumber, s := range currFunc.Sentences {
 
@@ -136,7 +143,7 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 		ctx.isLastSentence = sentenceNumber == len(currFunc.Sentences)-1
 		ctx.isFirstPatternInSentence = true
 		ctx.isLastPatternInSentence = ctx.inSentencePatternNumber == 1
-		ctx.nextSentenceEntryPoint = ctx.currEntryPoint + ctx.inSentencePatternNumber
+		ctx.nextSentenceEntryPoint = ctx.entryPoint + ctx.inSentencePatternNumber
 
 		f.matchingPattern(depth+1, &ctx)
 
@@ -146,7 +153,11 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 			switch a.ActionOp {
 
 			case syntax.REPLACE: // '='
-				f.ConstructResult(depth+2, a.Expr)
+				if ctx.entryPoint == 0 {
+					f.PrintLabel(depth+1, "default:")
+					f.PrintLabel(depth+1, "{")
+				}
+				f.ConstructResult(depth+2, ctx.entryPoint-1, &s.Scope, a.Expr)
 				break
 
 			case syntax.COLON: // ':'
@@ -166,9 +177,12 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 		f.PrintLabel(depth+2, "break; //Successful end of sentence")
 	}
 
+	//if isTheresPatternsExists {
 	f.PrintLabel(depth+1, "} // Pattern case end")
 	f.PrintLabel(depth+1, "} // Entry point switch end")
 	f.PrintLabel(depth, "} // Main while end")
+	//}
+
 	f.printFreeLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
 	f.PrintLabel(depth, "return funcRes;")
 
