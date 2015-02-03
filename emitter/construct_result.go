@@ -71,19 +71,11 @@ func (f *Data) ConstructLiteralsFragment(depth int, terms []*syntax.Term) []*syn
 
 func (f *Data) ConcatToParentChain(depth int, firstTerm bool, chainNumber int) {
 
-	if firstTerm {
-		f.PrintLabel(depth, "//First term in field chain -- Initialization.")
-		f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->next = currTerm;", chainNumber))
-		f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->prev = currTerm;", chainNumber))
-		f.PrintLabel(depth, fmt.Sprintf("currTerm->prev = helper[%d]->chain;", chainNumber))
-		f.PrintLabel(depth, fmt.Sprintf("currTerm->next = helper[%d]->chain;", chainNumber))
-	} else {
-		f.PrintLabel(depth, "//Adding term to field chain -- Just concat.")
-		f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->prev->next = currTerm;", chainNumber))
-		f.PrintLabel(depth, fmt.Sprintf("currTerm->prev = helper[%d]->chain->prev;", chainNumber))
-		f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->prev = currTerm;", chainNumber))
-		f.PrintLabel(depth, fmt.Sprintf("currTerm->next = helper[%d]->chain;", chainNumber))
-	}
+	f.PrintLabel(depth, "//Adding term to field chain -- Just concat.")
+	f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->prev->next = currTerm;", chainNumber))
+	f.PrintLabel(depth, fmt.Sprintf("currTerm->prev = helper[%d]->chain->prev;", chainNumber))
+	f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->prev = currTerm;", chainNumber))
+	f.PrintLabel(depth, fmt.Sprintf("currTerm->next = helper[%d]->chain;", chainNumber))
 }
 
 func (f *Data) printFuncCallPointer(depth int, terms []*syntax.Term) (string, []*syntax.Term) {
@@ -125,7 +117,7 @@ func (f *Data) ConstructFuncCall(depth, entryPoint int, sentenceScope *syntax.Sc
 	f.PrintLabel(depth, "funcTerm->funcCall->entryPoint = 0;")
 	f.PrintLabel(depth, "funcTerm->funcCall->fieldOfView = currTerm->chain;")
 	f.PrintLabel(depth, "//WARN: Begin")
-	f.PrintLabel(depth, "free(currTerm->chain);")
+	f.PrintLabel(depth, "free(currTerm);")
 	f.PrintLabel(depth, "//WARN: End")
 
 	f.PrintLabel(depth, "//Finished construction func call")
@@ -215,8 +207,8 @@ func (f *Data) ConstructResult(depth, entryPoint int, sentenceScope *syntax.Scop
 		f.PrintLabel(depth+1, "helper[i] = (struct lterm_t*)malloc(sizeof(struct lterm_t));")
 		f.PrintLabel(depth+1, "helper[i]->tag = L_TERM_CHAIN_TAG;")
 		f.PrintLabel(depth+1, "helper[i]->chain = (struct lterm_t*)malloc(sizeof(struct lterm_t));")
-		f.PrintLabel(depth+1, "helper[i]->chain->prev = 0;")
-		f.PrintLabel(depth+1, "helper[i]->chain->next = 0;")
+		f.PrintLabel(depth+1, "helper[i]->chain->prev = helper[i]->chain;")
+		f.PrintLabel(depth+1, "helper[i]->chain->next = helper[i]->chain;")
 		f.PrintLabel(depth, "}")
 
 		f.PrintLabel(depth, "struct lterm_t* currTerm = 0;")
