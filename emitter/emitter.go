@@ -16,6 +16,11 @@ type Data struct {
 	CurrTermNum int
 }
 
+type patternContext struct {
+	entryPoint     int
+	prevEntryPoint int
+}
+
 type emitterContext struct {
 	entryPoint               int
 	patternNumber            int
@@ -27,8 +32,8 @@ type emitterContext struct {
 	isLastPatternInSentence  bool
 	isLastSentence           bool
 	sentenceScope            *syntax.Scope
-	terms                    []*syntax.Term
 	fixedVars                map[string]bool
+	patternCtx               patternContext
 }
 
 func (f *Data) mainFunc(depth int) {
@@ -104,18 +109,6 @@ func (f *Data) calcPatternsNumber(s *syntax.Sentence) int {
 	return number
 }
 
-//func (f *Data) isTherePatternsExists(sentences []*syntax.Sentence) bool {
-
-//	for _, s := range sentences {
-
-//		if len(s.Pattern.Terms) > 0 {
-//			return true
-//		}
-//	}
-
-//	return false
-//}
-
 func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 	//isTheresPatternsExists := f.isTherePatternsExists(currFunc.Sentences)
 	var ctx emitterContext
@@ -138,7 +131,6 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 		ctx.fixedVars = make(map[string]bool)
 		ctx.sentenceNumber = sentenceNumber
 		ctx.sentenceScope = &s.Scope
-		ctx.terms = s.Pattern.Terms
 		ctx.inSentencePatternNumber = f.calcPatternsNumber(s)
 		ctx.isLastSentence = sentenceNumber == len(currFunc.Sentences)-1
 		ctx.isFirstPatternInSentence = true
@@ -146,7 +138,7 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 		ctx.nextSentenceEntryPoint = ctx.entryPoint + ctx.inSentencePatternNumber
 		ctx.patternNumber = 0
 
-		f.matchingPattern(depth+1, &ctx)
+		f.matchingPattern(depth+1, &ctx, s.Pattern.Terms)
 
 		ctx.isFirstPatternInSentence = false
 
@@ -159,8 +151,7 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 
 			case syntax.COLON: // ':'
 				f.PrintLabel(depth+1, "} // Pattern case end\n")
-				ctx.terms = a.Expr.Terms
-				f.matchingPattern(depth+1, &ctx)
+				f.matchingPattern(depth+1, &ctx, a.Expr.Terms)
 				break
 
 			case syntax.COMMA: // ','
@@ -175,11 +166,8 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 		f.PrintLabel(depth+1, "} // Pattern case end")
 	}
 
-	//if isTheresPatternsExists {
-
 	f.PrintLabel(depth+1, "} // Entry point switch end")
 	f.PrintLabel(depth, "} // Main while end")
-	//}
 
 	f.printFreeLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
 	f.PrintLabel(depth, "return funcRes;")

@@ -16,8 +16,8 @@ func (f *Data) matchingFreeTermVar(depth, prevStretchVarNumber, patternNumber, v
 	f.PrintLabel(depth+1, "}")
 	f.PrintLabel(depth+1, "else")
 	f.PrintLabel(depth+1, "{")
-	f.PrintLabel(depth+1, fmt.Sprintf("env->locals[%d][%d].fragment->length = 1;", patternNumber, varNumber))
-	f.PrintLabel(depth+1, "fragmentOffset++;")
+	f.PrintLabel(depth+2, fmt.Sprintf("env->locals[%d][%d].fragment->length = 1;", patternNumber, varNumber))
+	f.PrintLabel(depth+2, "fragmentOffset++;")
 	f.PrintLabel(depth+1, "}")
 	f.PrintLabel(depth, "}")
 }

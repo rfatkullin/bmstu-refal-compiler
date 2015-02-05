@@ -9,7 +9,7 @@ import (
 	"BMSTU-Refal-Compiler/tokens"
 )
 
-func (f *Data) matchingPattern(depth int, ctx *emitterContext) {
+func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.Term) {
 
 	f.PrintLabel(depth, fmt.Sprintf("//Sentence: %d, Pattern: %d", ctx.sentenceNumber, ctx.patternNumber))
 	f.PrintLabel(depth, fmt.Sprintf("case %d:", ctx.entryPoint))
@@ -21,11 +21,16 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext) {
 	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = env->stretchVarsNumber[%d];", ctx.patternNumber))
 	f.PrintLabel(depth+1, "stretching = 0;\n")
 
-	if len(ctx.terms) == 0 {
-		f.processEmptyPattern(depth, ctx)
+	f.PrintLabel(depth+1, "while (stretchingVarNumber >= 0)")
+	f.PrintLabel(depth+1, "{")
+
+	if len(terms) == 0 {
+		f.processEmptyPattern(depth+1, ctx)
 	} else {
-		f.processPattern(depth, ctx)
+		f.processPattern(depth+1, ctx, terms)
 	}
+
+	f.PrintLabel(depth+1, "} // Pattern while\n")
 
 	f.processPatternFail(depth+1, ctx)
 
@@ -40,38 +45,77 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext) {
 func (f *Data) processEmptyPattern(depth int, ctx *emitterContext) {
 	f.PrintLabel(depth+1, "if (currFrag->length > 0)")
 	f.printFailBlock(depth+1, -1, false)
+	f.PrintLabel(depth+1, "break;")
 }
 
-func (f *Data) processPattern(depth int, ctx *emitterContext) {
+func (f *Data) processPattern(depth int, ctx *emitterContext, terms []*syntax.Term) {
 
-	f.PrintLabel(depth+1, "while (stretchingVarNumber >= 0)")
+	f.PrintLabel(depth+1, "//From what stretchable variable start?")
+	f.PrintLabel(depth+1, "switch (stretchingVarNumber)")
 	f.PrintLabel(depth+1, "{")
 
-	f.PrintLabel(depth+2, "//From what stretchable variable start?")
-	f.PrintLabel(depth+2, "switch (stretchingVarNumber)")
-	f.PrintLabel(depth+2, "{")
+	ctx.patternCtx.entryPoint = 0
+	ctx.patternCtx.prevEntryPoint = -1
 
-	prevStretchVarNumber := -1
-	for _, term := range ctx.terms {
+	if terms[0].TermTag != syntax.VAR || terms[0].VarType != tokens.VT_E {
+		ctx.patternCtx.entryPoint = 1
+		f.PrintLabel(depth+1, "case 0:")
+	}
+
+	f.matchingTerm(depth+2, ctx, terms)
+
+	f.PrintLabel(depth+1, "} //pattern switch\n")
+
+	f.PrintLabel(depth+1, "if (!stretching)")
+	f.PrintLabel(depth+1, "{")
+	f.PrintLabel(depth+2, "if (fragmentOffset - currFrag->offset < currFrag->length)")
+	f.printFailBlock(depth+2, ctx.patternCtx.prevEntryPoint, false)
+	f.PrintLabel(depth+2, "else")
+	f.PrintLabel(depth+3, "break; // Success!")
+	f.PrintLabel(depth+1, "}")
+}
+
+func (f *Data) matchingTerm(depth int, ctx *emitterContext, terms []*syntax.Term) {
+	for _, term := range terms {
 
 		switch term.TermTag {
 		case syntax.VAR:
-			f.matchingVariable(depth+2, ctx, &term.Value, &prevStretchVarNumber)
+			f.matchingVariable(depth, ctx, &term.Value)
+			break
+		case syntax.STR:
+			f.matchingStrLiteral(depth, ctx, string(term.Value.Str))
+			break
+		case syntax.COMP:
+			f.matchingCompLiteral(depth, ctx, term.Value.Name)
+			break
+		case syntax.INT:
+			f.matchingIntLiteral(depth, ctx, int(term.Value.Int.Int64()))
+			break
+		case syntax.EXPR:
+			f.matchingExpr(depth, ctx, term.Exprs[0].Terms)
+			break
+		case syntax.FLOAT:
+			//TO DO
 			break
 		}
 	}
+}
 
-	f.PrintLabel(depth+2, "} //pattern switch\n")
+func (f *Data) matchingExpr(depth int, ctx *emitterContext, terms []*syntax.Term) {
 
-	f.PrintLabel(depth+2, "if (!stretching)")
-	f.PrintLabel(depth+2, "{")
-	f.PrintLabel(depth+3, "if (fragmentOffset - currFrag->offset < currFrag->length)")
-	f.printFailBlock(depth+3, prevStretchVarNumber, false)
-	f.PrintLabel(depth+3, "else")
-	f.PrintLabel(depth+4, "break; // Success!")
-	f.PrintLabel(depth+2, "}")
+	f.PrintLabel(depth, "//Check (")
+	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, " || memMngr.vterms[fragmentOffset].tag != V_BRACKET_TAG || "+
+		"memMngr.vterms[fragmentOffset].inBracketLength == 0")
 
-	f.PrintLabel(depth+1, "} // Pattern while\n")
+	f.PrintLabel(depth, "fragmentOffset++;")
+
+	f.matchingTerm(depth, ctx, terms)
+
+	f.PrintLabel(depth, "//Check )")
+	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, " || memMngr.vterms[fragmentOffset].tag != V_BRACKET_TAG || "+
+		"memMngr.vterms[fragmentOffset].inBracketLength != 0")
+
+	f.PrintLabel(depth, "fragmentOffset++;")
 }
 
 func (f *Data) processPatternFail(depth int, ctx *emitterContext) {
@@ -119,41 +163,45 @@ func (f *Data) checkAndAssemblyChain(depth, indexInSentence int) {
 	f.PrintLabel(depth, fmt.Sprintf("currFrag = env->assembledFOVs[%d]->fragment;", indexInSentence))
 }
 
-func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Value, prevStretchVarNumber *int) {
+func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Value) {
 
 	varNumber := ctx.sentenceScope.VarMap[value.Name].Number
 	_, isFixedVar := ctx.fixedVars[value.Name]
-	f.PrintLabel(depth, fmt.Sprintf("case %d: //Matching %s variable", varNumber, value.Name))
-	f.PrintLabel(depth, "{")
+
+	f.PrintLabel(depth-1, fmt.Sprintf("//Matching %s variable", value.Name))
 
 	switch value.VarType {
 	case tokens.VT_T:
 		if isFixedVar {
-			f.matchingFixedExprVar(depth+1, *prevStretchVarNumber, ctx.patternNumber, varNumber)
+			f.matchingFixedExprVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
 		} else {
-			f.matchingFreeTermVar(depth+1, *prevStretchVarNumber, ctx.patternNumber, varNumber)
+			f.matchingFreeTermVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
 		}
 		break
 
 	case tokens.VT_S:
 		if isFixedVar {
-			f.matchingFixedSymbolVar(depth+1, *prevStretchVarNumber, ctx.patternNumber, varNumber)
+			f.matchingFixedSymbolVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
 		} else {
-			f.matchingFreeSymbolVar(depth+1, *prevStretchVarNumber, ctx.patternNumber, varNumber)
+			f.matchingFreeSymbolVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
 		}
 		break
 
 	case tokens.VT_E:
+
 		if isFixedVar {
-			f.matchingFixedExprVar(depth+1, *prevStretchVarNumber, ctx.patternNumber, varNumber)
+			f.matchingFixedExprVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
 		} else {
-			f.matchingFreeExprVar(depth+1, *prevStretchVarNumber, ctx.patternNumber, varNumber)
-			*prevStretchVarNumber = varNumber
+			f.PrintLabel(depth-1, fmt.Sprintf("case %d:", ctx.patternCtx.entryPoint))
+
+			f.matchingFreeExprVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
+
+			ctx.patternCtx.prevEntryPoint = ctx.patternCtx.entryPoint
+			ctx.patternCtx.entryPoint++
 		}
 		break
 	}
 
-	f.PrintLabel(depth, fmt.Sprintf("} // Matching %s variable", value.Name))
 	ctx.fixedVars[value.Name] = true
 }
 
