@@ -144,6 +144,7 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 		ctx.isFirstPatternInSentence = true
 		ctx.isLastPatternInSentence = ctx.inSentencePatternNumber == 1
 		ctx.nextSentenceEntryPoint = ctx.entryPoint + ctx.inSentencePatternNumber
+		ctx.patternNumber = 0
 
 		f.matchingPattern(depth+1, &ctx)
 
@@ -153,10 +154,6 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 			switch a.ActionOp {
 
 			case syntax.REPLACE: // '='
-				if ctx.entryPoint == 0 {
-					f.PrintLabel(depth+1, "default:")
-					f.PrintLabel(depth+1, "{")
-				}
 				f.ConstructResult(depth+2, ctx.entryPoint-1, &s.Scope, a.Expr)
 				break
 
@@ -175,10 +172,11 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 
 		f.PrintLabel(depth+2, "entryPoint = -1;")
 		f.PrintLabel(depth+2, "break; //Successful end of sentence")
+		f.PrintLabel(depth+1, "} // Pattern case end")
 	}
 
 	//if isTheresPatternsExists {
-	f.PrintLabel(depth+1, "} // Pattern case end")
+
 	f.PrintLabel(depth+1, "} // Entry point switch end")
 	f.PrintLabel(depth, "} // Main while end")
 	//}

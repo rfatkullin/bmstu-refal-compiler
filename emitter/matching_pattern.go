@@ -11,10 +11,6 @@ import (
 
 func (f *Data) matchingPattern(depth int, ctx *emitterContext) {
 
-	if len(ctx.terms) == 0 {
-		return
-	}
-
 	f.PrintLabel(depth, fmt.Sprintf("//Sentence: %d, Pattern: %d", ctx.sentenceNumber, ctx.patternNumber))
 	f.PrintLabel(depth, fmt.Sprintf("case %d:", ctx.entryPoint))
 	f.PrintLabel(depth, fmt.Sprintf("{"))
@@ -24,6 +20,29 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext) {
 	f.PrintLabel(depth+1, "fragmentOffset = currFrag->offset;")
 	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = env->stretchVarsNumber[%d];", ctx.patternNumber))
 	f.PrintLabel(depth+1, "stretching = 0;\n")
+
+	if len(ctx.terms) == 0 {
+		f.processEmptyPattern(depth, ctx)
+	} else {
+		f.processPattern(depth, ctx)
+	}
+
+	f.processPatternFail(depth+1, ctx)
+
+	if ctx.isLastPatternInSentence && !ctx.isLastSentence {
+		f.initSretchVarNumbers(depth+1, ctx.maxPatternNumber)
+	}
+
+	ctx.entryPoint++
+	ctx.patternNumber++
+}
+
+func (f *Data) processEmptyPattern(depth int, ctx *emitterContext) {
+	f.PrintLabel(depth+1, "if (currFrag->length > 0)")
+	f.printFailBlock(depth+1, -1, false)
+}
+
+func (f *Data) processPattern(depth int, ctx *emitterContext) {
 
 	f.PrintLabel(depth+1, "while (stretchingVarNumber >= 0)")
 	f.PrintLabel(depth+1, "{")
@@ -53,15 +72,6 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext) {
 	f.PrintLabel(depth+2, "}")
 
 	f.PrintLabel(depth+1, "} // Pattern while\n")
-
-	f.processPatternFail(depth+1, ctx)
-
-	if ctx.isLastPatternInSentence && !ctx.isLastSentence {
-		f.initSretchVarNumbers(depth, ctx.maxPatternNumber)
-	}
-
-	ctx.entryPoint++
-	ctx.patternNumber++
 }
 
 func (f *Data) processPatternFail(depth int, ctx *emitterContext) {
