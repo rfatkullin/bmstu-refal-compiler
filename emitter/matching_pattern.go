@@ -19,7 +19,6 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.T
 
 	f.PrintLabel(depth+1, "fragmentOffset = currFrag->offset;")
 	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = env->stretchVarsNumber[%d];", ctx.patternNumber))
-	f.PrintLabel(depth+1, "stretching = 0;\n")
 
 	f.PrintLabel(depth+1, "while (stretchingVarNumber >= 0)")
 	f.PrintLabel(depth+1, "{")
@@ -138,17 +137,17 @@ func (f *Data) processFailOfFirstPattern(depth int, ctx *emitterContext) {
 	if ctx.isLastSentence {
 		f.PrintLabel(depth, "//First pattern of last sentence -> nothing to stretch -> fail!")
 		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = FAIL_RESULT, .fieldChain = 0, .callChain = 0};")
-		f.PrintLabel(depth, "entryPoint = -1;")
+		f.PrintLabel(depth, "*entryPoint = -1;")
 
 	} else {
 		f.PrintLabel(depth, "//First pattern of current sentence -> jump to first pattern of next sentence!")
-		f.PrintLabel(depth, fmt.Sprintf("entryPoint = %d;", ctx.nextSentenceEntryPoint))
+		f.PrintLabel(depth, fmt.Sprintf("*entryPoint = %d;", ctx.nextSentenceEntryPoint))
 	}
 }
 
 func (f *Data) processFailOfCommonPattern(depth, prevEntryPoint int) {
 	f.PrintLabel(depth, "//Jump to previouse pattern of same sentence!")
-	f.PrintLabel(depth, fmt.Sprintf("entryPoint = %d;", prevEntryPoint))
+	f.PrintLabel(depth, fmt.Sprintf("*entryPoint = %d;", prevEntryPoint))
 }
 
 func (f *Data) initSretchVarNumbers(depth, maxPatternNumber int) {

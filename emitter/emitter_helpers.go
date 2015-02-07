@@ -22,7 +22,7 @@ func (f *Data) PrintLabel(depth int, label string) {
 }
 
 func (f *Data) printFuncHeader(depth int, name string) {
-	f.PrintLabel(depth, fmt.Sprintf("struct func_result_t %s(int entryPoint, struct env_t* env, struct lterm_t* fieldOfView) \n{", name))
+	f.PrintLabel(depth, fmt.Sprintf("struct func_result_t %s(int* entryPoint, struct env_t* env, struct lterm_t* fieldOfView) \n{", name))
 }
 
 func (f *Data) initData(depth int) {

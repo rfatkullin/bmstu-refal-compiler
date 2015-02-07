@@ -31,6 +31,9 @@ type emitterContext struct {
 	isFirstPatternInSentence bool
 	isLastPatternInSentence  bool
 	isLastSentence           bool
+	isNextActMatching        bool
+	isLastAction             bool
+	isFuncCallInConstruct    bool
 	sentenceScope            *syntax.Scope
 	fixedVars                map[string]bool
 	patternCtx               patternContext
@@ -49,13 +52,17 @@ func (f *Data) mainFunc(depth int) {
 func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 
 	f.PrintLabel(depth, "struct func_result_t funcRes;")
+	f.PrintLabel(depth, "struct lterm_t* funcCallChain = 0;")
 	f.PrintLabel(depth, "struct fragment_t* currFrag = 0;")
+	f.PrintLabel(depth, "struct lterm_t** helper = 0;")
+	f.PrintLabel(depth, "struct lterm_t* currTerm = 0;")
+	f.PrintLabel(depth, "struct lterm_t* funcTerm = 0;")
 	f.PrintLabel(depth, "int fragmentOffset = 0;")
 	f.PrintLabel(depth, "int stretchingVarNumber = 0;")
 	f.PrintLabel(depth, "int stretching = 0;")
 	f.PrintLabel(depth, "int i = 0;")
 	f.PrintLabel(depth, "int j = 0;")
-	f.PrintLabel(depth, "if (entryPoint == 0)")
+	f.PrintLabel(depth, "if (*entryPoint == 0)")
 	f.PrintLabel(depth, "{")
 	f.PrintLabel(depth+1, fmt.Sprintf("env->locals = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", maxPatternNumber))
 	f.PrintLabel(depth+1, fmt.Sprintf("env->assembledFOVs = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", maxPatternNumber))
@@ -120,9 +127,9 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 	f.printInitLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
 
 	//if isTheresPatternsExists {
-	f.PrintLabel(depth, "while(entryPoint >= 0)")
+	f.PrintLabel(depth, "while(*entryPoint >= 0)")
 	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, "switch (entryPoint)")
+	f.PrintLabel(depth+1, "switch (*entryPoint)")
 	f.PrintLabel(depth+1, "{")
 	//}
 
@@ -137,16 +144,24 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 		ctx.isLastPatternInSentence = ctx.inSentencePatternNumber == 1
 		ctx.nextSentenceEntryPoint = ctx.entryPoint + ctx.inSentencePatternNumber
 		ctx.patternNumber = 0
+		ctx.isFuncCallInConstruct = false
 
 		f.matchingPattern(depth+1, &ctx, s.Pattern.Terms)
 
 		ctx.isFirstPatternInSentence = false
 
-		for _, a := range s.Actions {
+		for index, a := range s.Actions {
+
+			ctx.isLastAction = index == len(s.Actions)-1
+			ctx.isNextActMatching = false
+			if index+1 < len(s.Actions) && (s.Actions[index+1].ActionOp == syntax.COLON || s.Actions[index+1].ActionOp == syntax.DCOLON) {
+				ctx.isNextActMatching = true
+			}
+
 			switch a.ActionOp {
 
-			case syntax.REPLACE: // '='
-				f.ConstructResult(depth+2, ctx.entryPoint-1, &s.Scope, a.Expr)
+			case syntax.REPLACE, syntax.COMMA: // '=' ','
+				f.ConstructResult(depth+2, &ctx, &s.Scope, a.Expr)
 				break
 
 			case syntax.COLON: // ':'
@@ -154,14 +169,13 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 				f.matchingPattern(depth+1, &ctx, a.Expr.Terms)
 				break
 
-			case syntax.COMMA: // ','
 			case syntax.TARROW: // '->'
 			case syntax.ARROW: // '=>'
 			case syntax.DCOLON: // '::'
 			}
 		}
 
-		f.PrintLabel(depth+2, "entryPoint = -1;")
+		f.PrintLabel(depth+2, "*entryPoint = -1;")
 		f.PrintLabel(depth+2, "break; //Successful end of sentence")
 		f.PrintLabel(depth+1, "} // Pattern case end")
 	}

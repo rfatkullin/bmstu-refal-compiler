@@ -41,12 +41,12 @@ func (f *Data) matchingFreeExprVar(depth, prevStretchVarNumber, patternNumber, v
 	f.PrintLabel(depth, "else // stretching")
 	f.PrintLabel(depth, "{")
 
-	f.printOffsetCheck(depth+1, prevStretchVarNumber, "")
-
 	f.PrintLabel(depth+1, "stretching = 0;")
 	f.PrintLabel(depth+1, fmt.Sprintf("env->stretchVarsNumber[%d] = %d;", patternNumber, varNumber))
 	f.PrintLabel(depth+1, "//Restore last offset at this point")
 	f.PrintLabel(depth+1, fmt.Sprintf("fragmentOffset = env->locals[%d][%d].fragment->offset + env->locals[%d][%d].fragment->length;", patternNumber, varNumber, patternNumber, varNumber))
+
+	f.printOffsetCheck(depth+1, prevStretchVarNumber, "")
 
 	f.PrintLabel(depth+1, "if (memMngr.vterms[fragmentOffset].tag == V_BRACKET_TAG)")
 	f.PrintLabel(depth+1, "{")
