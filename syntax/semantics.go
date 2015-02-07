@@ -10,7 +10,7 @@ import (
 )
 
 func analyse(ast chan<- *Unit, ms chan<- messages.Data,
-exts <-chan *FuncHeader, globals <-chan *Function, dialect int) {
+	exts <-chan *FuncHeader, globals <-chan *Function, dialect int) {
 	err := func(pos coords.Pos, s string) {
 		ms <- messages.Data{pos, messages.ERROR, s}
 	}
@@ -59,8 +59,8 @@ exts <-chan *FuncHeader, globals <-chan *Function, dialect int) {
 
 	unit := Unit{
 		Builtins: make(map[string]bool, 16),
-		ExtMap: make(map[string]*FuncHeader, 16),
-		GlobMap: make(map[string]*Function, 64),
+		ExtMap:   make(map[string]*FuncHeader, 16),
+		GlobMap:  make(map[string]*Function, 64),
 	}
 	ready := make(chan bool)
 
@@ -144,6 +144,9 @@ exts <-chan *FuncHeader, globals <-chan *Function, dialect int) {
 					} else {
 						errDuplicate(t.Pos, "nested function")
 					}
+				} else {
+					t.HasName = true
+					t.FuncName = scope.AddAnonymousFunc()
 				}
 			}
 		}

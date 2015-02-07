@@ -188,12 +188,30 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 
 }
 
+func (f *Data) predeclareGlobFuncs(depth int, globFuncs map[string]*syntax.Function) {
+
+	funcDeclarePattern := "struct func_result_t %s(int* entryPoint, struct env_t* env, struct lterm_t* fieldOfView);"
+
+	for _, currFunc := range globFuncs {
+		f.PrintLabel(depth, fmt.Sprintf(funcDeclarePattern, currFunc.FuncName))
+
+		for _, s := range currFunc.Sentences {
+			for funcName, _ := range s.FuncMap {
+				f.PrintLabel(depth, fmt.Sprintf(funcDeclarePattern, funcName))
+			}
+		}
+	}
+
+	f.PrintLabel(0, "")
+}
+
 func processFile(f Data) {
 	unit := f.Ast
 	depth := 0
 
 	f.PrintLabel(depth, fmt.Sprintf("// file:%s\n", f.Name))
 	f.PrintHeaders()
+	f.predeclareGlobFuncs(depth, unit.GlobMap)
 
 	f.initLiteralDataFunc(depth)
 

@@ -148,8 +148,7 @@ func (f *Data) PrintHeaders() {
 	f.PrintLabel(0, "#include <memory_manager.h>")
 	f.PrintLabel(0, "#include <vmachine.h>")
 	f.PrintLabel(0, "#include <builtins.h>")
-
-	f.PrintLabel(0, "\n")
+	f.PrintLabel(0, "")
 }
 
 func max(a, b int) int {
