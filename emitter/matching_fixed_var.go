@@ -5,7 +5,7 @@ import (
 )
 
 func (f *Data) matchingFixedSymbolVar(depth, prevStretchVarNumber, patternNumber, varNumber int) {
-	f.PrintLabel(depth, "if (fragmentOffset >= currFrag->length || memMngr.vterms[fragmentOffset].tag == V_BRACKET_TAG")
+	f.PrintLabel(depth, "if (fragmentOffset >= currFrag->length + currFrag->length || memMngr.vterms[fragmentOffset].tag == V_BRACKET_TAG")
 
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (memMngr.vterms[fragmentOffset].tag != memMngr.vterms[env->locals[%d][%d].fragment->offset].tag)", patternNumber, varNumber))
 
@@ -28,8 +28,7 @@ func (f *Data) matchingFixedSymbolVar(depth, prevStretchVarNumber, patternNumber
 
 func (f *Data) matchingFixedExprVar(depth, prevStretchVarNumber, patternNumber, varNumber int) {
 
-	f.PrintLabel(depth, "if (fragmentOffset >= currFrag->length)")
-	f.printFailBlock(depth, prevStretchVarNumber, true)
+	f.printOffsetCheck(depth, prevStretchVarNumber, "")
 
 	f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < env->locals[%d][%d].fragment->length; i++)", patternNumber, varNumber))
 	f.PrintLabel(depth, "{")

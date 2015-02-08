@@ -23,6 +23,7 @@ type patternContext struct {
 
 type emitterContext struct {
 	entryPoint               int
+	prevEntryPoint           int
 	patternNumber            int
 	inSentencePatternNumber  int
 	maxPatternNumber         int
@@ -35,7 +36,7 @@ type emitterContext struct {
 	isLastAction             bool
 	isFuncCallInConstruct    bool
 	sentenceScope            *syntax.Scope
-	fixedVars                map[string]bool
+	fixedVars                map[string]int
 	patternCtx               patternContext
 }
 
@@ -66,9 +67,11 @@ func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 	f.PrintLabel(depth, "{")
 	f.PrintLabel(depth+1, fmt.Sprintf("env->locals = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", maxPatternNumber))
 	f.PrintLabel(depth+1, fmt.Sprintf("env->assembledFOVs = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", maxPatternNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("env->_FOVs = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", maxPatternNumber))
 	f.PrintLabel(depth+1, fmt.Sprintf("env->stretchVarsNumber = (int*)malloc(%d * sizeof(int));", maxPatternNumber))
 	f.PrintLabel(depth+1, fmt.Sprintf("for (i = 0; i < %d; i++)", maxPatternNumber))
 	f.PrintLabel(depth+1, "{")
+	f.PrintLabel(depth+2, "env->_FOVs[i] = 0;")
 	f.PrintLabel(depth+2, "env->assembledFOVs[i] = 0;")
 	f.PrintLabel(depth+2, fmt.Sprintf("env->locals[i] = (struct lterm_t*)malloc(%d * sizeof(struct lterm_t));", varsNumber))
 	f.PrintLabel(depth+2, fmt.Sprintf("for (j = 0; j < %d; j++)", varsNumber))
@@ -135,7 +138,7 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 
 	for sentenceNumber, s := range currFunc.Sentences {
 
-		ctx.fixedVars = make(map[string]bool)
+		ctx.fixedVars = make(map[string]int)
 		ctx.sentenceNumber = sentenceNumber
 		ctx.sentenceScope = &s.Scope
 		ctx.inSentencePatternNumber = f.calcPatternsNumber(s)
@@ -145,6 +148,7 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 		ctx.nextSentenceEntryPoint = ctx.entryPoint + ctx.inSentencePatternNumber
 		ctx.patternNumber = 0
 		ctx.isFuncCallInConstruct = false
+		ctx.prevEntryPoint = -1
 
 		f.matchingPattern(depth+1, &ctx, s.Pattern.Terms)
 
@@ -160,7 +164,7 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 
 			switch a.ActionOp {
 
-			case syntax.REPLACE, syntax.COMMA: // '=' ','
+			case syntax.COMMA: // ','
 				f.ConstructResult(depth+2, &ctx, &s.Scope, a.Expr)
 				break
 
@@ -169,9 +173,20 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 				f.matchingPattern(depth+1, &ctx, a.Expr.Terms)
 				break
 
+			case syntax.REPLACE: // '='
+				ctx.prevEntryPoint = -1
+				f.ConstructResult(depth+2, &ctx, &s.Scope, a.Expr)
+				break
+
+			case syntax.DCOLON: // '::'
+				ctx.prevEntryPoint = -1
+				f.PrintLabel(depth+1, "} // Pattern case end\n")
+				f.matchingPattern(depth+1, &ctx, a.Expr.Terms)
+				break
+
 			case syntax.TARROW: // '->'
 			case syntax.ARROW: // '=>'
-			case syntax.DCOLON: // '::'
+
 			}
 		}
 

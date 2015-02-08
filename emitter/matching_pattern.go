@@ -15,7 +15,7 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.T
 	f.PrintLabel(depth, fmt.Sprintf("case %d:", ctx.entryPoint))
 	f.PrintLabel(depth, fmt.Sprintf("{"))
 
-	f.checkAndAssemblyChain(depth+1, ctx.patternNumber)
+	f.checkAndAssemblyChain(depth+1, ctx.entryPoint)
 
 	f.PrintLabel(depth+1, "fragmentOffset = currFrag->offset;")
 	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = env->stretchVarsNumber[%d];", ctx.patternNumber))
@@ -37,6 +37,7 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.T
 		f.initSretchVarNumbers(depth+1, ctx.maxPatternNumber)
 	}
 
+	ctx.prevEntryPoint = ctx.entryPoint
 	ctx.entryPoint++
 	ctx.patternNumber++
 }
@@ -56,10 +57,7 @@ func (f *Data) processPattern(depth int, ctx *emitterContext, terms []*syntax.Te
 	ctx.patternCtx.entryPoint = 0
 	ctx.patternCtx.prevEntryPoint = -1
 
-	if terms[0].TermTag != syntax.VAR || terms[0].VarType != tokens.VT_E {
-		ctx.patternCtx.entryPoint = 1
-		f.PrintLabel(depth+1, "case 0:")
-	}
+	f.printFirstCase(depth, ctx, terms[0])
 
 	f.matchingTerm(depth+2, ctx, terms)
 
@@ -72,6 +70,19 @@ func (f *Data) processPattern(depth int, ctx *emitterContext, terms []*syntax.Te
 	f.PrintLabel(depth+2, "else")
 	f.PrintLabel(depth+3, "break; // Success!")
 	f.PrintLabel(depth+1, "}")
+}
+
+func (f *Data) printFirstCase(depth int, ctx *emitterContext, term *syntax.Term) {
+
+	if term.TermTag == syntax.VAR && term.VarType != tokens.VT_E {
+
+		if _, ok := ctx.fixedVars[term.Name]; ok {
+			return
+		}
+	}
+
+	ctx.patternCtx.entryPoint = 1
+	f.PrintLabel(depth+1, "case 0:")
 }
 
 func (f *Data) matchingTerm(depth int, ctx *emitterContext, terms []*syntax.Term) {
@@ -123,7 +134,7 @@ func (f *Data) processPatternFail(depth int, ctx *emitterContext) {
 	f.PrintLabel(depth, "{")
 
 	//First pattern in current sentence
-	if ctx.patternNumber == 0 {
+	if ctx.patternNumber == 0 || ctx.prevEntryPoint == -1 {
 		f.processFailOfFirstPattern(depth+1, ctx)
 	} else {
 		f.processFailOfCommonPattern(depth+1, ctx.entryPoint-1)
@@ -141,6 +152,7 @@ func (f *Data) processFailOfFirstPattern(depth int, ctx *emitterContext) {
 
 	} else {
 		f.PrintLabel(depth, "//First pattern of current sentence -> jump to first pattern of next sentence!")
+		f.PrintLabel(depth+1, "stretching = 0;")
 		f.PrintLabel(depth, fmt.Sprintf("*entryPoint = %d;", ctx.nextSentenceEntryPoint))
 	}
 }
@@ -156,52 +168,83 @@ func (f *Data) initSretchVarNumbers(depth, maxPatternNumber int) {
 	f.PrintLabel(depth+1, "env->stretchVarsNumber[i] = 0;")
 }
 
-func (f *Data) checkAndAssemblyChain(depth, indexInSentence int) {
-	f.PrintLabel(depth, fmt.Sprintf("if (env->assembledFOVs[%d] == 0)", indexInSentence))
-	f.PrintLabel(depth+1, fmt.Sprintf("env->assembledFOVs[%d] = getAssembliedChain(fieldOfView);", indexInSentence))
-	f.PrintLabel(depth, fmt.Sprintf("currFrag = env->assembledFOVs[%d]->fragment;", indexInSentence))
+func (f *Data) checkAndAssemblyChain(depth, entryPoint int) {
+	prevEntryPoint := entryPoint - 1
+
+	f.PrintLabel(depth, "if (!stretching)")
+	f.PrintLabel(depth, "{")
+
+	if prevEntryPoint == -1 {
+		f.PrintLabel(depth+1, fmt.Sprintf("if (env->_FOVs[%d] != fieldOfView)", entryPoint))
+		f.printAssemblyChain(depth+1, entryPoint)
+	} else {
+		f.PrintLabel(depth+1, fmt.Sprintf("if (env->_FOVs[%d] == fieldOfView)", prevEntryPoint))
+		f.printGetPrevAssembledFOV(depth+1, prevEntryPoint, entryPoint)
+		f.PrintLabel(depth+1, "else")
+		f.printAssemblyChain(depth+1, entryPoint)
+	}
+
+	f.PrintLabel(depth, "}")
+	f.PrintLabel(depth, fmt.Sprintf("currFrag = env->assembledFOVs[%d]->fragment;", entryPoint))
+}
+
+func (f *Data) printAssemblyChain(depth, entryPoint int) {
+	f.PrintLabel(depth, "{")
+	f.PrintLabel(depth+1, fmt.Sprintf("//WARN: Correct free env->_FOVs[%d]", entryPoint))
+	f.PrintLabel(depth+1, fmt.Sprintf("env->_FOVs[%d] = fieldOfView;", entryPoint))
+	f.PrintLabel(depth+1, fmt.Sprintf("env->assembledFOVs[%d] = getAssembliedChain(fieldOfView);", entryPoint))
+	f.PrintLabel(depth, "}")
+}
+
+func (f *Data) printGetPrevAssembledFOV(depth, prevEntryPoint, entryPoint int) {
+	f.PrintLabel(depth, "{")
+	f.PrintLabel(depth+1, fmt.Sprintf("//WARN: Correct free env->_FOVs[%d]", entryPoint))
+	f.PrintLabel(depth+1, fmt.Sprintf("env->_FOVs[%d] = fieldOfView;", entryPoint))
+	f.PrintLabel(depth+1, fmt.Sprintf("env->assembledFOVs[%d] = env->assembledFOVs[%d];", entryPoint, prevEntryPoint))
+	f.PrintLabel(depth, "}")
 }
 
 func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Value) {
 
 	varNumber := ctx.sentenceScope.VarMap[value.Name].Number
-	_, isFixedVar := ctx.fixedVars[value.Name]
+	matchedEntryPoint, isFixedVar := ctx.fixedVars[value.Name]
 
 	f.PrintLabel(depth-1, fmt.Sprintf("//Matching %s variable", value.Name))
 
 	switch value.VarType {
 	case tokens.VT_T:
 		if isFixedVar {
-			f.matchingFixedExprVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
+			f.matchingFixedExprVar(depth, ctx.patternCtx.prevEntryPoint, matchedEntryPoint, varNumber)
 		} else {
 			f.matchingFreeTermVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
+			ctx.fixedVars[value.Name] = ctx.entryPoint
 		}
 		break
 
 	case tokens.VT_S:
 		if isFixedVar {
-			f.matchingFixedSymbolVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
+			f.matchingFixedSymbolVar(depth, ctx.patternCtx.prevEntryPoint, matchedEntryPoint, varNumber)
 		} else {
 			f.matchingFreeSymbolVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
+			ctx.fixedVars[value.Name] = ctx.entryPoint
 		}
 		break
 
 	case tokens.VT_E:
 
 		if isFixedVar {
-			f.matchingFixedExprVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
+			f.matchingFixedExprVar(depth, ctx.patternCtx.prevEntryPoint, matchedEntryPoint, varNumber)
 		} else {
 			f.PrintLabel(depth-1, fmt.Sprintf("case %d:", ctx.patternCtx.entryPoint))
 
 			f.matchingFreeExprVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
 
+			ctx.fixedVars[value.Name] = ctx.entryPoint
 			ctx.patternCtx.prevEntryPoint = ctx.patternCtx.entryPoint
 			ctx.patternCtx.entryPoint++
 		}
 		break
 	}
-
-	ctx.fixedVars[value.Name] = true
 }
 
 func (f *Data) printFailBlock(depth, prevStretchVarNumber int, withBreakStatement bool) {
