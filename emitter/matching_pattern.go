@@ -15,10 +15,10 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.T
 	f.PrintLabel(depth, fmt.Sprintf("case %d:", ctx.entryPoint))
 	f.PrintLabel(depth, fmt.Sprintf("{"))
 
-	f.checkAndAssemblyChain(depth+1, ctx.entryPoint)
+	f.checkAndAssemblyChain(depth+1, ctx.patternNumber)
 
 	f.PrintLabel(depth+1, "fragmentOffset = currFrag->offset;")
-	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = env->stretchVarsNumber[%d];", ctx.patternNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = env->stretchVarsNumber[%d];", ctx.entryPoint))
 
 	f.PrintLabel(depth+1, "while (stretchingVarNumber >= 0)")
 	f.PrintLabel(depth+1, "{")
@@ -32,10 +32,6 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.T
 	f.PrintLabel(depth+1, "} // Pattern while\n")
 
 	f.processPatternFail(depth+1, ctx)
-
-	if ctx.isLastPatternInSentence && !ctx.isLastSentence {
-		f.initSretchVarNumbers(depth+1, ctx.maxPatternNumber)
-	}
 
 	ctx.prevEntryPoint = ctx.entryPoint
 	ctx.entryPoint++
@@ -152,8 +148,9 @@ func (f *Data) processFailOfFirstPattern(depth int, ctx *emitterContext) {
 
 	} else {
 		f.PrintLabel(depth, "//First pattern of current sentence -> jump to first pattern of next sentence!")
-		f.PrintLabel(depth+1, "stretching = 0;")
+		f.PrintLabel(depth, "stretching = 0;")
 		f.PrintLabel(depth, fmt.Sprintf("*entryPoint = %d;", ctx.nextSentenceEntryPoint))
+		f.initSretchVarNumbers(depth, ctx.maxPatternNumber)
 	}
 }
 
@@ -168,24 +165,24 @@ func (f *Data) initSretchVarNumbers(depth, maxPatternNumber int) {
 	f.PrintLabel(depth+1, "env->stretchVarsNumber[i] = 0;")
 }
 
-func (f *Data) checkAndAssemblyChain(depth, entryPoint int) {
-	prevEntryPoint := entryPoint - 1
+func (f *Data) checkAndAssemblyChain(depth, patternNumber int) {
+	prevPatternNumber := patternNumber - 1
 
 	f.PrintLabel(depth, "if (!stretching)")
 	f.PrintLabel(depth, "{")
 
-	if prevEntryPoint == -1 {
-		f.PrintLabel(depth+1, fmt.Sprintf("if (env->_FOVs[%d] != fieldOfView)", entryPoint))
-		f.printAssemblyChain(depth+1, entryPoint)
+	if prevPatternNumber == -1 {
+		f.PrintLabel(depth+1, fmt.Sprintf("if (env->_FOVs[%d] != fieldOfView)", patternNumber))
+		f.printAssemblyChain(depth+1, patternNumber)
 	} else {
-		f.PrintLabel(depth+1, fmt.Sprintf("if (env->_FOVs[%d] == fieldOfView)", prevEntryPoint))
-		f.printGetPrevAssembledFOV(depth+1, prevEntryPoint, entryPoint)
+		f.PrintLabel(depth+1, fmt.Sprintf("if (env->_FOVs[%d] == fieldOfView)", prevPatternNumber))
+		f.printGetPrevAssembledFOV(depth+1, prevPatternNumber, patternNumber)
 		f.PrintLabel(depth+1, "else")
-		f.printAssemblyChain(depth+1, entryPoint)
+		f.printAssemblyChain(depth+1, patternNumber)
 	}
 
 	f.PrintLabel(depth, "}")
-	f.PrintLabel(depth, fmt.Sprintf("currFrag = env->assembledFOVs[%d]->fragment;", entryPoint))
+	f.PrintLabel(depth, fmt.Sprintf("currFrag = env->assembledFOVs[%d]->fragment;", patternNumber))
 }
 
 func (f *Data) printAssemblyChain(depth, entryPoint int) {
