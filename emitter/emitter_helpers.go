@@ -25,20 +25,6 @@ func (f *Data) printFuncHeader(depth int, name string) {
 	f.PrintLabel(depth, fmt.Sprintf("struct func_result_t %s(int* entryPoint, struct env_t* env, struct lterm_t* fieldOfView) \n{", name))
 }
 
-func (f *Data) initData(depth int) {
-	unit := f.Ast
-
-	for _, fun := range unit.GlobMap {
-		for _, s := range fun.Sentences {
-			for _, a := range s.Actions {
-				f.initActionData(depth, a.Expr)
-			}
-		}
-	}
-
-	fmt.Fprintf(f, "\n")
-}
-
 func (f *Data) initActionData(depth int, expr syntax.Expr) {
 
 	terms := make([]*syntax.Term, len(expr.Terms))
@@ -92,12 +78,23 @@ func (f *Data) initActionData(depth int, expr syntax.Expr) {
 	}
 }
 
+// Инициализация vterm_t для анонимной функции
+func (f *Data) initNestedFuncLiterals(depth int, nestedFuncs map[string]*syntax.Function) {
+	for funcName, currFunc := range nestedFuncs {
+		f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_CLOSURE_TAG, .closure = %s};", f.CurrTermNum, funcName))
+		currFunc.IndexInLiterals = f.CurrTermNum
+		f.CurrTermNum++
+	}
+
+	f.PrintLabel(depth, "")
+}
+
 // Инициализация vterm_t строкового литерала
 // Пока только ASCII символы
 func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 	str := string(term.Value.Str)
 	strLen := len(str)
-	term.Index = f.CurrTermNum
+	term.IndexInLiterals = f.CurrTermNum
 
 	for i := 0; i < strLen; i++ {
 		f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_CHAR_TAG, .ch = %q};", f.CurrTermNum, str[i]))
@@ -110,7 +107,7 @@ func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
 
 	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = %d};", f.CurrTermNum, term.Value.Int))
-	term.Index = f.CurrTermNum
+	term.IndexInLiterals = f.CurrTermNum
 	f.CurrTermNum++
 }
 
@@ -118,7 +115,7 @@ func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
 func (f *Data) initFloatVTerm(depth int, term *syntax.Term) {
 
 	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_FLOAT_NUM_TAG, .floatNum = %f};", f.CurrTermNum, term.Value.Float))
-	term.Index = f.CurrTermNum
+	term.IndexInLiterals = f.CurrTermNum
 	f.CurrTermNum++
 }
 
@@ -128,18 +125,36 @@ func (f *Data) initIdentVTerm(depth int, term *syntax.Term) {
 
 	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_IDENT_TAG, .str = %q};", f.CurrTermNum, string(term.Value.Name)))
 
-	term.Index = f.CurrTermNum
+	term.IndexInLiterals = f.CurrTermNum
 	f.CurrTermNum++
 }
 
-func (f *Data) initLiteralDataFunc(depth int) {
+func (f *Data) printLiteralsAndHeapsInit(depth int, unit *syntax.Unit) {
 
 	f.PrintLabel(depth, "void __initLiteralData()\n{")
 	f.PrintLabel(depth+1, "initAllocator(1024 * 1024 * 1024);")
-	f.initData(depth + 1)
+
+	f.initLiterals(depth+1, unit.GlobMap)
+	f.initLiterals(depth+1, unit.NestedMap)
+	f.initNestedFuncLiterals(depth+1, unit.NestedMap)
+
 	f.PrintLabel(depth+1, fmt.Sprintf("initHeaps(2, %d);", f.CurrTermNum))
+
 	//fmt.Fprintf(f, "%sdebugLiteralsPrint();\n", tabs)
 	f.PrintLabel(depth, "} // __initLiteralData()\n")
+}
+
+func (f *Data) initLiterals(depth int, funcs map[string]*syntax.Function) {
+
+	for _, fun := range funcs {
+		for _, s := range fun.Sentences {
+			for _, a := range s.Actions {
+				f.initActionData(depth, a.Expr)
+			}
+		}
+	}
+
+	fmt.Fprintf(f, "\n")
 }
 
 func (f *Data) PrintHeaders() {

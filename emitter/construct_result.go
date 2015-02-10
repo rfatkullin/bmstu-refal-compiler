@@ -38,10 +38,23 @@ func isLiteral(termTag syntax.TermTag) bool {
 	return false
 }
 
+func (f *Data) constructAnynonimFunc(depth, funcLiteralOffset int) {
+
+	f.PrintLabel(depth, "//Start construction anonym func term term.")
+
+	f.PrintLabel(depth, "currTerm = (struct lterm_t*)malloc(sizeof(struct lterm_t));")
+	f.PrintLabel(depth, "currTerm->tag = L_TERM_FRAGMENT_TAG;")
+	f.PrintLabel(depth, "currTerm->fragment = (struct fragment_t*)malloc(sizeof(struct fragment_t));")
+	f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = %d;", funcLiteralOffset))
+	f.PrintLabel(depth, "currTerm->fragment->length = 1;")
+
+	f.PrintLabel(depth, "//Finish construction anonym func term term.")
+}
+
 func (f *Data) ConstructLiteralsFragment(depth int, terms []*syntax.Term) []*syntax.Term {
 	var term *syntax.Term
 	fragmentLength := 0
-	fragmentOffset := terms[0].Index
+	fragmentOffset := terms[0].IndexInLiterals
 	literalsNumber := 0
 
 	for _, term = range terms {
@@ -93,7 +106,12 @@ func (f *Data) printFuncCallPointer(depth int, terms []*syntax.Term) (string, []
 		//TO DO:
 		break
 
+	case syntax.EVAL:
+		//Nothing to do.
+		break
+
 	default:
+		f.PrintLabel(depth, "Fail in construct_result.go:printFuncCallPointer")
 		f.printFailBlock(depth, -1, true)
 		break
 	}
@@ -105,15 +123,23 @@ func (f *Data) ConstructFuncCall(depth, entryPoint int, ctx *emitterContext, sen
 
 	funcName, terms := f.printFuncCallPointer(depth, terms)
 
+	f.PrintLabel(depth, "//Start construction func call.")
+
 	terms = f.ConstructExprInParenthesis(depth, entryPoint, ctx, sentenceScope, chainNumber, firstFuncCall, terms)
 
-	f.PrintLabel(depth, "//Start construction func call.")
 	f.PrintLabel(depth, "funcTerm = (struct lterm_t*)malloc(sizeof(struct lterm_t));")
 	f.PrintLabel(depth, "funcTerm->tag = L_TERM_FUNC_CALL;")
 	f.PrintLabel(depth, "funcTerm->funcCall = (struct func_call_t*)malloc(sizeof(struct func_call_t));")
 	f.PrintLabel(depth, "funcTerm->funcCall->env = (struct env_t*)malloc(sizeof(struct env_t));")
-	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->funcName = %q;", funcName))
-	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->funcPtr = %s;", funcName))
+
+	if funcName != "" {
+		f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->funcName = %q;", funcName))
+		f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->funcPtr = %s;", funcName))
+	} else {
+		f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->funcName = %q;", "FuncInVariable"))
+		f.PrintLabel(depth, "funcTerm->funcCall->funcPtr = 0;")
+	}
+
 	f.PrintLabel(depth, "funcTerm->funcCall->entryPoint = 0;")
 	f.PrintLabel(depth, "funcTerm->funcCall->fieldOfView = currTerm->chain;")
 	f.PrintLabel(depth, "//WARN: Correct free currTerm.")
@@ -173,14 +199,18 @@ func (f *Data) ConstructExprInParenthesis(depth, entryPoint int, ctx *emitterCon
 
 		// Значение переменной
 		if term.TermTag == syntax.VAR {
-			f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->locals[%d][%d];", entryPoint, sentenceScope.VarMap[term.Value.Name].Number))
+			f.constructVar(depth, entryPoint, term.Value.Name, sentenceScope)
+		}
+
+		if term.TermTag == syntax.FUNC {
+			f.constructAnynonimFunc(depth, term.Function.IndexInLiterals)
 		}
 
 		f.ConcatToParentChain(depth, firstTermInParenthesis, currChainNumber)
 		firstTermInParenthesis = false
 
 		// Остальные случаи
-		//case syntax.FUNC, syntax.BRACED_EXPR, syntax.BRACKETED_EXPR, syntax.ANGLED_EXPR,
+		//case syntax.BRACED_EXPR, syntax.BRACKETED_EXPR, syntax.ANGLED_EXPR,
 		//syntax.L, syntax.R:
 	}
 
@@ -188,6 +218,11 @@ func (f *Data) ConstructExprInParenthesis(depth, entryPoint int, ctx *emitterCon
 	f.PrintLabel(depth, fmt.Sprintf("currTerm = helper[%d];", currChainNumber))
 
 	return terms
+}
+
+func (f *Data) constructVar(depth, entryPoint int, varName string, sentenceScope *syntax.Scope) {
+
+	f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->locals[%d][%d];", entryPoint, sentenceScope.VarMap[varName].Number))
 }
 
 func (f *Data) ConstructResult(depth int, ctx *emitterContext, sentenceScope *syntax.Scope, resultExpr syntax.Expr) {

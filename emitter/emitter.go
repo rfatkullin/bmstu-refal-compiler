@@ -200,7 +200,6 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 
 	f.printFreeLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
 	f.PrintLabel(depth, "return funcRes;")
-
 }
 
 func (f *Data) predeclareGlobFuncs(depth int, globFuncs map[string]*syntax.Function) {
@@ -220,6 +219,19 @@ func (f *Data) predeclareGlobFuncs(depth int, globFuncs map[string]*syntax.Funct
 	f.PrintLabel(0, "")
 }
 
+func (f *Data) processFuncs(depth int, funcs map[string]*syntax.Function) {
+
+	fmt.Printf("Functions number: %d\n", len(funcs))
+
+	for _, currFunc := range funcs {
+
+		fmt.Printf("Func name: %q\n", currFunc.FuncName)
+		f.printFuncHeader(depth, currFunc.FuncName)
+		f.processFuncSentences(depth+1, currFunc)
+		f.PrintLabel(depth, fmt.Sprintf("} // func %s\n", currFunc.FuncName)) // func block end
+	}
+}
+
 func processFile(f Data) {
 	unit := f.Ast
 	depth := 0
@@ -228,13 +240,10 @@ func processFile(f Data) {
 	f.PrintHeaders()
 	f.predeclareGlobFuncs(depth, unit.GlobMap)
 
-	f.initLiteralDataFunc(depth)
+	f.printLiteralsAndHeapsInit(depth, unit)
 
-	for _, currFunc := range unit.GlobMap {
-		f.printFuncHeader(depth, currFunc.FuncName)
-		f.processFuncSentences(depth+1, currFunc)
-		f.PrintLabel(depth, fmt.Sprintf("} // func %s\n", currFunc.FuncName)) // func block end
-	}
+	f.processFuncs(depth, unit.GlobMap)
+	f.processFuncs(depth, unit.NestedMap)
 
 	f.mainFunc(depth)
 }

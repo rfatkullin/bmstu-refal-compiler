@@ -97,6 +97,7 @@ type FuncHeader struct {
 
 type Function struct {
 	coords.Fragment
+	IndexInLiterals int
 	FuncHeader
 	IsEntry   bool
 	Rollback  bool
@@ -126,7 +127,7 @@ type Expr struct {
 type Term struct {
 	Comment string
 	coords.Fragment
-	Index int
+	IndexInLiterals int
 	TermTag
 	tokens.Value
 	Exprs []*Expr
@@ -149,9 +150,10 @@ type Scope struct {
 }
 
 type Unit struct {
-	Builtins map[string]bool
-	ExtMap   map[string]*FuncHeader
-	GlobMap  map[string]*Function
+	Builtins  map[string]bool
+	ExtMap    map[string]*FuncHeader
+	GlobMap   map[string]*Function
+	NestedMap map[string]*Function
 }
 
 func (f *Function) Len() int { return len(f.Sentences) }
