@@ -38,6 +38,7 @@ type emitterContext struct {
 	sentenceScope            *syntax.Scope
 	fixedVars                map[string]int
 	patternCtx               patternContext
+	envVarMap                map[string]syntax.ScopeVar
 }
 
 func (f *Data) mainFunc(depth int) {
@@ -126,7 +127,7 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 	ctx.entryPoint = 0
 	ctx.patternNumber = 0
 	ctx.maxPatternNumber, maxVarsNumber = f.calcMaxPatternsAndVarsNumbers(currFunc)
-
+	ctx.envVarMap = currFunc.EnvVarMap
 	f.printInitLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
 
 	//if isTheresPatternsExists {
@@ -221,11 +222,7 @@ func (f *Data) predeclareGlobFuncs(depth int, globFuncs map[string]*syntax.Funct
 
 func (f *Data) processFuncs(depth int, funcs map[string]*syntax.Function) {
 
-	fmt.Printf("Functions number: %d\n", len(funcs))
-
 	for _, currFunc := range funcs {
-
-		fmt.Printf("Func name: %q\n", currFunc.FuncName)
 		f.printFuncHeader(depth, currFunc.FuncName)
 		f.processFuncSentences(depth+1, currFunc)
 		f.PrintLabel(depth, fmt.Sprintf("} // func %s\n", currFunc.FuncName)) // func block end
@@ -241,6 +238,8 @@ func processFile(f Data) {
 	f.predeclareGlobFuncs(depth, unit.GlobMap)
 
 	f.printLiteralsAndHeapsInit(depth, unit)
+
+	f.setEnvNestedFuncs(unit.NestedMap)
 
 	f.processFuncs(depth, unit.GlobMap)
 	f.processFuncs(depth, unit.NestedMap)

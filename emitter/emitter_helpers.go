@@ -78,17 +78,6 @@ func (f *Data) initActionData(depth int, expr syntax.Expr) {
 	}
 }
 
-// Инициализация vterm_t для анонимной функции
-func (f *Data) initNestedFuncLiterals(depth int, nestedFuncs map[string]*syntax.Function) {
-	for funcName, currFunc := range nestedFuncs {
-		f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_CLOSURE_TAG, .closure = %s};", f.CurrTermNum, funcName))
-		currFunc.IndexInLiterals = f.CurrTermNum
-		f.CurrTermNum++
-	}
-
-	f.PrintLabel(depth, "")
-}
-
 // Инициализация vterm_t строкового литерала
 // Пока только ASCII символы
 func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
@@ -136,7 +125,6 @@ func (f *Data) printLiteralsAndHeapsInit(depth int, unit *syntax.Unit) {
 
 	f.initLiterals(depth+1, unit.GlobMap)
 	f.initLiterals(depth+1, unit.NestedMap)
-	f.initNestedFuncLiterals(depth+1, unit.NestedMap)
 
 	f.PrintLabel(depth+1, fmt.Sprintf("initHeaps(2, %d);", f.CurrTermNum))
 

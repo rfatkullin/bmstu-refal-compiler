@@ -203,15 +203,30 @@ func (f *Data) printGetPrevAssembledFOV(depth, prevEntryPoint, entryPoint int) {
 
 func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Value) {
 
-	varNumber := ctx.sentenceScope.VarMap[value.Name].Number
-	matchedEntryPoint, isFixedVar := ctx.fixedVars[value.Name]
+	varInfo, isLocalVar := ctx.sentenceScope.VarMap[value.Name]
+	isFixedVar := true
+	matchedEntryPoint := 0
+
+	if !isLocalVar {
+		//Env var
+		varInfo = ctx.envVarMap[value.Name]
+
+	} else {
+		matchedEntryPoint, isFixedVar = ctx.fixedVars[value.Name]
+	}
+
+	varNumber := varInfo.Number
 
 	f.PrintLabel(depth-1, fmt.Sprintf("//Matching %s variable", value.Name))
 
 	switch value.VarType {
 	case tokens.VT_T:
 		if isFixedVar {
-			f.matchingFixedExprVar(depth, ctx.patternCtx.prevEntryPoint, matchedEntryPoint, varNumber)
+			if isLocalVar {
+				f.matchingFixedLocalExprVar(depth, ctx.patternCtx.prevEntryPoint, matchedEntryPoint, varNumber)
+			} else {
+				f.matchingFixedEnvExprVar(depth, ctx.patternCtx.prevEntryPoint, varNumber)
+			}
 		} else {
 			f.matchingFreeTermVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
 			ctx.fixedVars[value.Name] = ctx.entryPoint
@@ -220,7 +235,12 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 
 	case tokens.VT_S:
 		if isFixedVar {
-			f.matchingFixedSymbolVar(depth, ctx.patternCtx.prevEntryPoint, matchedEntryPoint, varNumber)
+			if isLocalVar {
+				f.matchingFixedLocalSymbolVar(depth, ctx.patternCtx.prevEntryPoint, matchedEntryPoint, varNumber)
+			} else {
+				f.matchingFixedEnvSymbolVar(depth, ctx.patternCtx.prevEntryPoint, varNumber)
+			}
+
 		} else {
 			f.matchingFreeSymbolVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
 			ctx.fixedVars[value.Name] = ctx.entryPoint
@@ -230,7 +250,11 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 	case tokens.VT_E:
 
 		if isFixedVar {
-			f.matchingFixedExprVar(depth, ctx.patternCtx.prevEntryPoint, matchedEntryPoint, varNumber)
+			if isLocalVar {
+				f.matchingFixedLocalExprVar(depth, ctx.patternCtx.prevEntryPoint, matchedEntryPoint, varNumber)
+			} else {
+				f.matchingFixedEnvExprVar(depth, ctx.patternCtx.prevEntryPoint, varNumber)
+			}
 		} else {
 			f.PrintLabel(depth-1, fmt.Sprintf("case %d:", ctx.patternCtx.entryPoint))
 

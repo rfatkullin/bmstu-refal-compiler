@@ -38,15 +38,26 @@ func isLiteral(termTag syntax.TermTag) bool {
 	return false
 }
 
-func (f *Data) constructAnynonimFunc(depth, funcLiteralOffset int) {
+func (f *Data) constructAnynonimFunc(depth int, ctx *emitterContext, currFunc *syntax.Function) {
 
 	f.PrintLabel(depth, "//Start construction anonym func term term.")
 
 	f.PrintLabel(depth, "currTerm = (struct lterm_t*)malloc(sizeof(struct lterm_t));")
 	f.PrintLabel(depth, "currTerm->tag = L_TERM_FRAGMENT_TAG;")
 	f.PrintLabel(depth, "currTerm->fragment = (struct fragment_t*)malloc(sizeof(struct fragment_t));")
-	f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = %d;", funcLiteralOffset))
+	f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = allocateClosure(%s, %d);", currFunc.FuncName, len(currFunc.EnvVarMap)))
 	f.PrintLabel(depth, "currTerm->fragment->length = 1;")
+
+	for needVarName, needVarInfo := range currFunc.EnvVarMap {
+
+		if parentLocalVarNumber, ok := ctx.sentenceScope.VarMap[needVarName]; ok {
+			f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure->env[%d] = env->locals[%d][%d];", needVarInfo.Number, ctx.entryPoint-1, parentLocalVarNumber.Number))
+		} else {
+			//Get from env of parent func
+			parentEnvVarInfo, _ := ctx.envVarMap[needVarName]
+			f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure->env[%d] = env->params[%d];", needVarInfo.Number, parentEnvVarInfo.Number))
+		}
+	}
 
 	f.PrintLabel(depth, "//Finish construction anonym func term term.")
 }
@@ -199,11 +210,11 @@ func (f *Data) ConstructExprInParenthesis(depth, entryPoint int, ctx *emitterCon
 
 		// Значение переменной
 		if term.TermTag == syntax.VAR {
-			f.constructVar(depth, entryPoint, term.Value.Name, sentenceScope)
+			f.constructVar(depth, entryPoint, term.Value.Name, ctx)
 		}
 
 		if term.TermTag == syntax.FUNC {
-			f.constructAnynonimFunc(depth, term.Function.IndexInLiterals)
+			f.constructAnynonimFunc(depth, ctx, term.Function)
 		}
 
 		f.ConcatToParentChain(depth, firstTermInParenthesis, currChainNumber)
@@ -220,9 +231,15 @@ func (f *Data) ConstructExprInParenthesis(depth, entryPoint int, ctx *emitterCon
 	return terms
 }
 
-func (f *Data) constructVar(depth, entryPoint int, varName string, sentenceScope *syntax.Scope) {
+func (f *Data) constructVar(depth, entryPoint int, varName string, ctx *emitterContext) {
 
-	f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->locals[%d][%d];", entryPoint, sentenceScope.VarMap[varName].Number))
+	if scopeVar, ok := ctx.sentenceScope.VarMap[varName]; ok {
+		f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->locals[%d][%d];", entryPoint, scopeVar.Number))
+	} else {
+		// Get env var
+		needVarInfo, _ := ctx.envVarMap[varName]
+		f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->params[%d];", needVarInfo.Number))
+	}
 }
 
 func (f *Data) ConstructResult(depth int, ctx *emitterContext, sentenceScope *syntax.Scope, resultExpr syntax.Expr) {

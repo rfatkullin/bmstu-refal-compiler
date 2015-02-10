@@ -303,7 +303,6 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 
 	for nestedFunc := range nested {
 		unit.NestedMap[nestedFunc.FuncName] = nestedFunc
-		checkBlock(nestedFunc, nil)
 	}
 
 	<-ready

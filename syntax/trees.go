@@ -97,12 +97,12 @@ type FuncHeader struct {
 
 type Function struct {
 	coords.Fragment
-	IndexInLiterals int
 	FuncHeader
 	IsEntry   bool
 	Rollback  bool
 	Params    Scope
 	Sentences []*Sentence
+	EnvVarMap map[string]ScopeVar
 }
 
 type Sentence struct {
