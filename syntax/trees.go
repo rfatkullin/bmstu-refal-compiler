@@ -149,9 +149,10 @@ type Scope struct {
 }
 
 type Unit struct {
-	Builtins map[string]bool
-	ExtMap   map[string]*FuncHeader
-	GlobMap  map[string]*Function
+	Builtins        map[string]bool
+	ExtMap          map[string]*FuncHeader
+	GlobMap         map[string]*Function
+	AnonymousNumber int
 }
 
 func (f *Function) Len() int { return len(f.Sentences) }

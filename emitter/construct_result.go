@@ -36,7 +36,7 @@ func (f *Data) isLiteral(term *syntax.Term, ctx *emitterContext) bool {
 
 	case syntax.COMP:
 		_, yes := f.isFuncName(term.Value.Name, ctx)
-		return yes
+		return !yes
 	}
 
 	return false
@@ -94,6 +94,7 @@ func (f *Data) ConstructFuncCall(depth, entryPoint int, ctx *emitterContext, sen
 	f.PrintLabel(depth, "funcTerm->funcCall->env = (struct env_t*)malloc(sizeof(struct env_t));")
 
 	f.PrintLabel(depth, "funcTerm->funcCall->entryPoint = 0;")
+	f.PrintLabel(depth, "funcTerm->funcCall->funcPtr = 0;")
 	f.PrintLabel(depth, "funcTerm->funcCall->fieldOfView = currTerm->chain;")
 	f.PrintLabel(depth, "//WARN: Correct free currTerm.")
 	f.PrintLabel(depth, "free(currTerm);")
@@ -158,16 +159,16 @@ func (f *Data) ConstructExprInParenthesis(depth, entryPoint int, ctx *emitterCon
 		//Имя функции. Создаем функциональный vterm.
 		if term.TermTag == syntax.COMP {
 			if funcInfo, yes := f.isFuncName(term.Value.Name, ctx); yes {
-				f.constructFunctionalVTerm(depth, ctx, funcInfo)
+				f.constructFunctionalVTerm(depth, ctx, term.Value.Name, funcInfo)
 			}
 		}
 
 		//Создание вложенной функции. Создание функционального vterm'a
 		if term.TermTag == syntax.FUNC {
 			//TO DO: добавить в список вложенных функций
-
-			funcInfo := ctx.funcsKeeper.AddFunc(ctx.fullPathKeeper.String(), term.Function)
-			f.constructFunctionalVTerm(depth, ctx, funcInfo)
+			funcInfo := ctx.funcsKeeper.AddFunc(ctx.scopeKeeper.String(), term.Function)
+			f.constructFunctionalVTerm(depth, ctx, term.Function.FuncName, funcInfo)
+			ctx.nestedNamedFuncs = append(ctx.nestedNamedFuncs, funcInfo)
 		}
 
 		f.ConcatToParentChain(depth, firstTermInParenthesis, currChainNumber)

@@ -46,6 +46,14 @@ func (funcsKeeper *FuncsKeeper) AddFunc(scopeName string, funcSyntTree *syntax.F
 	return &funcInfo
 }
 
+func (funcsKeeper *FuncsKeeper) AddBuiltinFunc(funcName string) {
+
+	emittedFuncName := funcName
+
+	funcInfo := FuncInfo{"", emittedFuncName, nil, make(map[string]syntax.ScopeVar, 0)}
+	funcsKeeper.funcs[funcName] = funcInfo
+}
+
 func (funcInfo *FuncInfo) setEnv() {
 
 	if funcInfo.EnvVarMap == nil {

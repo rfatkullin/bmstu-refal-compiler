@@ -10,7 +10,7 @@ import (
 )
 
 func analyse(ast chan<- *Unit, ms chan<- messages.Data,
-	exts <-chan *FuncHeader, globals <-chan *Function, dialect int) {
+	exts <-chan *FuncHeader, globals <-chan *Function, nested <-chan *Function, dialect int) {
 	err := func(pos coords.Pos, s string) {
 		ms <- messages.Data{pos, messages.ERROR, s}
 	}
@@ -58,9 +58,10 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 	}
 
 	unit := Unit{
-		Builtins: make(map[string]bool, 16),
-		ExtMap:   make(map[string]*FuncHeader, 16),
-		GlobMap:  make(map[string]*Function, 64),
+		Builtins:        make(map[string]bool, 16),
+		ExtMap:          make(map[string]*FuncHeader, 16),
+		GlobMap:         make(map[string]*Function, 64),
+		AnonymousNumber: 0,
 	}
 	ready := make(chan bool)
 
@@ -73,6 +74,14 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 					unit.ExtMap[e.FuncName] = e
 				}
 			}
+		}
+
+		ready <- true
+	}()
+
+	go func() {
+		for _ = range nested {
+			unit.AnonymousNumber++
 		}
 
 		ready <- true
@@ -300,6 +309,7 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 		checkBlock(g, nil)
 	}
 
+	<-ready
 	<-ready
 
 	for pos, name := range issues {
