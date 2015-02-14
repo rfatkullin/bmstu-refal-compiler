@@ -124,7 +124,6 @@ func (f *Data) printLiteralsAndHeapsInit(depth int, unit *syntax.Unit) {
 	f.PrintLabel(depth+1, "initAllocator(1024 * 1024 * 1024);")
 
 	f.initLiterals(depth+1, unit.GlobMap)
-	f.initLiterals(depth+1, unit.NestedMap)
 
 	f.PrintLabel(depth+1, fmt.Sprintf("initHeaps(2, %d);", f.CurrTermNum))
 

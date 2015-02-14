@@ -6,8 +6,15 @@ import (
 )
 
 import (
+	fk "BMSTU-Refal-Compiler/emitter/funcs_keeper"
+	sk "BMSTU-Refal-Compiler/emitter/scope_name_keeper"
 	"BMSTU-Refal-Compiler/syntax"
 )
+
+type funcData struct {
+	*syntax.Function
+	emittedName string
+}
 
 type Data struct {
 	Name string
@@ -39,6 +46,9 @@ type emitterContext struct {
 	fixedVars                map[string]int
 	patternCtx               patternContext
 	envVarMap                map[string]syntax.ScopeVar
+	fullPathKeeper           *sk.FullPathKeeper
+	funcsKeeper              *fk.FuncsKeeper
+	nestedNamedFuncs         map[string]*syntax.Function
 }
 
 func (f *Data) mainFunc(depth int) {
@@ -120,14 +130,15 @@ func (f *Data) calcPatternsNumber(s *syntax.Sentence) int {
 	return number
 }
 
-func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
-	//isTheresPatternsExists := f.isTherePatternsExists(currFunc.Sentences)
-	var ctx emitterContext
+func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *syntax.Function) {
+
 	maxVarsNumber := 0
 	ctx.entryPoint = 0
 	ctx.patternNumber = 0
 	ctx.maxPatternNumber, maxVarsNumber = f.calcMaxPatternsAndVarsNumbers(currFunc)
-	ctx.envVarMap = currFunc.EnvVarMap
+	ctx.funcsKeeper.AddFunc(ctx.fullPathKeeper.String(), currFunc)
+	ctx.nestedNamedFuncs = make(map[string]*syntax.Function)
+
 	f.printInitLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
 
 	//if isTheresPatternsExists {
@@ -150,8 +161,9 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 		ctx.patternNumber = 0
 		ctx.isFuncCallInConstruct = false
 		ctx.prevEntryPoint = -1
+		ctx.fullPathKeeper.PushIntElement(sentenceNumber)
 
-		f.matchingPattern(depth+1, &ctx, s.Pattern.Terms)
+		f.matchingPattern(depth+1, ctx, s.Pattern.Terms)
 
 		ctx.isFirstPatternInSentence = false
 
@@ -166,23 +178,23 @@ func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 			switch a.ActionOp {
 
 			case syntax.COMMA: // ','
-				f.ConstructResult(depth+2, &ctx, &s.Scope, a.Expr)
+				f.ConstructResult(depth+2, ctx, &s.Scope, a.Expr)
 				break
 
 			case syntax.COLON: // ':'
 				f.PrintLabel(depth+1, "} // Pattern case end\n")
-				f.matchingPattern(depth+1, &ctx, a.Expr.Terms)
+				f.matchingPattern(depth+1, ctx, a.Expr.Terms)
 				break
 
 			case syntax.REPLACE: // '='
 				ctx.prevEntryPoint = -1
-				f.ConstructResult(depth+2, &ctx, &s.Scope, a.Expr)
+				f.ConstructResult(depth+2, ctx, &s.Scope, a.Expr)
 				break
 
 			case syntax.DCOLON: // '::'
 				ctx.prevEntryPoint = -1
 				f.PrintLabel(depth+1, "} // Pattern case end\n")
-				f.matchingPattern(depth+1, &ctx, a.Expr.Terms)
+				f.matchingPattern(depth+1, ctx, a.Expr.Terms)
 				break
 
 			case syntax.TARROW: // '->'
@@ -220,11 +232,11 @@ func (f *Data) predeclareGlobFuncs(depth int, globFuncs map[string]*syntax.Funct
 	f.PrintLabel(0, "")
 }
 
-func (f *Data) processFuncs(depth int, funcs map[string]*syntax.Function) {
+func (f *Data) processFuncs(depth int, ctx *emitterContext, funcs map[string]*syntax.Function) {
 
 	for _, currFunc := range funcs {
 		f.printFuncHeader(depth, currFunc.FuncName)
-		f.processFuncSentences(depth+1, currFunc)
+		f.processFuncSentences(depth+1, ctx, currFunc)
 		f.PrintLabel(depth, fmt.Sprintf("} // func %s\n", currFunc.FuncName)) // func block end
 	}
 }
@@ -233,16 +245,17 @@ func processFile(f Data) {
 	unit := f.Ast
 	depth := 0
 
+	var ctx emitterContext
+	ctx.fullPathKeeper = sk.NewFullPathKeeper()
+	ctx.funcsKeeper = fk.NewFuncsKeeper()
+
 	f.PrintLabel(depth, fmt.Sprintf("// file:%s\n", f.Name))
 	f.PrintHeaders()
 	f.predeclareGlobFuncs(depth, unit.GlobMap)
 
 	f.printLiteralsAndHeapsInit(depth, unit)
 
-	f.setEnvNestedFuncs(unit.NestedMap)
-
-	f.processFuncs(depth, unit.GlobMap)
-	f.processFuncs(depth, unit.NestedMap)
+	f.processFuncs(depth, &ctx, unit.GlobMap)
 
 	f.mainFunc(depth)
 }

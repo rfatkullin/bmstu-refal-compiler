@@ -16,8 +16,7 @@ import (
 func Handle(ast chan<- *Unit, ms chan<- messages.Data, ts <-chan tokens.Data, dialect int) {
 	exts := make(chan *FuncHeader, 128)
 	globals := make(chan *Function, 128)
-	nesteds := make(chan *Function, 128)
-	go analyse(ast, ms, exts, globals, nesteds, dialect)
+	go analyse(ast, ms, exts, globals, dialect)
 
 	var tok tokens.Data
 	var prevPos coords.Pos
@@ -641,7 +640,6 @@ func Handle(ast chan<- *Unit, ms chan<- messages.Data, ts <-chan tokens.Data, di
 				errExpected(tokens.LBRACE, true)
 				f.Follow = tok.Start
 			}
-			nesteds <- f
 		case tokens.QMARK,
 			tokens.LBRACE:
 			t.TermTag = FUNC
@@ -652,7 +650,6 @@ func Handle(ast chan<- *Unit, ms chan<- messages.Data, ts <-chan tokens.Data, di
 			f.Start = tok.Start
 			block(f) // block's FIRST set is ensured here
 			f.Follow = prevPos
-			nesteds <- f
 		}
 
 		t.Follow = prevPos
@@ -663,7 +660,6 @@ func Handle(ast chan<- *Unit, ms chan<- messages.Data, ts <-chan tokens.Data, di
 	program()
 	close(exts)
 	close(globals)
-	close(nesteds)
 }
 
 func Intercept(out chan<- *Unit, w io.WriteCloser, in <-chan *Unit) {
