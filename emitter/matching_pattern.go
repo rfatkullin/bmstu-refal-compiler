@@ -209,7 +209,7 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 
 	if !isLocalVar {
 		//Env var
-		varInfo = ctx.envVarMap[value.Name]
+		varInfo = ctx.currFuncInfo.EnvVarMap[value.Name]
 
 	} else {
 		matchedEntryPoint, isFixedVar = ctx.fixedVars[value.Name]
@@ -229,7 +229,7 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 			}
 		} else {
 			f.matchingFreeTermVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
-			ctx.fixedVars[value.Name] = ctx.entryPoint
+			ctx.fixedVars[value.Name] = ctx.patternNumber
 		}
 		break
 
@@ -243,7 +243,7 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 
 		} else {
 			f.matchingFreeSymbolVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
-			ctx.fixedVars[value.Name] = ctx.entryPoint
+			ctx.fixedVars[value.Name] = ctx.patternNumber
 		}
 		break
 
@@ -260,7 +260,7 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 
 			f.matchingFreeExprVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
 
-			ctx.fixedVars[value.Name] = ctx.entryPoint
+			ctx.fixedVars[value.Name] = ctx.patternNumber
 			ctx.patternCtx.prevEntryPoint = ctx.patternCtx.entryPoint
 			ctx.patternCtx.entryPoint++
 		}

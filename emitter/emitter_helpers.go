@@ -25,7 +25,7 @@ func (f *Data) printFuncHeader(depth int, name string) {
 	f.PrintLabel(depth, fmt.Sprintf("struct func_result_t %s(int* entryPoint, struct env_t* env, struct lterm_t* fieldOfView) \n{", name))
 }
 
-func (f *Data) initActionData(depth int, expr syntax.Expr) {
+func (f *Data) initActionLiterals(depth int, expr syntax.Expr) {
 
 	terms := make([]*syntax.Term, len(expr.Terms))
 	copy(terms, expr.Terms)
@@ -60,20 +60,20 @@ func (f *Data) initActionData(depth int, expr syntax.Expr) {
 			break
 
 		case syntax.FUNC:
-			//TO DO
+			f.initFuncLiterals(depth, term.Function)
 			break
+		}
+	}
+}
 
-		case syntax.BRACED_EXPR:
-		case syntax.BRACKETED_EXPR:
-		case syntax.ANGLED_EXPR:
-			//Пока считаем, что тут не может быть литералов
-			break
+func (f *Data) initFuncLiterals(depth int, currFunc *syntax.Function) {
 
-		case syntax.VAR:
-		case syntax.L:
-		case syntax.R:
-			//Не литералы
-			break
+	for _, s := range currFunc.Sentences {
+		for _, a := range s.Actions {
+
+			if a.ActionOp == syntax.COMMA || a.ActionOp == syntax.REPLACE {
+				f.initActionLiterals(depth, a.Expr)
+			}
 		}
 	}
 }
@@ -133,12 +133,8 @@ func (f *Data) printLiteralsAndHeapsInit(depth int, unit *syntax.Unit) {
 
 func (f *Data) initLiterals(depth int, funcs map[string]*syntax.Function) {
 
-	for _, fun := range funcs {
-		for _, s := range fun.Sentences {
-			for _, a := range s.Actions {
-				f.initActionData(depth, a.Expr)
-			}
-		}
+	for _, currFunc := range funcs {
+		f.initFuncLiterals(depth, currFunc)
 	}
 
 	fmt.Fprintf(f, "\n")

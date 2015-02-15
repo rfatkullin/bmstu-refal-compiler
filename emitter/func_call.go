@@ -14,13 +14,19 @@ func (f *Data) isFuncName(ident string, ctx *emitterContext) (*fk.FuncInfo, bool
 	var funcInfo *fk.FuncInfo = nil
 	var ok bool = false
 
+	//fmt.Printf("Search global func: %s\n", ident)
 	if funcInfo, ok = ctx.funcsKeeper.IsThereFunc(ident); ok {
 		//Global func
 		return funcInfo, ok
 	}
 
-	if funcInfo, ok := ctx.funcsKeeper.IsThereFunc(ctx.scopeKeeper.String() + ident); ok {
-		return funcInfo, ok
+	//fmt.Printf("Search nested func: %s\n", ident)
+
+	for _, scope := range ctx.scopeKeeper.GetAllScopes() {
+		//fmt.Printf("\tSearch in scope: %d %s\n", ind, scope)
+		if funcInfo, ok := ctx.funcsKeeper.IsThereFunc(scope + ident); ok {
+			return funcInfo, ok
+		}
 	}
 
 	return nil, false
@@ -43,7 +49,7 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, ident st
 			f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure->env[%d] = env->locals[%d][%d];", needVarInfo.Number, ctx.entryPoint-1, parentLocalVarNumber.Number))
 		} else {
 			//Get from env of parent func
-			parentEnvVarInfo, _ := ctx.envVarMap[needVarName]
+			parentEnvVarInfo, _ := ctx.currFuncInfo.EnvVarMap[needVarName]
 			f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure->env[%d] = env->params[%d];", needVarInfo.Number, parentEnvVarInfo.Number))
 		}
 	}

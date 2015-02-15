@@ -153,9 +153,6 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 					} else {
 						errDuplicate(t.Pos, "nested function")
 					}
-				} else {
-					t.HasName = true
-					t.FuncName = scope.AddAnonymousFunc()
 				}
 			}
 		}

@@ -153,20 +153,22 @@ func (f *Data) ConstructExprInParenthesis(depth, entryPoint int, ctx *emitterCon
 
 		// Значение переменной
 		if term.TermTag == syntax.VAR {
-			f.constructVar(depth, entryPoint, term.Value.Name, ctx)
+			fixedEntryPoint := ctx.fixedVars[term.Value.Name]
+			f.constructVar(depth, fixedEntryPoint, term.Value.Name, ctx)
 		}
 
 		//Имя функции. Создаем функциональный vterm.
 		if term.TermTag == syntax.COMP {
+			//fmt.Printf("Check on functional compound: %s\n", term.Value.Name)
 			if funcInfo, yes := f.isFuncName(term.Value.Name, ctx); yes {
+				//fmt.Printf("There is functional compound: %s\n", term.Value.Name)
 				f.constructFunctionalVTerm(depth, ctx, term.Value.Name, funcInfo)
 			}
 		}
 
 		//Создание вложенной функции. Создание функционального vterm'a
 		if term.TermTag == syntax.FUNC {
-			//TO DO: добавить в список вложенных функций
-			funcInfo := ctx.funcsKeeper.AddFunc(ctx.scopeKeeper.String(), term.Function)
+			funcInfo := ctx.funcsKeeper.AddFunc(ctx.scopeKeeper, term.Function)
 			f.constructFunctionalVTerm(depth, ctx, term.Function.FuncName, funcInfo)
 			ctx.nestedNamedFuncs = append(ctx.nestedNamedFuncs, funcInfo)
 		}
@@ -181,13 +183,13 @@ func (f *Data) ConstructExprInParenthesis(depth, entryPoint int, ctx *emitterCon
 	return terms
 }
 
-func (f *Data) constructVar(depth, entryPoint int, varName string, ctx *emitterContext) {
+func (f *Data) constructVar(depth, fixedEntryPoint int, varName string, ctx *emitterContext) {
 
 	if scopeVar, ok := ctx.sentenceScope.VarMap[varName]; ok {
-		f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->locals[%d][%d];", entryPoint, scopeVar.Number))
+		f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->locals[%d][%d];", fixedEntryPoint, scopeVar.Number))
 	} else {
 		// Get env var
-		needVarInfo, _ := ctx.envVarMap[varName]
+		needVarInfo, _ := ctx.currFuncInfo.EnvVarMap[varName]
 		f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->params[%d];", needVarInfo.Number))
 	}
 }

@@ -139,11 +139,10 @@ type ScopeVar struct {
 }
 
 type Scope struct {
-	VarMap               map[string]ScopeVar
-	VarsNumber           int
-	AnonymousVarsNumber  int
-	AnonymousFuncsNumber int
-	FuncMap              map[string]int
+	VarMap              map[string]ScopeVar
+	VarsNumber          int
+	AnonymousVarsNumber int
+	FuncMap             map[string]int
 
 	Parent *Scope
 }
@@ -200,13 +199,6 @@ func (s *Scope) AddFunc(n string) {
 
 	index := len(s.FuncMap)
 	s.FuncMap[n] = index
-}
-
-func (s *Scope) AddAnonymousFunc() (n string) {
-	n = fmt.Sprintf("_%d_BMSTU_REFALC_ANONYM_FUNC", s.AnonymousVarsNumber)
-	s.AnonymousFuncsNumber++
-	s.AddFunc(n)
-	return
 }
 
 func (s *Scope) PropagateVar(vt tokens.VarType, n string, level int) {

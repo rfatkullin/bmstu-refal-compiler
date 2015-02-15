@@ -4,11 +4,12 @@ import (
 	"fmt"
 )
 import (
+	sk "BMSTU-Refal-Compiler/emitter/scope_name_keeper"
 	"BMSTU-Refal-Compiler/syntax"
 )
 
 type FuncInfo struct {
-	ScopeName        string                     //func full scope name where it was declaration
+	ScopeKeeper      *sk.ScopeKeeper            //func full scope name where it was declaration
 	EmittedFuncName  string                     //func name in C program pattern "func_#"
 	*syntax.Function                            //func syntax tree struct
 	EnvVarMap        map[string]syntax.ScopeVar //func all environment vars
@@ -31,7 +32,7 @@ func (funcsKeeper *FuncsKeeper) IsThereFunc(funcFullName string) (*FuncInfo, boo
 	}
 }
 
-func (funcsKeeper *FuncsKeeper) AddFunc(scopeName string, funcSyntTree *syntax.Function) *FuncInfo {
+func (funcsKeeper *FuncsKeeper) AddFunc(scopeKeeper *sk.ScopeKeeper, funcSyntTree *syntax.Function) *FuncInfo {
 
 	funcNum := len(funcsKeeper.funcs)
 	emittedFuncName := fmt.Sprintf("func_%d", funcNum)
@@ -40,8 +41,9 @@ func (funcsKeeper *FuncsKeeper) AddFunc(scopeName string, funcSyntTree *syntax.F
 		funcSyntTree.FuncName = fmt.Sprintf("anonym_func_%d", funcNum)
 	}
 
-	funcInfo := FuncInfo{scopeName, emittedFuncName, funcSyntTree, make(map[string]syntax.ScopeVar, 8)}
-	funcsKeeper.funcs[scopeName+funcSyntTree.FuncName] = funcInfo
+	funcInfo := FuncInfo{scopeKeeper.Copy(), emittedFuncName, funcSyntTree, make(map[string]syntax.ScopeVar, 8)}
+	funcInfo.setEnv()
+	funcsKeeper.funcs[scopeKeeper.GetFuncName(funcSyntTree.FuncName)] = funcInfo
 
 	return &funcInfo
 }
@@ -50,8 +52,14 @@ func (funcsKeeper *FuncsKeeper) AddBuiltinFunc(funcName string) {
 
 	emittedFuncName := funcName
 
-	funcInfo := FuncInfo{"", emittedFuncName, nil, make(map[string]syntax.ScopeVar, 0)}
+	funcInfo := FuncInfo{sk.NewScopeKeeper(), emittedFuncName, nil, make(map[string]syntax.ScopeVar, 0)}
 	funcsKeeper.funcs[funcName] = funcInfo
+}
+
+func (funcsKeeper *FuncsKeeper) PrintAllFuncs() {
+	for name, funcInfo := range funcsKeeper.funcs {
+		fmt.Printf("%s\t%s\n", name, funcInfo.EmittedFuncName)
+	}
 }
 
 func (funcInfo *FuncInfo) setEnv() {

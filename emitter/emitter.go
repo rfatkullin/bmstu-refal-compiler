@@ -45,10 +45,10 @@ type emitterContext struct {
 	sentenceScope            *syntax.Scope
 	fixedVars                map[string]int
 	patternCtx               patternContext
-	envVarMap                map[string]syntax.ScopeVar
-	scopeKeeper              *sk.FullPathKeeper
+	scopeKeeper              *sk.ScopeKeeper
 	funcsKeeper              *fk.FuncsKeeper
 	nestedNamedFuncs         []*fk.FuncInfo
+	currFuncInfo             *fk.FuncInfo
 }
 
 func (f *Data) mainFunc(depth int, entryFuncName string) {
@@ -130,29 +130,30 @@ func (f *Data) calcPatternsNumber(s *syntax.Sentence) int {
 	return number
 }
 
-func (f *Data) processFuncSentences(depth int, scopeName string, ctx *emitterContext, currFunc *syntax.Function) {
+func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitterContext) {
 
 	maxVarsNumber := 0
 	ctx.entryPoint = 0
 	ctx.patternNumber = 0
-	ctx.maxPatternNumber, maxVarsNumber = f.calcMaxPatternsAndVarsNumbers(currFunc)
-	ctx.scopeKeeper.PushNameElement(scopeName + currFunc.FuncName)
+	ctx.maxPatternNumber, maxVarsNumber = f.calcMaxPatternsAndVarsNumbers(funcInfo.Function)
+	ctx.scopeKeeper = funcInfo.ScopeKeeper
+	ctx.scopeKeeper.AddFuncScope(funcInfo.FuncName)
+	ctx.currFuncInfo = funcInfo
 
 	f.printInitLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
-
 	f.PrintLabel(depth, "while(*entryPoint >= 0)")
 	f.PrintLabel(depth, "{")
 	f.PrintLabel(depth+1, "switch (*entryPoint)")
 	f.PrintLabel(depth+1, "{")
 
-	for sentenceNumber, s := range currFunc.Sentences {
-		ctx.scopeKeeper.PushIntElement(sentenceNumber)
+	for sentenceNumber, s := range funcInfo.Function.Sentences {
+		ctx.scopeKeeper.AddSentenceScope(sentenceNumber)
 
 		ctx.fixedVars = make(map[string]int)
 		ctx.sentenceNumber = sentenceNumber
 		ctx.sentenceScope = &s.Scope
 		ctx.inSentencePatternNumber = f.calcPatternsNumber(s)
-		ctx.isLastSentence = sentenceNumber == len(currFunc.Sentences)-1
+		ctx.isLastSentence = sentenceNumber == len(funcInfo.Function.Sentences)-1
 		ctx.isFirstPatternInSentence = true
 		ctx.isLastPatternInSentence = ctx.inSentencePatternNumber == 1
 		ctx.nextSentenceEntryPoint = ctx.entryPoint + ctx.inSentencePatternNumber
@@ -204,7 +205,7 @@ func (f *Data) processFuncSentences(depth int, scopeName string, ctx *emitterCon
 		f.PrintLabel(depth+2, "break; //Successful end of sentence")
 		f.PrintLabel(depth+1, "} // Pattern case end")
 
-		ctx.scopeKeeper.PopElement()
+		ctx.scopeKeeper.PopLastSentenceScope()
 	}
 
 	f.PrintLabel(depth+1, "} // Entry point switch end")
@@ -212,8 +213,6 @@ func (f *Data) processFuncSentences(depth int, scopeName string, ctx *emitterCon
 
 	f.printFreeLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
 	f.PrintLabel(depth, "return funcRes;")
-
-	ctx.scopeKeeper.PopElement()
 }
 
 func (f *Data) predeclareGlobFuncs(depth, startIndex, funcsNumber int) {
@@ -231,7 +230,7 @@ func (f *Data) processGlobFuncs(depth int, ctx *emitterContext, funcs map[string
 
 	for funcName, currFunc := range funcs {
 
-		funcInfo := ctx.funcsKeeper.AddFunc("", currFunc)
+		funcInfo := ctx.funcsKeeper.AddFunc(sk.NewScopeKeeper(), currFunc)
 
 		globs = append(globs, funcInfo)
 
@@ -242,7 +241,7 @@ func (f *Data) processGlobFuncs(depth int, ctx *emitterContext, funcs map[string
 
 	for _, funcInfo := range globs {
 		f.printFuncHeader(depth, funcInfo.EmittedFuncName)
-		f.processFuncSentences(depth+1, "", ctx, funcInfo.Function)
+		f.processFuncSentences(depth+1, funcInfo, ctx)
 		f.PrintLabel(depth, fmt.Sprintf("} // func %s:%s\n", funcInfo.FuncName, funcInfo.EmittedFuncName)) // func block end
 	}
 
@@ -253,8 +252,15 @@ func (f *Data) processNestedFuncs(depth int, ctx *emitterContext) {
 
 	for _, funcInfo := range ctx.nestedNamedFuncs {
 		f.printFuncHeader(depth, funcInfo.EmittedFuncName)
-		f.processFuncSentences(depth+1, funcInfo.ScopeName, ctx, funcInfo.Function)
-		f.PrintLabel(depth, fmt.Sprintf("} // func %s\n", funcInfo.EmittedFuncName)) // func block end
+		f.processFuncSentences(depth+1, funcInfo, ctx)
+
+		funcName := "anonym"
+
+		if funcInfo.Function.HasName {
+			funcName = funcInfo.FuncName
+		}
+
+		f.PrintLabel(depth, fmt.Sprintf("} // func %s:%s\n", funcName, funcInfo.EmittedFuncName)) // func block end
 	}
 }
 
@@ -270,7 +276,6 @@ func processFile(f Data) {
 	depth := 0
 
 	var ctx emitterContext
-	ctx.scopeKeeper = sk.NewFullPathKeeper()
 	ctx.funcsKeeper = fk.NewFuncsKeeper()
 	ctx.nestedNamedFuncs = make([]*fk.FuncInfo, 0)
 
@@ -287,6 +292,8 @@ func processFile(f Data) {
 	f.processNestedFuncs(depth, &ctx)
 
 	f.mainFunc(depth, entryFuncName)
+
+	//ctx.funcsKeeper.PrintAllFuncs()
 }
 
 func Handle(done chan<- bool, fs <-chan Data) {
