@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 import (
-	sk "BMSTU-Refal-Compiler/emitter/scope_name_keeper"
+	sk "BMSTU-Refal-Compiler/emitter/scope_keeper"
 	"BMSTU-Refal-Compiler/syntax"
 )
 

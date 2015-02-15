@@ -45,7 +45,7 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, ident st
 
 	for needVarName, needVarInfo := range funcInfo.EnvVarMap {
 
-		if parentLocalVarNumber, ok := ctx.sentenceScope.VarMap[needVarName]; ok {
+		if parentLocalVarNumber, ok := ctx.sentenceInfo.scope.VarMap[needVarName]; ok {
 			f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure->env[%d] = env->locals[%d][%d];", needVarInfo.Number, ctx.entryPoint-1, parentLocalVarNumber.Number))
 		} else {
 			//Get from env of parent func

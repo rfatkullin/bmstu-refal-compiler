@@ -185,7 +185,7 @@ func (f *Data) ConstructExprInParenthesis(depth, entryPoint int, ctx *emitterCon
 
 func (f *Data) constructVar(depth, fixedEntryPoint int, varName string, ctx *emitterContext) {
 
-	if scopeVar, ok := ctx.sentenceScope.VarMap[varName]; ok {
+	if scopeVar, ok := ctx.sentenceInfo.scope.VarMap[varName]; ok {
 		f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->locals[%d][%d];", fixedEntryPoint, scopeVar.Number))
 	} else {
 		// Get env var

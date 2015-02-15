@@ -11,7 +11,7 @@ import (
 
 func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.Term) {
 
-	f.PrintLabel(depth, fmt.Sprintf("//Sentence: %d, Pattern: %d", ctx.sentenceNumber, ctx.patternNumber))
+	f.PrintLabel(depth, fmt.Sprintf("//Sentence: %d, Pattern: %d", ctx.sentenceInfo.index, ctx.patternNumber))
 	f.PrintLabel(depth, fmt.Sprintf("case %d:", ctx.entryPoint))
 	f.PrintLabel(depth, fmt.Sprintf("{"))
 
@@ -141,7 +141,7 @@ func (f *Data) processPatternFail(depth int, ctx *emitterContext) {
 }
 
 func (f *Data) processFailOfFirstPattern(depth int, ctx *emitterContext) {
-	if ctx.isLastSentence {
+	if ctx.sentenceInfo.isLast {
 		f.PrintLabel(depth, "//First pattern of last sentence -> nothing to stretch -> fail!")
 		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = FAIL_RESULT, .fieldChain = 0, .callChain = 0};")
 		f.PrintLabel(depth, "*entryPoint = -1;")
@@ -203,7 +203,7 @@ func (f *Data) printGetPrevAssembledFOV(depth, prevEntryPoint, entryPoint int) {
 
 func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Value) {
 
-	varInfo, isLocalVar := ctx.sentenceScope.VarMap[value.Name]
+	varInfo, isLocalVar := ctx.sentenceInfo.scope.VarMap[value.Name]
 	isFixedVar := true
 	matchedEntryPoint := 0
 

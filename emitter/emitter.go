@@ -7,7 +7,7 @@ import (
 
 import (
 	fk "BMSTU-Refal-Compiler/emitter/funcs_keeper"
-	sk "BMSTU-Refal-Compiler/emitter/scope_name_keeper"
+	sk "BMSTU-Refal-Compiler/emitter/scope_keeper"
 	"BMSTU-Refal-Compiler/syntax"
 )
 
@@ -28,27 +28,31 @@ type patternContext struct {
 	prevEntryPoint int
 }
 
+type sentenceInfo struct {
+	patternsCount  int
+	index          int
+	isFirstPattern bool
+	isLastPattern  bool
+	isLast         bool
+	scope          *syntax.Scope
+}
+
 type emitterContext struct {
-	entryPoint               int
-	prevEntryPoint           int
-	patternNumber            int
-	inSentencePatternNumber  int
-	maxPatternNumber         int
-	nextSentenceEntryPoint   int
-	sentenceNumber           int
-	isFirstPatternInSentence bool
-	isLastPatternInSentence  bool
-	isLastSentence           bool
-	isNextActMatching        bool
-	isLastAction             bool
-	isFuncCallInConstruct    bool
-	sentenceScope            *syntax.Scope
-	fixedVars                map[string]int
-	patternCtx               patternContext
-	scopeKeeper              *sk.ScopeKeeper
-	funcsKeeper              *fk.FuncsKeeper
-	nestedNamedFuncs         []*fk.FuncInfo
-	currFuncInfo             *fk.FuncInfo
+	entryPoint             int
+	prevEntryPoint         int
+	patternNumber          int
+	maxPatternNumber       int
+	nextSentenceEntryPoint int
+	isNextActMatching      bool
+	isLastAction           bool
+	isFuncCallInConstruct  bool
+	sentenceInfo           sentenceInfo
+	fixedVars              map[string]int
+	patternCtx             patternContext
+	scopeKeeper            *sk.ScopeKeeper
+	funcsKeeper            *fk.FuncsKeeper
+	nestedNamedFuncs       []*fk.FuncInfo
+	currFuncInfo           *fk.FuncInfo
 }
 
 func (f *Data) mainFunc(depth int, entryFuncName string) {
@@ -150,20 +154,22 @@ func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitt
 		ctx.scopeKeeper.AddSentenceScope(sentenceNumber)
 
 		ctx.fixedVars = make(map[string]int)
-		ctx.sentenceNumber = sentenceNumber
-		ctx.sentenceScope = &s.Scope
-		ctx.inSentencePatternNumber = f.calcPatternsNumber(s)
-		ctx.isLastSentence = sentenceNumber == len(funcInfo.Function.Sentences)-1
-		ctx.isFirstPatternInSentence = true
-		ctx.isLastPatternInSentence = ctx.inSentencePatternNumber == 1
-		ctx.nextSentenceEntryPoint = ctx.entryPoint + ctx.inSentencePatternNumber
+
+		ctx.sentenceInfo.index = sentenceNumber
+		ctx.sentenceInfo.scope = &s.Scope
+		ctx.sentenceInfo.patternsCount = f.calcPatternsNumber(s)
+		ctx.sentenceInfo.isLast = sentenceNumber == len(funcInfo.Function.Sentences)-1
+		ctx.sentenceInfo.isFirstPattern = true
+		ctx.sentenceInfo.isLastPattern = ctx.sentenceInfo.patternsCount == 1
+
+		ctx.nextSentenceEntryPoint = ctx.entryPoint + ctx.sentenceInfo.patternsCount
 		ctx.patternNumber = 0
 		ctx.isFuncCallInConstruct = false
 		ctx.prevEntryPoint = -1
 
 		f.matchingPattern(depth+1, ctx, s.Pattern.Terms)
 
-		ctx.isFirstPatternInSentence = false
+		ctx.sentenceInfo.isFirstPattern = false
 
 		for index, a := range s.Actions {
 
