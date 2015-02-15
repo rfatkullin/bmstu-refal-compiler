@@ -6,7 +6,6 @@ import (
 
 import (
 	fk "BMSTU-Refal-Compiler/emitter/funcs_keeper"
-	_ "BMSTU-Refal-Compiler/syntax"
 )
 
 func (f *Data) isFuncName(ident string, ctx *emitterContext) (*fk.FuncInfo, bool) {
@@ -14,17 +13,14 @@ func (f *Data) isFuncName(ident string, ctx *emitterContext) (*fk.FuncInfo, bool
 	var funcInfo *fk.FuncInfo = nil
 	var ok bool = false
 
-	//fmt.Printf("Search global func: %s\n", ident)
 	if funcInfo, ok = ctx.funcsKeeper.IsThereFunc(ident); ok {
 		//Global func
 		return funcInfo, ok
 	}
 
-	//fmt.Printf("Search nested func: %s\n", ident)
-
 	for _, scope := range ctx.scopeKeeper.GetAllScopes() {
-		//fmt.Printf("\tSearch in scope: %d %s\n", ind, scope)
 		if funcInfo, ok := ctx.funcsKeeper.IsThereFunc(scope + ident); ok {
+			//Nested func
 			return funcInfo, ok
 		}
 	}

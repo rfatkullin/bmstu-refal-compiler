@@ -28,19 +28,9 @@ type patternContext struct {
 	prevEntryPoint int
 }
 
-type sentenceInfo struct {
-	patternsCount  int
-	index          int
-	isFirstPattern bool
-	isLastPattern  bool
-	isLast         bool
-	scope          *syntax.Scope
-}
-
 type emitterContext struct {
 	entryPoint             int
 	prevEntryPoint         int
-	patternNumber          int
 	maxPatternNumber       int
 	nextSentenceEntryPoint int
 	isNextActMatching      bool
@@ -51,8 +41,8 @@ type emitterContext struct {
 	patternCtx             patternContext
 	scopeKeeper            *sk.ScopeKeeper
 	funcsKeeper            *fk.FuncsKeeper
-	nestedNamedFuncs       []*fk.FuncInfo
 	currFuncInfo           *fk.FuncInfo
+	nestedNamedFuncs       []*fk.FuncInfo
 }
 
 func (f *Data) mainFunc(depth int, entryFuncName string) {
@@ -109,80 +99,45 @@ func (f *Data) printFreeLocals(depth, matchingNumber, varsNumber int) {
 	f.PrintLabel(depth, "}")
 }
 
-func (f *Data) calcMaxPatternsAndVarsNumbers(currFunc *syntax.Function) (int, int) {
-	maxPatternsNumber := 0
-	maxVarNumber := 0
-
-	for _, s := range currFunc.Sentences {
-		maxPatternsNumber = max(maxPatternsNumber, f.calcPatternsNumber(s))
-		maxVarNumber = max(maxVarNumber, s.Scope.VarsNumber)
-	}
-
-	return maxPatternsNumber, maxVarNumber
-}
-
-func (f *Data) calcPatternsNumber(s *syntax.Sentence) int {
-	// +1 s.Pattern
-	number := 1
-
-	for _, a := range s.Actions {
-		if a.ActionOp == syntax.COLON {
-			number++
-		}
-	}
-
-	return number
-}
-
 func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitterContext) {
 
 	maxVarsNumber := 0
+	sentencesCount := len(funcInfo.Function.Sentences)
 	ctx.entryPoint = 0
-	ctx.patternNumber = 0
-	ctx.maxPatternNumber, maxVarsNumber = f.calcMaxPatternsAndVarsNumbers(funcInfo.Function)
+	ctx.maxPatternNumber, maxVarsNumber = getMaxPatternsAndVarsCount(funcInfo.Function)
 	ctx.scopeKeeper = funcInfo.ScopeKeeper
 	ctx.scopeKeeper.AddFuncScope(funcInfo.FuncName)
 	ctx.currFuncInfo = funcInfo
 
 	f.printInitLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
+
 	f.PrintLabel(depth, "while(*entryPoint >= 0)")
 	f.PrintLabel(depth, "{")
 	f.PrintLabel(depth+1, "switch (*entryPoint)")
 	f.PrintLabel(depth+1, "{")
 
-	for sentenceNumber, s := range funcInfo.Function.Sentences {
-		ctx.scopeKeeper.AddSentenceScope(sentenceNumber)
+	for sentenceIndex, sentence := range funcInfo.Function.Sentences {
 
+		ctx.scopeKeeper.AddSentenceScope(sentenceIndex)
 		ctx.fixedVars = make(map[string]int)
-
-		ctx.sentenceInfo.index = sentenceNumber
-		ctx.sentenceInfo.scope = &s.Scope
-		ctx.sentenceInfo.patternsCount = f.calcPatternsNumber(s)
-		ctx.sentenceInfo.isLast = sentenceNumber == len(funcInfo.Function.Sentences)-1
-		ctx.sentenceInfo.isFirstPattern = true
-		ctx.sentenceInfo.isLastPattern = ctx.sentenceInfo.patternsCount == 1
-
+		ctx.sentenceInfo.init(sentencesCount, sentenceIndex, sentence)
 		ctx.nextSentenceEntryPoint = ctx.entryPoint + ctx.sentenceInfo.patternsCount
-		ctx.patternNumber = 0
-		ctx.isFuncCallInConstruct = false
 		ctx.prevEntryPoint = -1
 
-		f.matchingPattern(depth+1, ctx, s.Pattern.Terms)
+		f.matchingPattern(depth+1, ctx, sentence.Pattern.Terms)
 
-		ctx.sentenceInfo.isFirstPattern = false
+		for index, a := range sentence.Actions {
 
-		for index, a := range s.Actions {
-
-			ctx.isLastAction = index == len(s.Actions)-1
+			ctx.isLastAction = index == len(sentence.Actions)-1
 			ctx.isNextActMatching = false
-			if index+1 < len(s.Actions) && (s.Actions[index+1].ActionOp == syntax.COLON || s.Actions[index+1].ActionOp == syntax.DCOLON) {
+			if index+1 < len(sentence.Actions) && (sentence.Actions[index+1].ActionOp == syntax.COLON || sentence.Actions[index+1].ActionOp == syntax.DCOLON) {
 				ctx.isNextActMatching = true
 			}
 
 			switch a.ActionOp {
 
 			case syntax.COMMA: // ','
-				f.ConstructResult(depth+2, ctx, &s.Scope, a.Expr)
+				f.ConstructResult(depth+2, ctx, a.Expr)
 				break
 
 			case syntax.COLON: // ':'
@@ -192,7 +147,7 @@ func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitt
 
 			case syntax.REPLACE: // '='
 				ctx.prevEntryPoint = -1
-				f.ConstructResult(depth+2, ctx, &s.Scope, a.Expr)
+				f.ConstructResult(depth+2, ctx, a.Expr)
 				break
 
 			case syntax.DCOLON: // '::'
@@ -271,10 +226,13 @@ func (f *Data) processNestedFuncs(depth int, ctx *emitterContext) {
 }
 
 func (f *Data) addBuiltins(ctx *emitterContext) int {
+
+	funcsCount := ctx.funcsKeeper.GetFuncsCount()
+
 	ctx.funcsKeeper.AddBuiltinFunc("Prout")
 	ctx.funcsKeeper.AddBuiltinFunc("Card")
 
-	return 2
+	return ctx.funcsKeeper.GetFuncsCount() - funcsCount
 }
 
 func processFile(f Data) {

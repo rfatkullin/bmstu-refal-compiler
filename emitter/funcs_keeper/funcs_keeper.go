@@ -56,6 +56,10 @@ func (funcsKeeper *FuncsKeeper) AddBuiltinFunc(funcName string) {
 	funcsKeeper.funcs[funcName] = funcInfo
 }
 
+func (funcsKeeper *FuncsKeeper) GetFuncsCount() int {
+	return len(funcsKeeper.funcs)
+}
+
 func (funcsKeeper *FuncsKeeper) PrintAllFuncs() {
 	for name, funcInfo := range funcsKeeper.funcs {
 		fmt.Printf("%s\t%s\n", name, funcInfo.EmittedFuncName)

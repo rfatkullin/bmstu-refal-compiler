@@ -11,11 +11,11 @@ import (
 
 func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.Term) {
 
-	f.PrintLabel(depth, fmt.Sprintf("//Sentence: %d, Pattern: %d", ctx.sentenceInfo.index, ctx.patternNumber))
+	f.PrintLabel(depth, fmt.Sprintf("//Sentence: %d, Pattern: %d", ctx.sentenceInfo.index, ctx.sentenceInfo.patternIndex))
 	f.PrintLabel(depth, fmt.Sprintf("case %d:", ctx.entryPoint))
 	f.PrintLabel(depth, fmt.Sprintf("{"))
 
-	f.checkAndAssemblyChain(depth+1, ctx.patternNumber)
+	f.checkAndAssemblyChain(depth+1, ctx.sentenceInfo.patternIndex)
 
 	f.PrintLabel(depth+1, "fragmentOffset = currFrag->offset;")
 	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = env->stretchVarsNumber[%d];", ctx.entryPoint))
@@ -35,7 +35,7 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.T
 
 	ctx.prevEntryPoint = ctx.entryPoint
 	ctx.entryPoint++
-	ctx.patternNumber++
+	ctx.sentenceInfo.patternIndex++
 }
 
 func (f *Data) processEmptyPattern(depth int, ctx *emitterContext) {
@@ -130,7 +130,7 @@ func (f *Data) processPatternFail(depth int, ctx *emitterContext) {
 	f.PrintLabel(depth, "{")
 
 	//First pattern in current sentence
-	if ctx.patternNumber == 0 || ctx.prevEntryPoint == -1 {
+	if ctx.sentenceInfo.patternIndex == 0 || ctx.prevEntryPoint == -1 {
 		f.processFailOfFirstPattern(depth+1, ctx)
 	} else {
 		f.processFailOfCommonPattern(depth+1, ctx.entryPoint-1)
@@ -228,8 +228,8 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 				f.matchingFixedEnvExprVar(depth, ctx.patternCtx.prevEntryPoint, varNumber)
 			}
 		} else {
-			f.matchingFreeTermVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
-			ctx.fixedVars[value.Name] = ctx.patternNumber
+			f.matchingFreeTermVar(depth, ctx.patternCtx.prevEntryPoint, ctx.sentenceInfo.patternIndex, varNumber)
+			ctx.fixedVars[value.Name] = ctx.sentenceInfo.patternIndex
 		}
 		break
 
@@ -242,8 +242,8 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 			}
 
 		} else {
-			f.matchingFreeSymbolVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
-			ctx.fixedVars[value.Name] = ctx.patternNumber
+			f.matchingFreeSymbolVar(depth, ctx.patternCtx.prevEntryPoint, ctx.sentenceInfo.patternIndex, varNumber)
+			ctx.fixedVars[value.Name] = ctx.sentenceInfo.patternIndex
 		}
 		break
 
@@ -258,9 +258,9 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 		} else {
 			f.PrintLabel(depth-1, fmt.Sprintf("case %d:", ctx.patternCtx.entryPoint))
 
-			f.matchingFreeExprVar(depth, ctx.patternCtx.prevEntryPoint, ctx.patternNumber, varNumber)
+			f.matchingFreeExprVar(depth, ctx.patternCtx.prevEntryPoint, ctx.sentenceInfo.patternIndex, varNumber)
 
-			ctx.fixedVars[value.Name] = ctx.patternNumber
+			ctx.fixedVars[value.Name] = ctx.sentenceInfo.patternIndex
 			ctx.patternCtx.prevEntryPoint = ctx.patternCtx.entryPoint
 			ctx.patternCtx.entryPoint++
 		}
