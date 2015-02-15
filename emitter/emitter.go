@@ -33,8 +33,6 @@ type emitterContext struct {
 	prevEntryPoint         int
 	maxPatternNumber       int
 	nextSentenceEntryPoint int
-	isNextActMatching      bool
-	isLastAction           bool
 	isFuncCallInConstruct  bool
 	sentenceInfo           sentenceInfo
 	fixedVars              map[string]int
@@ -105,9 +103,10 @@ func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitt
 	sentencesCount := len(funcInfo.Function.Sentences)
 	ctx.entryPoint = 0
 	ctx.maxPatternNumber, maxVarsNumber = getMaxPatternsAndVarsCount(funcInfo.Function)
+	ctx.currFuncInfo = funcInfo
+
 	ctx.scopeKeeper = funcInfo.ScopeKeeper
 	ctx.scopeKeeper.AddFuncScope(funcInfo.FuncName)
-	ctx.currFuncInfo = funcInfo
 
 	f.printInitLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
 
@@ -119,8 +118,11 @@ func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitt
 	for sentenceIndex, sentence := range funcInfo.Function.Sentences {
 
 		ctx.scopeKeeper.AddSentenceScope(sentenceIndex)
+
 		ctx.fixedVars = make(map[string]int)
+
 		ctx.sentenceInfo.init(sentencesCount, sentenceIndex, sentence)
+
 		ctx.nextSentenceEntryPoint = ctx.entryPoint + ctx.sentenceInfo.patternsCount
 		ctx.prevEntryPoint = -1
 
@@ -128,11 +130,7 @@ func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitt
 
 		for index, a := range sentence.Actions {
 
-			ctx.isLastAction = index == len(sentence.Actions)-1
-			ctx.isNextActMatching = false
-			if index+1 < len(sentence.Actions) && (sentence.Actions[index+1].ActionOp == syntax.COLON || sentence.Actions[index+1].ActionOp == syntax.DCOLON) {
-				ctx.isNextActMatching = true
-			}
+			ctx.sentenceInfo.actionIndex = index
 
 			switch a.ActionOp {
 

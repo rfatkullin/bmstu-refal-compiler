@@ -210,9 +210,9 @@ func (f *Data) ConstructResult(depth int, ctx *emitterContext, resultExpr syntax
 
 		f.PrintLabel(depth, "fieldOfView = currTerm->chain;")
 
-		if ctx.isLastAction {
+		if ctx.sentenceInfo.isLastAction() {
 			f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = currTerm->chain, .callChain = funcCallChain};")
-		} else if ctx.isNextActMatching && ctx.isFuncCallInConstruct {
+		} else if ctx.isFuncCallInConstruct && ctx.sentenceInfo.isNextMatchingAction() {
 			f.PrintLabel(depth, fmt.Sprintf("*entryPoint = %d;", ctx.entryPoint))
 			f.PrintLabel(depth, "return (struct func_result_t){.status = CALL_RESULT, .fieldChain = currTerm->chain, .callChain = funcCallChain};")
 		}

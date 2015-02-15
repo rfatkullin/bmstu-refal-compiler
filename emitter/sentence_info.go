@@ -5,9 +5,11 @@ import (
 )
 
 type sentenceInfo struct {
-	patternsCount int
 	index         int
 	patternIndex  int
+	actionIndex   int
+	patternsCount int
+	actionsCount  int
 	isLastPattern bool
 	isLast        bool
 	scope         *syntax.Scope
@@ -22,6 +24,28 @@ func (sentenceInfo *sentenceInfo) init(sentencesCount, sentenceIndex int, s *syn
 	sentenceInfo.isLast = sentenceIndex == sentencesCount-1
 	sentenceInfo.isLastPattern = sentenceInfo.patternsCount == 1
 	sentenceInfo.patternIndex = 0
+	sentenceInfo.actionsCount = len(s.Actions)
+}
+
+func (sentenceInfo *sentenceInfo) isLastAction() bool {
+
+	return sentenceInfo.actionIndex+1 >= sentenceInfo.actionsCount
+}
+
+func (sentenceInfo *sentenceInfo) isNextMatchingAction() bool {
+
+	if sentenceInfo.isLastAction() {
+		return false
+	}
+
+	actions := sentenceInfo.sentence.Actions
+	index := sentenceInfo.actionIndex
+
+	if actions[index+1].ActionOp == syntax.COLON || actions[index+1].ActionOp == syntax.DCOLON {
+		return true
+	}
+
+	return false
 }
 
 func getPatternsCount(s *syntax.Sentence) int {
