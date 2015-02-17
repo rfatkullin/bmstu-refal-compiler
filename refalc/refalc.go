@@ -185,7 +185,7 @@ func main() {
 		fmt.Println("  1203  - UTF-32 (big-endian)")
 		fmt.Println("  65001 - UTF-8")
 		fmt.Println()
-		fmt.Println("NOTE 1: Default encoding is UTF-32(le).")
+		fmt.Println("NOTE 1: Default encoding is UTF-8.")
 		fmt.Println()
 		fmt.Println("NOTE 2: Unicode preamble (Byte-Order Mark) in the beginning")
 		fmt.Println("  of the source file overrides '--cp-source' option.")
