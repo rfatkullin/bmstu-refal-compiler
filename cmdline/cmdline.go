@@ -59,8 +59,8 @@ func init() {
 
 	flag.BoolVar(&ListCp, "list-cp", false, "")
 
-	flag.IntVar(&CpSource, "cp-source", 65001, "")
-	flag.IntVar(&CpSource, "cs", 65001, "")
+	flag.IntVar(&CpSource, "cp-source", 1202, "")
+	flag.IntVar(&CpSource, "cs", 1202, "")
 
 	flag.BoolVar(&Help, "help", false, "")
 	flag.BoolVar(&Help, "h", false, "")

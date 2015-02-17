@@ -81,12 +81,10 @@ func (f *Data) initFuncLiterals(depth int, currFunc *syntax.Function) {
 // Инициализация vterm_t строкового литерала
 // Пока только ASCII символы
 func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
-	str := string(term.Value.Str)
-	strLen := len(str)
 	term.IndexInLiterals = f.CurrTermNum
 
-	for i := 0; i < strLen; i++ {
-		f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_CHAR_TAG, .ch = %q};", f.CurrTermNum, str[i]))
+	for i := 0; i < len(term.Value.Str); i++ {
+		f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_CHAR_TAG, .ch = %d};", f.CurrTermNum, term.Value.Str[i]))
 		f.CurrTermNum++
 	}
 }
@@ -143,6 +141,7 @@ func (f *Data) initLiterals(depth int, funcs map[string]*syntax.Function) {
 func (f *Data) PrintHeaders() {
 
 	f.PrintLabel(0, "#include <stdlib.h>\n")
+	f.PrintLabel(0, "#include <stdio.h>\n")
 	f.PrintLabel(0, "#include <memory_manager.h>")
 	f.PrintLabel(0, "#include <vmachine.h>")
 	f.PrintLabel(0, "#include <builtins.h>")
