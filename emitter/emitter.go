@@ -229,6 +229,7 @@ func (f *Data) addBuiltins(ctx *emitterContext) int {
 
 	ctx.funcsKeeper.AddBuiltinFunc("Prout")
 	ctx.funcsKeeper.AddBuiltinFunc("Card")
+	ctx.funcsKeeper.AddBuiltinFunc("Add")
 
 	return ctx.funcsKeeper.GetFuncsCount() - funcsCount
 }

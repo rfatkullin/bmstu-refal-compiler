@@ -451,9 +451,9 @@ func Handle(ts chan<- Data, ms chan<- messages.Data, runes <-chan chars.Rune,
 			}
 		},
 
-		`(R5) '%'`: func() { shortArith("Mod") },
+		`(R5, R7) '%'`: func() { shortArith("Mod") },
 
-		`(R5) '+'`: func() { shortArith("Add") },
+		`(R5, R7) '+'`: func() { shortArith("Add") },
 
 		`(R5) '-'`: func() { shortArith("Sub") },
 
@@ -882,6 +882,7 @@ func Handle(ts chan<- Data, ms chan<- messages.Data, runes <-chan chars.Rune,
 			start = r.Pos
 			handler()
 		} else {
+			fmt.Printf("%d\n", r.Code)
 			errUnexpectedChar()
 			next()
 		}

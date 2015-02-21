@@ -66,8 +66,8 @@ var Builtins = map[int]map[string]bool{
 		"GetPPID":             true,
 	},
 	7: map[string]bool{
-		"Add":   false,
-		"+":     false,
+		"Add":   true,
+		"+":     true,
 		"Div":   false,
 		"/":     false,
 		"Mod":   false,

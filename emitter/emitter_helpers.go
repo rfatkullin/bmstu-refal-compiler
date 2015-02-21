@@ -93,7 +93,7 @@ func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 // Пока только обычные
 func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
 
-	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = %d};", f.CurrTermNum, term.Value.Int))
+	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = %dU};", f.CurrTermNum, term.Value.Int))
 	term.IndexInLiterals = f.CurrTermNum
 	f.CurrTermNum++
 }
