@@ -48,7 +48,9 @@ func (f *Data) mainFunc(depth int, entryFuncName string) {
 	f.PrintLabel(depth, "int main()")
 	f.PrintLabel(depth, "{")
 	f.PrintLabel(depth+1, "__initLiteralData();")
+	f.PrintLabel(depth+1, "initBuiltins();")
 	f.PrintLabel(depth+1, fmt.Sprintf("mainLoop(\"Go\", %s);", entryFuncName))
+	f.PrintLabel(depth+1, "deinitBuiltins();")
 	f.PrintLabel(depth+1, "return 0;")
 	f.PrintLabel(depth, "}")
 }

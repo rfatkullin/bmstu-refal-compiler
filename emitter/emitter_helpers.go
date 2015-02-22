@@ -140,7 +140,7 @@ func (f *Data) initLiterals(depth int, funcs map[string]*syntax.Function) {
 
 func (f *Data) PrintHeaders() {
 
-	f.PrintLabel(0, "#include <stdlib.h>\n")
+	f.PrintLabel(0, "#include <stdlib.h>")
 	f.PrintLabel(0, "#include <stdio.h>\n")
 	f.PrintLabel(0, "#include <memory_manager.h>")
 	f.PrintLabel(0, "#include <vmachine.h>")
