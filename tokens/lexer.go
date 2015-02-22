@@ -443,7 +443,7 @@ func Handle(ts chan<- Data, ms chan<- messages.Data, runes <-chan chars.Rune,
 			}
 		},
 
-		`(R5) '*'`: func() {
+		`(R5, R7) '*'`: func() {
 			if r.Col == 1 {
 				skipComment()
 			} else {
