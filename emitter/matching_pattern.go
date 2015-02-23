@@ -5,8 +5,8 @@ import (
 )
 
 import (
-	"BMSTU-Refal-Compiler/syntax"
-	"BMSTU-Refal-Compiler/tokens"
+	"bmstu-refal-compiler/syntax"
+	"bmstu-refal-compiler/tokens"
 )
 
 func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.Term) {

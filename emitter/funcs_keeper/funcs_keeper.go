@@ -4,8 +4,8 @@ import (
 	"fmt"
 )
 import (
-	sk "BMSTU-Refal-Compiler/emitter/scope_keeper"
-	"BMSTU-Refal-Compiler/syntax"
+	sk "bmstu-refal-compiler/emitter/scope_keeper"
+	"bmstu-refal-compiler/syntax"
 )
 
 type FuncInfo struct {

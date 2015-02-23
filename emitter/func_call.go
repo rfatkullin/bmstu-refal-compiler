@@ -5,7 +5,7 @@ import (
 )
 
 import (
-	fk "BMSTU-Refal-Compiler/emitter/funcs_keeper"
+	fk "bmstu-refal-compiler/emitter/funcs_keeper"
 )
 
 func (f *Data) isFuncName(ident string, ctx *emitterContext) (*fk.FuncInfo, bool) {

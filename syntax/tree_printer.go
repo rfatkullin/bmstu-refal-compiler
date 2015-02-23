@@ -7,7 +7,7 @@ import (
 )
 
 import (
-	"BMSTU-Refal-Compiler/tokens"
+	"bmstu-refal-compiler/tokens"
 )
 
 const (

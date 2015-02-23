@@ -6,9 +6,9 @@ import (
 )
 
 import (
-	fk "BMSTU-Refal-Compiler/emitter/funcs_keeper"
-	sk "BMSTU-Refal-Compiler/emitter/scope_keeper"
-	"BMSTU-Refal-Compiler/syntax"
+	fk "bmstu-refal-compiler/emitter/funcs_keeper"
+	sk "bmstu-refal-compiler/emitter/scope_keeper"
+	"bmstu-refal-compiler/syntax"
 )
 
 type funcData struct {

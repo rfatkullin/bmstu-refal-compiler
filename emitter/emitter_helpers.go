@@ -7,7 +7,7 @@ import (
 )
 
 import (
-	"BMSTU-Refal-Compiler/syntax"
+	"bmstu-refal-compiler/syntax"
 )
 
 func genTabs(depth int) string {

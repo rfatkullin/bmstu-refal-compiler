@@ -1,7 +1,7 @@
 package emitter
 
 import (
-	"BMSTU-Refal-Compiler/syntax"
+	"bmstu-refal-compiler/syntax"
 )
 
 type sentenceInfo struct {

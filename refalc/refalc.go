@@ -11,13 +11,13 @@ import (
 
 // Bauman Refal Compiler packages
 import (
-	"BMSTU-Refal-Compiler/chars"
-	"BMSTU-Refal-Compiler/cmdline"
-	_ "BMSTU-Refal-Compiler/coords"
-	"BMSTU-Refal-Compiler/emitter"
-	"BMSTU-Refal-Compiler/messages"
-	"BMSTU-Refal-Compiler/syntax"
-	"BMSTU-Refal-Compiler/tokens"
+	"bmstu-refal-compiler/chars"
+	"bmstu-refal-compiler/cmdline"
+	_ "bmstu-refal-compiler/coords"
+	"bmstu-refal-compiler/emitter"
+	"bmstu-refal-compiler/messages"
+	"bmstu-refal-compiler/syntax"
+	"bmstu-refal-compiler/tokens"
 )
 
 func changeExt(file, newExt string) string {

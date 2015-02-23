@@ -9,8 +9,8 @@ import (
 )
 
 import (
-	"BMSTU-Refal-Compiler/coords"
-	"BMSTU-Refal-Compiler/messages"
+	"bmstu-refal-compiler/coords"
+	"bmstu-refal-compiler/messages"
 )
 
 const EOF = -1
@@ -86,7 +86,7 @@ func Handle(runes chan<- Rune, ms chan<- messages.Data, r io.ReadCloser, cp int)
 				break
 			}
 			fallthrough
-		case 0x2028, /* Unicode Line Separator */ 0x2029 /* Unicode Paragraph Separator */ :
+		case 0x2028 /* Unicode Line Separator */, 0x2029 /* Unicode Paragraph Separator */ :
 			runes <- Rune{pos, '\n'}
 			line++
 			col, crFlag = 1, false
@@ -179,8 +179,8 @@ func Handle(runes chan<- Rune, ms chan<- messages.Data, r io.ReadCloser, cp int)
 
 			// 2-byte, 11-bit sequence?
 			if c0 < 0xE0 /* 1110 0000 */ {
-				x := rune(c0&0x3F /* 0011 1111 */ )<<6 |
-					rune(c1&0x3F /* 0011 1111 */ )
+				x := rune(c0&0x3F /* 0011 1111 */)<<6 |
+					rune(c1&0x3F /* 0011 1111 */)
 				if x <= (1<<7)-1 {
 					complain8()
 				} else {
@@ -205,9 +205,9 @@ func Handle(runes chan<- Rune, ms chan<- messages.Data, r io.ReadCloser, cp int)
 
 			// 3-byte, 16-bit sequence?
 			if c0 < 0xF0 /* 1111 0000 */ {
-				x := rune(c0&0x1F /* 0001 1111 */ )<<12 |
-					rune(c1&0x3F /* 0011 1111 */ )<<6 |
-					rune(c2&0x3F /* 0011 1111 */ )
+				x := rune(c0&0x1F /* 0001 1111 */)<<12 |
+					rune(c1&0x3F /* 0011 1111 */)<<6 |
+					rune(c2&0x3F /* 0011 1111 */)
 				if x <= (1<<11)-1 {
 					complain8()
 				} else {
@@ -232,10 +232,10 @@ func Handle(runes chan<- Rune, ms chan<- messages.Data, r io.ReadCloser, cp int)
 
 			// 4-byte, 21-bit sequence?
 			if c0 < 0xF8 /* 1111 1000 */ {
-				x := rune(c0&0x07 /* 0000 0111 */ )<<18 |
-					rune(c1&0x3F /* 0011 1111 */ )<<12 |
-					rune(c2&0x3F /* 0011 1111 */ )<<6 |
-					rune(c3&0x3F /* 0011 1111 */ )
+				x := rune(c0&0x07 /* 0000 0111 */)<<18 |
+					rune(c1&0x3F /* 0011 1111 */)<<12 |
+					rune(c2&0x3F /* 0011 1111 */)<<6 |
+					rune(c3&0x3F /* 0011 1111 */)
 				if x <= (1<<16)-1 {
 					complain8()
 				} else {

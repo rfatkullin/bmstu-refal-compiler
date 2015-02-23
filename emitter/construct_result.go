@@ -6,7 +6,7 @@ import (
 )
 
 import (
-	"BMSTU-Refal-Compiler/syntax"
+	"bmstu-refal-compiler/syntax"
 )
 
 const (
