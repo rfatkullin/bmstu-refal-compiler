@@ -41,6 +41,7 @@ type emitterContext struct {
 	funcsKeeper            *fk.FuncsKeeper
 	currFuncInfo           *fk.FuncInfo
 	nestedNamedFuncs       []*fk.FuncInfo
+	isLeftMatching         bool
 }
 
 func (f *Data) mainFunc(depth int, entryFuncName string) {
@@ -63,7 +64,9 @@ func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 	f.PrintLabel(depth, "struct lterm_t** helper = 0;")
 	f.PrintLabel(depth, "struct lterm_t* currTerm = 0;")
 	f.PrintLabel(depth, "struct lterm_t* funcTerm = 0;")
-	f.PrintLabel(depth, "int fragmentOffset = 0;")
+	f.PrintLabel(depth, "uint64_t fragmentOffset = 0;")
+	f.PrintLabel(depth, "uint64_t leftCheckOffset = 0;")
+	f.PrintLabel(depth, "uint64_t rightCheckOffset = 0;")
 	f.PrintLabel(depth, "int stretchingVarNumber = 0;")
 	f.PrintLabel(depth, "int stretching = 0;")
 	f.PrintLabel(depth, "int i = 0;")
@@ -101,6 +104,7 @@ func (f *Data) printFreeLocals(depth, matchingNumber, varsNumber int) {
 
 func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitterContext) {
 
+	//fmt.Printf("Roll back function! %s %t\n", funcInfo.FuncName, funcInfo.Function.Rollback)
 	maxVarsNumber := 0
 	sentencesCount := len(funcInfo.Function.Sentences)
 	ctx.entryPoint = 0
@@ -119,6 +123,7 @@ func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitt
 
 	for sentenceIndex, sentence := range funcInfo.Function.Sentences {
 
+		ctx.isLeftMatching = true
 		ctx.scopeKeeper.AddSentenceScope(sentenceIndex)
 
 		ctx.fixedVars = make(map[string]int)

@@ -55,7 +55,7 @@ func (f *Data) processPattern(depth int, ctx *emitterContext, terms []*syntax.Te
 
 	f.printFirstCase(depth, ctx, terms[0])
 
-	f.matchingTerm(depth+2, ctx, terms)
+	f.matchingTerms(depth+2, false, ctx, terms)
 
 	f.PrintLabel(depth+1, "} //pattern switch\n")
 
@@ -81,7 +81,26 @@ func (f *Data) printFirstCase(depth int, ctx *emitterContext, term *syntax.Term)
 	f.PrintLabel(depth+1, "case 0:")
 }
 
-func (f *Data) matchingTerm(depth int, ctx *emitterContext, terms []*syntax.Term) {
+func (f *Data) matchingTerms(depth int, inBrackets bool, ctx *emitterContext, terms []*syntax.Term) {
+	parentMatchingOrder := ctx.isLeftMatching
+	termsCount := len(terms)
+	if termsCount == 0 {
+		return
+	}
+
+	if terms[0].TermTag == syntax.R {
+		terms = ReverseTerms(terms)
+		ctx.isLeftMatching = false
+
+		f.PrintLabel(depth, "leftCheckOffset = fragmentOffset;")
+		if inBrackets {
+			f.PrintLabel(depth, "fragmentOffset += memMngr.vterms[fragmentOffset].inBracketLength - 2;")
+		} else {
+			f.PrintLabel(depth, "fragmentOffset += currFrag->length - 1;")
+		}
+		f.PrintLabel(depth, "rightCheckOffset = fragmentOffset;")
+	}
+
 	for _, term := range terms {
 
 		switch term.TermTag {
@@ -105,21 +124,26 @@ func (f *Data) matchingTerm(depth int, ctx *emitterContext, terms []*syntax.Term
 			break
 		}
 	}
+
+	if !ctx.isLeftMatching {
+		f.PrintLabel(depth, "fragmentOffset += memMngr.vterms[fragmentOffset].inBracketLength - 2;")
+	}
+
+	ctx.isLeftMatching = parentMatchingOrder
 }
 
 func (f *Data) matchingExpr(depth int, ctx *emitterContext, terms []*syntax.Term) {
 
 	f.PrintLabel(depth, "//Check (")
-	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, " || memMngr.vterms[fragmentOffset].tag != V_BRACKET_TAG || "+
+	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, " || memMngr.vterms[fragmentOffset].tag != V_BRACKET_OPEN_TAG || "+
 		"memMngr.vterms[fragmentOffset].inBracketLength == 0")
 
 	f.PrintLabel(depth, "fragmentOffset++;")
 
-	f.matchingTerm(depth, ctx, terms)
+	f.matchingTerms(depth, true, ctx, terms)
 
 	f.PrintLabel(depth, "//Check )")
-	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, " || memMngr.vterms[fragmentOffset].tag != V_BRACKET_TAG || "+
-		"memMngr.vterms[fragmentOffset].inBracketLength != 0")
+	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, " || memMngr.vterms[fragmentOffset].tag != V_BRACKET_CLOSE_TAG")
 
 	f.PrintLabel(depth, "fragmentOffset++;")
 }
@@ -208,27 +232,24 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 	matchedEntryPoint := 0
 
 	if !isLocalVar {
-		//Env var
 		varInfo = ctx.currFuncInfo.EnvVarMap[value.Name]
-
 	} else {
 		matchedEntryPoint, isFixedVar = ctx.fixedVars[value.Name]
 	}
 
 	varNumber := varInfo.Number
-
 	f.PrintLabel(depth-1, fmt.Sprintf("//Matching %s variable", value.Name))
 
 	switch value.VarType {
 	case tokens.VT_T:
 		if isFixedVar {
 			if isLocalVar {
-				f.matchingFixedLocalExprVar(depth, ctx.patternCtx.prevEntryPoint, matchedEntryPoint, varNumber)
+				f.matchingFixedLocalExprVar(depth, ctx, matchedEntryPoint, varNumber)
 			} else {
-				f.matchingFixedEnvExprVar(depth, ctx.patternCtx.prevEntryPoint, varNumber)
+				f.matchingFixedEnvExprVar(depth, ctx, varNumber)
 			}
 		} else {
-			f.matchingFreeTermVar(depth, ctx.patternCtx.prevEntryPoint, ctx.sentenceInfo.patternIndex, varNumber)
+			f.matchingFreeTermVar(depth, ctx, varNumber)
 			ctx.fixedVars[value.Name] = ctx.sentenceInfo.patternIndex
 		}
 		break
@@ -236,13 +257,13 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 	case tokens.VT_S:
 		if isFixedVar {
 			if isLocalVar {
-				f.matchingFixedLocalSymbolVar(depth, ctx.patternCtx.prevEntryPoint, matchedEntryPoint, varNumber)
+				f.matchingFixedLocalSymbolVar(depth, ctx, matchedEntryPoint, varNumber)
 			} else {
-				f.matchingFixedEnvSymbolVar(depth, ctx.patternCtx.prevEntryPoint, varNumber)
+				f.matchingFixedEnvSymbolVar(depth, ctx, varNumber)
 			}
 
 		} else {
-			f.matchingFreeSymbolVar(depth, ctx.patternCtx.prevEntryPoint, ctx.sentenceInfo.patternIndex, varNumber)
+			f.matchingFreeSymbolVar(depth, ctx, varNumber)
 			ctx.fixedVars[value.Name] = ctx.sentenceInfo.patternIndex
 		}
 		break
@@ -251,14 +272,14 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 
 		if isFixedVar {
 			if isLocalVar {
-				f.matchingFixedLocalExprVar(depth, ctx.patternCtx.prevEntryPoint, matchedEntryPoint, varNumber)
+				f.matchingFixedLocalExprVar(depth, ctx, matchedEntryPoint, varNumber)
 			} else {
-				f.matchingFixedEnvExprVar(depth, ctx.patternCtx.prevEntryPoint, varNumber)
+				f.matchingFixedEnvExprVar(depth, ctx, varNumber)
 			}
 		} else {
 			f.PrintLabel(depth-1, fmt.Sprintf("case %d:", ctx.patternCtx.entryPoint))
 
-			f.matchingFreeExprVar(depth, ctx.patternCtx.prevEntryPoint, ctx.sentenceInfo.patternIndex, varNumber)
+			f.matchingFreeExprVar(depth, ctx, varNumber)
 
 			ctx.fixedVars[value.Name] = ctx.sentenceInfo.patternIndex
 			ctx.patternCtx.prevEntryPoint = ctx.patternCtx.entryPoint
