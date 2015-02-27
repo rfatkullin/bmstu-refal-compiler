@@ -54,7 +54,7 @@ func (f *Data) matchingFixedExprVar(depth, prevStretchVarNumber int, ctx *emitte
 
 	f.PrintLabel(depth+1, fmt.Sprintf("if((%s.tag != %s.tag)", checkTerm, patternTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_CHAR_TAG && %s.ch != %s.ch)", checkTerm, checkTerm, patternTerm))
-	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_IDENT_TAG && strcmp(%s.str, %s.str))", checkTerm, checkTerm, patternTerm))
+	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_IDENT_TAG && !UStrCmp(%s.str, %s.str))", checkTerm, checkTerm, patternTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_INT_NUM_TAG && %s.intNum != %s.intNum)", checkTerm, checkTerm, patternTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_FLOAT_NUM_TAG && %s.floatNum != %s.floatNum)", checkTerm, checkTerm, patternTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| ((%s.tag == V_BRACKET_OPEN_TAG || %s.tag == V_BRACKET_CLOSE_TAG) && %s.inBracketLength != %s.inBracketLength))", checkTerm, checkTerm, checkTerm, patternTerm))
@@ -85,7 +85,7 @@ func (f *Data) matchingFixedSymbolVar(depth, prevStretchVarNumber int, ctx *emit
 	f.PrintLabel(depth, fmt.Sprintf("|| %s.tag == V_BRACKET_OPEN_TAG || %s.tag == V_BRACKET_CLOSE_TAG", checkTerm, checkTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag != %s.tag)", checkTerm, patternTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_CHAR_TAG && %s.ch != %s.ch)", checkTerm, checkTerm, patternTerm))
-	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_IDENT_TAG && strcmp(%s.str, %s.str))", checkTerm, checkTerm, patternTerm))
+	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_IDENT_TAG && !UStrCmp(%s.str, %s.str))", checkTerm, checkTerm, patternTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_INT_NUM_TAG && %s.intNum != %s.intNum)", checkTerm, checkTerm, patternTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_FLOAT_NUM_TAG && %s.floatNum != %s.floatNum))", checkTerm, checkTerm, patternTerm))
 

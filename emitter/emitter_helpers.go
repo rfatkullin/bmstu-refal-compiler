@@ -3,7 +3,7 @@ package emitter
 import (
 	"fmt"
 	"strings"
-	//"io"
+	"unicode/utf8"
 )
 
 import (
@@ -78,8 +78,6 @@ func (f *Data) initFuncLiterals(depth int, currFunc *syntax.Function) {
 	}
 }
 
-// Инициализация vterm_t строкового литерала
-// Пока только ASCII символы
 func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 	term.IndexInLiterals = f.CurrTermNum
 
@@ -107,10 +105,14 @@ func (f *Data) initFloatVTerm(depth int, term *syntax.Term) {
 }
 
 // Инициализация vterm_t для идентификатора
-// Пока только ASCII символы
 func (f *Data) initIdentVTerm(depth int, term *syntax.Term) {
+	ident := term.Value.Name
+	runesStr := GetStrOfRunes(ident)
 
-	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_IDENT_TAG, .str = %q};", f.CurrTermNum, string(term.Value.Name)))
+	f.PrintLabel(depth, "{")
+	f.PrintLabel(depth+1, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_IDENT_TAG, .str = allocateLiteralVString((uint32_t[]){%s}, UINT64_C(%d))};",
+		f.CurrTermNum, runesStr, utf8.RuneCountInString(ident)))
+	f.PrintLabel(depth, "}")
 
 	term.IndexInLiterals = f.CurrTermNum
 	f.CurrTermNum++

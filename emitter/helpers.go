@@ -1,6 +1,11 @@
 package emitter
 
 import (
+	"fmt"
+	"strings"
+)
+
+import (
 	"bmstu-refal-compiler/syntax"
 )
 
@@ -13,4 +18,16 @@ func ReverseTerms(slice []*syntax.Term) (rSlice []*syntax.Term) {
 	}
 
 	return
+}
+
+/// Unicode string --> char string"
+func GetStrOfRunes(str string) string {
+
+	runes := make([]string, 0)
+
+	for _, rune := range str {
+		runes = append(runes, fmt.Sprintf("%d", rune))
+	}
+
+	return strings.Join(runes, ",")
 }

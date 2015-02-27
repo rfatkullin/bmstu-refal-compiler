@@ -2,6 +2,7 @@ package emitter
 
 import (
 	"fmt"
+	"unicode/utf8"
 )
 
 func (f *Data) matchingIntLiteral(depth int, ctx *emitterContext, intNumber int) {
@@ -23,13 +24,22 @@ func (f *Data) matchingIntLiteral(depth int, ctx *emitterContext, intNumber int)
 
 func (f *Data) matchingCompLiteral(depth int, ctx *emitterContext, compSymbol string) {
 
+	identLen := utf8.RuneCountInString(compSymbol)
+
 	f.PrintLabel(depth-1, fmt.Sprintf("//Matching %q literal", compSymbol))
 
 	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, "")
 
 	f.PrintLabel(depth, fmt.Sprintf("if (memMngr.vterms[fragmentOffset].tag != V_IDENT_TAG || "+
-		"strcmp(memMngr.vterms[fragmentOffset].str, %q))", compSymbol))
+		"memMngr.vterms[fragmentOffset].str->length != UINT64_C(%d))", identLen))
 	f.printFailBlock(depth, ctx.patternCtx.prevEntryPoint, true)
+
+	f.PrintLabel(depth, "{")
+	runesStr := GetStrOfRunes(compSymbol)
+	f.PrintLabel(depth+1, fmt.Sprintf("struct v_string strTmp = (struct v_string){.head = (uint32_t[]){%s}, .length = UINT64_C(%d)};", runesStr, identLen))
+	f.PrintLabel(depth+1, "if (!UStrCmp(memMngr.vterms[fragmentOffset].str, &strTmp))")
+	f.printFailBlock(depth+1, ctx.patternCtx.prevEntryPoint, true)
+	f.PrintLabel(depth, "}")
 
 	if ctx.isLeftMatching {
 		f.PrintLabel(depth, "fragmentOffset++;")

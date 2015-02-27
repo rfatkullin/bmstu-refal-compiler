@@ -27,6 +27,7 @@ func changeExt(file, newExt string) string {
 }
 
 func main() {
+
 	fmt.Println()
 	fmt.Println("Bauman Refal Compiler")
 	fmt.Println("(c) 2003-2010 Sergei Yu. Skorobogatov")
