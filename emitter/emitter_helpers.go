@@ -90,8 +90,14 @@ func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 // Инициализация vterm_t для литералов целого типа
 // Пока только обычные
 func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
+	bytesStr, sign, bytesCount := GetStrOfBytes(term.Value.Int)
 
-	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_INT_NUM_TAG, .intNum = %dU};", f.CurrTermNum, term.Value.Int))
+	f.PrintLabel(depth, "{")
+	f.PrintLabel(depth+1, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_INT_NUM_TAG,"+
+		" .intNum = allocateIntNumberLiteral((uint8_t[]){%s}, %d, UINT64_C(%d))};",
+		f.CurrTermNum, bytesStr, sign, bytesCount))
+	f.PrintLabel(depth, "}")
+
 	term.IndexInLiterals = f.CurrTermNum
 	f.CurrTermNum++
 }
@@ -110,7 +116,7 @@ func (f *Data) initIdentVTerm(depth int, term *syntax.Term) {
 	runesStr := GetStrOfRunes(ident)
 
 	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_IDENT_TAG, .str = allocateLiteralVString((uint32_t[]){%s}, UINT64_C(%d))};",
+	f.PrintLabel(depth+1, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_IDENT_TAG, .str = allocateVStringLiteral((uint32_t[]){%s}, UINT64_C(%d))};",
 		f.CurrTermNum, runesStr, utf8.RuneCountInString(ident)))
 	f.PrintLabel(depth, "}")
 

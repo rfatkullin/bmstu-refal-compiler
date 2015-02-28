@@ -2,6 +2,7 @@ package emitter
 
 import (
 	"fmt"
+	"math/big"
 	"strings"
 )
 
@@ -30,4 +31,24 @@ func GetStrOfRunes(str string) string {
 	}
 
 	return strings.Join(runes, ",")
+}
+
+/// Bytes --> string
+func GetStrOfBytes(num *big.Int) (str string, sign int, count int) {
+	strs := make([]string, 0)
+	bytes := num.Bytes()
+
+	for _, byteVal := range num.Bytes() {
+		strs = append(strs, fmt.Sprintf("%d", byteVal))
+	}
+
+	sign = 0
+	if num.Sign() < 0 {
+		sign = 1
+	}
+
+	str = strings.Join(strs, ",")
+	count = len(bytes)
+
+	return
 }
