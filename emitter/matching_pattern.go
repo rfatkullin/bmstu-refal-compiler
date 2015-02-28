@@ -18,7 +18,7 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.T
 	f.checkAndAssemblyChain(depth+1, ctx.sentenceInfo.patternIndex)
 
 	f.PrintLabel(depth+1, "fragmentOffset = currFrag->offset;")
-	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = env->stretchVarsNumber[%d];", ctx.entryPoint))
+	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = env->stretchVarsNumber[%d];", ctx.sentenceInfo.patternIndex))
 
 	f.PrintLabel(depth+1, "while (stretchingVarNumber >= 0)")
 	f.PrintLabel(depth+1, "{")
@@ -84,21 +84,19 @@ func (f *Data) printFirstCase(depth int, ctx *emitterContext, term *syntax.Term)
 func (f *Data) matchingTerms(depth int, inBrackets bool, ctx *emitterContext, terms []*syntax.Term) {
 	parentMatchingOrder := ctx.isLeftMatching
 	termsCount := len(terms)
+
 	if termsCount == 0 {
 		return
 	}
 
 	if terms[0].TermTag == syntax.R {
-		terms = ReverseTerms(terms)
 		ctx.isLeftMatching = false
 
-		f.PrintLabel(depth, "leftCheckOffset = fragmentOffset;")
 		if inBrackets {
-			f.PrintLabel(depth, "fragmentOffset += memMngr.vterms[fragmentOffset].inBracketLength - 2;")
+			f.PrintLabel(depth, "rightCheckOffset = fragmentOffset + memMngr.vterms[fragmentOffset-1].inBracketLength - 2;")
 		} else {
-			f.PrintLabel(depth, "fragmentOffset += currFrag->length - 1;")
+			f.PrintLabel(depth, "rightCheckOffset = fragmentOffset + currFrag->length - 1;")
 		}
-		f.PrintLabel(depth, "rightCheckOffset = fragmentOffset;")
 	}
 
 	for _, term := range terms {
@@ -125,8 +123,9 @@ func (f *Data) matchingTerms(depth int, inBrackets bool, ctx *emitterContext, te
 		}
 	}
 
-	if !ctx.isLeftMatching {
-		f.PrintLabel(depth, "fragmentOffset += memMngr.vterms[fragmentOffset].inBracketLength - 2;")
+	if !ctx.isLeftMatching && inBrackets {
+		f.PrintLabel(depth, "if (fragmentOffset < rightCheckOffset)")
+		f.printFailBlock(depth, ctx.patternCtx.prevEntryPoint, true)
 	}
 
 	ctx.isLeftMatching = parentMatchingOrder
@@ -135,15 +134,14 @@ func (f *Data) matchingTerms(depth int, inBrackets bool, ctx *emitterContext, te
 func (f *Data) matchingExpr(depth int, ctx *emitterContext, terms []*syntax.Term) {
 
 	f.PrintLabel(depth, "//Check (")
-	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, " || memMngr.vterms[fragmentOffset].tag != V_BRACKET_OPEN_TAG || "+
-		"memMngr.vterms[fragmentOffset].inBracketLength == 0")
+	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, ctx.isLeftMatching, " || memMngr.vterms[fragmentOffset].tag != V_BRACKET_OPEN_TAG")
 
 	f.PrintLabel(depth, "fragmentOffset++;")
 
 	f.matchingTerms(depth, true, ctx, terms)
 
 	f.PrintLabel(depth, "//Check )")
-	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, " || memMngr.vterms[fragmentOffset].tag != V_BRACKET_CLOSE_TAG")
+	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, ctx.isLeftMatching, " || memMngr.vterms[fragmentOffset].tag != V_BRACKET_CLOSE_TAG")
 
 	f.PrintLabel(depth, "fragmentOffset++;")
 }
@@ -300,7 +298,8 @@ func (f *Data) printFailBlock(depth, prevStretchVarNumber int, withBreakStatemen
 	f.PrintLabel(depth, "}")
 }
 
-func (f *Data) printOffsetCheck(depth, prevStretchVarNumber int, optionalCond string) {
+func (f *Data) printOffsetCheck(depth, prevStretchVarNumber int, isLeftMatching bool, optionalCond string) {
+
 	f.PrintLabel(depth, fmt.Sprintf("if (fragmentOffset >= currFrag->offset + currFrag->length%s)", optionalCond))
 	f.printFailBlock(depth, prevStretchVarNumber, true)
 }

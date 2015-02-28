@@ -63,7 +63,6 @@ func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 	f.PrintLabel(depth, "struct lterm_t* currTerm = 0;")
 	f.PrintLabel(depth, "struct lterm_t* funcTerm = 0;")
 	f.PrintLabel(depth, "uint64_t fragmentOffset = 0;")
-	f.PrintLabel(depth, "uint64_t leftCheckOffset = 0;")
 	f.PrintLabel(depth, "uint64_t rightCheckOffset = 0;")
 	f.PrintLabel(depth, "int stretchingVarNumber = 0;")
 	f.PrintLabel(depth, "int stretching = 0;")

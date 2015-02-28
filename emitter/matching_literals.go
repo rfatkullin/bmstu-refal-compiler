@@ -8,7 +8,7 @@ func (f *Data) matchingIntLiteral(depth int, ctx *emitterContext, index int) {
 
 	f.PrintLabel(depth-1, "//Matching int literal")
 
-	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, "")
+	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, ctx.isLeftMatching, "")
 
 	f.PrintLabel(depth, fmt.Sprintf("if (memMngr.vterms[fragmentOffset].tag != V_INT_NUM_TAG || "+
 		"!IntCmp(memMngr.vterms[fragmentOffset].intNum, memMngr.vterms[UINT64_C(%d)].intNum))", index))
@@ -25,7 +25,7 @@ func (f *Data) matchingCompLiteral(depth int, ctx *emitterContext, index int) {
 
 	f.PrintLabel(depth-1, "//Matching indetificator literal")
 
-	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, "")
+	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, ctx.isLeftMatching, "")
 
 	f.PrintLabel(depth, fmt.Sprintf("if (memMngr.vterms[fragmentOffset].tag != V_IDENT_TAG || "+
 		"!UStrCmp(memMngr.vterms[fragmentOffset].str, memMngr.vterms[UINT64_C(%d)].str))", index))
@@ -42,7 +42,7 @@ func (f *Data) matchingStrLiteral(depth int, ctx *emitterContext, str string) {
 
 	f.PrintLabel(depth-1, fmt.Sprintf("//Matching %q literal", str))
 
-	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, "")
+	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, ctx.isLeftMatching, "")
 
 	f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; i++)", len(str)))
 	f.PrintLabel(depth, "{")

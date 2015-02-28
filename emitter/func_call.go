@@ -6,6 +6,7 @@ import (
 
 import (
 	fk "bmstu-refal-compiler/emitter/funcs_keeper"
+	"bmstu-refal-compiler/syntax"
 )
 
 func (f *Data) isFuncName(ident string, ctx *emitterContext) (*fk.FuncInfo, bool) {
@@ -28,7 +29,7 @@ func (f *Data) isFuncName(ident string, ctx *emitterContext) (*fk.FuncInfo, bool
 	return nil, false
 }
 
-func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, ident string, funcInfo *fk.FuncInfo) {
+func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, term *syntax.Term, funcInfo *fk.FuncInfo) {
 
 	f.PrintLabel(depth, "//Start construction func term.")
 
@@ -36,7 +37,7 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, ident st
 	f.PrintLabel(depth, "currTerm->tag = L_TERM_FRAGMENT_TAG;")
 	f.PrintLabel(depth, "currTerm->fragment = (struct fragment_t*)malloc(sizeof(struct fragment_t));")
 	f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = allocateClosure(%s, %d);", funcInfo.EmittedFuncName, len(funcInfo.EnvVarMap)))
-	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure->ident = %q;", ident))
+	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure->ident = memMngr.vterms[%d].str;", term.IndexInLiterals))
 	f.PrintLabel(depth, "currTerm->fragment->length = 1;")
 
 	for needVarName, needVarInfo := range funcInfo.EnvVarMap {

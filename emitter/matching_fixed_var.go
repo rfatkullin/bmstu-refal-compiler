@@ -32,7 +32,7 @@ func (f *Data) matchingFixedEnvExprVar(depth int, ctx *emitterContext, varNumber
 }
 
 func (f *Data) matchingFixedExprVar(depth, prevStretchVarNumber int, ctx *emitterContext, lterm string) {
-	f.printOffsetCheck(depth, prevStretchVarNumber, "")
+	f.printOffsetCheck(depth, prevStretchVarNumber, ctx.isLeftMatching, "")
 
 	checkTerm := ""
 	patternTerm := ""

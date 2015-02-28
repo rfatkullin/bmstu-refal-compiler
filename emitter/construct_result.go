@@ -162,14 +162,14 @@ func (f *Data) ConstructExprInParenthesis(depth, entryPoint int, ctx *emitterCon
 			//fmt.Printf("Check on functional compound: %s\n", term.Value.Name)
 			if funcInfo, yes := f.isFuncName(term.Value.Name, ctx); yes {
 				//fmt.Printf("There is functional compound: %s\n", term.Value.Name)
-				f.constructFunctionalVTerm(depth, ctx, term.Value.Name, funcInfo)
+				f.constructFunctionalVTerm(depth, ctx, term, funcInfo)
 			}
 		}
 
 		//Создание вложенной функции. Создание функционального vterm'a
 		if term.TermTag == syntax.FUNC {
 			funcInfo := ctx.funcsKeeper.AddFunc(ctx.scopeKeeper, term.Function)
-			f.constructFunctionalVTerm(depth, ctx, term.Function.FuncName, funcInfo)
+			f.constructFunctionalVTerm(depth, ctx, term, funcInfo)
 			ctx.nestedNamedFuncs = append(ctx.nestedNamedFuncs, funcInfo)
 		}
 
