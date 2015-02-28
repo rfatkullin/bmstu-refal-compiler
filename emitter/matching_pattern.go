@@ -111,10 +111,10 @@ func (f *Data) matchingTerms(depth int, inBrackets bool, ctx *emitterContext, te
 			f.matchingStrLiteral(depth, ctx, string(term.Value.Str))
 			break
 		case syntax.COMP:
-			f.matchingCompLiteral(depth, ctx, term.Value.Name)
+			f.matchingCompLiteral(depth, ctx, term.IndexInLiterals)
 			break
 		case syntax.INT:
-			f.matchingIntLiteral(depth, ctx, int(term.Value.Int.Int64()))
+			f.matchingIntLiteral(depth, ctx, term.IndexInLiterals)
 			break
 		case syntax.EXPR:
 			f.matchingExpr(depth, ctx, term.Exprs[0].Terms)

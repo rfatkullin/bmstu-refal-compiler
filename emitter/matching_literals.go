@@ -2,17 +2,16 @@ package emitter
 
 import (
 	"fmt"
-	"unicode/utf8"
 )
 
-func (f *Data) matchingIntLiteral(depth int, ctx *emitterContext, intNumber int) {
+func (f *Data) matchingIntLiteral(depth int, ctx *emitterContext, index int) {
 
-	f.PrintLabel(depth-1, fmt.Sprintf("//Matching %d literal", intNumber))
+	f.PrintLabel(depth-1, "//Matching int literal")
 
 	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, "")
 
 	f.PrintLabel(depth, fmt.Sprintf("if (memMngr.vterms[fragmentOffset].tag != V_INT_NUM_TAG || "+
-		"memMngr.vterms[fragmentOffset].intNum != %d)", intNumber))
+		"!IntCmp(memMngr.vterms[fragmentOffset].intNum, memMngr.vterms[UINT64_C(%d)].intNum))", index))
 	f.printFailBlock(depth, ctx.patternCtx.prevEntryPoint, true)
 
 	if ctx.isLeftMatching {
@@ -22,24 +21,15 @@ func (f *Data) matchingIntLiteral(depth int, ctx *emitterContext, intNumber int)
 	}
 }
 
-func (f *Data) matchingCompLiteral(depth int, ctx *emitterContext, compSymbol string) {
+func (f *Data) matchingCompLiteral(depth int, ctx *emitterContext, index int) {
 
-	identLen := utf8.RuneCountInString(compSymbol)
-
-	f.PrintLabel(depth-1, fmt.Sprintf("//Matching %q literal", compSymbol))
+	f.PrintLabel(depth-1, "//Matching indetificator literal")
 
 	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, "")
 
 	f.PrintLabel(depth, fmt.Sprintf("if (memMngr.vterms[fragmentOffset].tag != V_IDENT_TAG || "+
-		"memMngr.vterms[fragmentOffset].str->length != UINT64_C(%d))", identLen))
+		"!UStrCmp(memMngr.vterms[fragmentOffset].str, memMngr.vterms[UINT64_C(%d)].str))", index))
 	f.printFailBlock(depth, ctx.patternCtx.prevEntryPoint, true)
-
-	f.PrintLabel(depth, "{")
-	runesStr := GetStrOfRunes(compSymbol)
-	f.PrintLabel(depth+1, fmt.Sprintf("struct v_string strTmp = (struct v_string){.head = (uint32_t[]){%s}, .length = UINT64_C(%d)};", runesStr, identLen))
-	f.PrintLabel(depth+1, "if (!UStrCmp(memMngr.vterms[fragmentOffset].str, &strTmp))")
-	f.printFailBlock(depth+1, ctx.patternCtx.prevEntryPoint, true)
-	f.PrintLabel(depth, "}")
 
 	if ctx.isLeftMatching {
 		f.PrintLabel(depth, "fragmentOffset++;")

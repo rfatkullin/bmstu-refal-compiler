@@ -69,11 +69,9 @@ func (f *Data) initActionLiterals(depth int, expr syntax.Expr) {
 func (f *Data) initFuncLiterals(depth int, currFunc *syntax.Function) {
 
 	for _, s := range currFunc.Sentences {
+		f.initActionLiterals(depth, s.Pattern)
 		for _, a := range s.Actions {
-
-			if a.ActionOp == syntax.COMMA || a.ActionOp == syntax.REPLACE {
-				f.initActionLiterals(depth, a.Expr)
-			}
+			f.initActionLiterals(depth, a.Expr)
 		}
 	}
 }
@@ -92,11 +90,9 @@ func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
 	bytesStr, sign, bytesCount := GetStrOfBytes(term.Value.Int)
 
-	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_INT_NUM_TAG,"+
+	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_INT_NUM_TAG,"+
 		" .intNum = allocateIntNumberLiteral((uint8_t[]){%s}, %d, UINT64_C(%d))};",
 		f.CurrTermNum, bytesStr, sign, bytesCount))
-	f.PrintLabel(depth, "}")
 
 	term.IndexInLiterals = f.CurrTermNum
 	f.CurrTermNum++
@@ -105,7 +101,7 @@ func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
 // Инициализация vterm_t для литералов вещественного типа
 func (f *Data) initFloatVTerm(depth int, term *syntax.Term) {
 
-	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_FLOAT_NUM_TAG, .floatNum = %f};", f.CurrTermNum, term.Value.Float))
+	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_DOUBLE_NUM_TAG, .doubleNum = %f};", f.CurrTermNum, term.Value.Float))
 	term.IndexInLiterals = f.CurrTermNum
 	f.CurrTermNum++
 }
@@ -115,10 +111,8 @@ func (f *Data) initIdentVTerm(depth int, term *syntax.Term) {
 	ident := term.Value.Name
 	runesStr := GetStrOfRunes(ident)
 
-	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_IDENT_TAG, .str = allocateVStringLiteral((uint32_t[]){%s}, UINT64_C(%d))};",
+	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_IDENT_TAG, .str = allocateVStringLiteral((uint32_t[]){%s}, UINT64_C(%d))};",
 		f.CurrTermNum, runesStr, utf8.RuneCountInString(ident)))
-	f.PrintLabel(depth, "}")
 
 	term.IndexInLiterals = f.CurrTermNum
 	f.CurrTermNum++
