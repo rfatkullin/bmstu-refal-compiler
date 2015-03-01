@@ -139,17 +139,17 @@ func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitt
 			switch a.ActionOp {
 
 			case syntax.COMMA: // ','
-				f.ConstructResult(depth+2, ctx, a.Expr)
+				f.ConstructAssembly(depth+2, ctx, a.Expr)
+				break
+
+			case syntax.REPLACE: // '='
+				ctx.prevEntryPoint = -1
+				f.ConstructAssembly(depth+2, ctx, a.Expr)
 				break
 
 			case syntax.COLON: // ':'
 				f.PrintLabel(depth+1, "} // Pattern case end\n")
 				f.matchingPattern(depth+1, ctx, a.Expr.Terms)
-				break
-
-			case syntax.REPLACE: // '='
-				ctx.prevEntryPoint = -1
-				f.ConstructResult(depth+2, ctx, a.Expr)
 				break
 
 			case syntax.DCOLON: // '::'
@@ -159,8 +159,13 @@ func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitt
 				break
 
 			case syntax.TARROW: // '->'
-			case syntax.ARROW: // '=>'
+				f.ConstructFuncCallAction(depth+2, ctx, a.Expr.Terms)
+				break
 
+			case syntax.ARROW: // '=>'
+				ctx.prevEntryPoint = -1
+				f.ConstructFuncCallAction(depth+2, ctx, a.Expr.Terms)
+				break
 			}
 		}
 

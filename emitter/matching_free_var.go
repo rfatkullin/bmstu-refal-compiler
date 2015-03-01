@@ -69,7 +69,7 @@ func (f *Data) matchingFreeExprVar(depth int, ctx *emitterContext, varNumber int
 	f.PrintLabel(depth+1, fmt.Sprintf("fragmentOffset = env->locals[%d][%d].fragment->offset + env->locals[%d][%d].fragment->length;", patternNumber, varNumber, patternNumber, varNumber))
 
 	if ctx.isLeftMatching {
-		f.printOffsetCheck(depth, prevStretchVarNumber, "")
+		f.printOffsetCheck(depth+1, prevStretchVarNumber, "")
 		f.PrintLabel(depth+1, "if (memMngr.vterms[fragmentOffset].tag == V_BRACKET_OPEN_TAG)")
 		f.PrintLabel(depth+1, "{")
 		f.PrintLabel(depth+2, fmt.Sprintf("env->locals[%d][%d].fragment->length += memMngr.vterms[fragmentOffset].inBracketLength;", patternNumber, varNumber))
