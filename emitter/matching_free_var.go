@@ -8,34 +8,22 @@ func (f *Data) matchingFreeTermVar(depth int, ctx *emitterContext, varNumber int
 	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
 	patternNumber := ctx.sentenceInfo.patternIndex
 
-	f.printOffsetCheck(depth, prevStretchVarNumber, ctx.isLeftMatching, "")
+	f.printOffsetCheck(depth, prevStretchVarNumber, "")
 	f.PrintLabel(depth, "else")
 	f.PrintLabel(depth, "{")
 	f.PrintLabel(depth+1, fmt.Sprintf("env->locals[%d][%d].fragment->offset = fragmentOffset;", patternNumber, varNumber))
 
-	if ctx.isLeftMatching {
-		f.PrintLabel(depth+1, "if (memMngr.vterms[fragmentOffset].tag == V_BRACKET_OPEN_TAG)")
-		f.PrintLabel(depth+1, "{")
-		f.PrintLabel(depth+2, fmt.Sprintf("env->locals[%d][%d].fragment->length = memMngr.vterms[fragmentOffset].inBracketLength;", patternNumber, varNumber))
-		f.PrintLabel(depth+2, "fragmentOffset += memMngr.vterms[fragmentOffset].inBracketLength;")
-		f.PrintLabel(depth+1, "}")
-	} else {
-		f.PrintLabel(depth+1, "if (memMngr.vterms[fragmentOffset].tag == V_BRACKET_CLOSE_TAG)")
-		f.PrintLabel(depth+1, "{")
-		f.PrintLabel(depth+2, fmt.Sprintf("env->locals[%d][%d].fragment->length = memMngr.vterms[fragmentOffset].inBracketLength;", patternNumber, varNumber))
-		f.PrintLabel(depth+2, "fragmentOffset -= memMngr.vterms[fragmentOffset].inBracketLength;")
-		f.PrintLabel(depth+1, "}")
-	}
+	f.PrintLabel(depth+1, "if (memMngr.vterms[fragmentOffset].tag == V_BRACKET_OPEN_TAG)")
+	f.PrintLabel(depth+1, "{")
+	f.PrintLabel(depth+2, fmt.Sprintf("env->locals[%d][%d].fragment->length = memMngr.vterms[fragmentOffset].inBracketLength;", patternNumber, varNumber))
+	f.PrintLabel(depth+2, "fragmentOffset += memMngr.vterms[fragmentOffset].inBracketLength;")
+	f.PrintLabel(depth+1, "}")
 
 	f.PrintLabel(depth+1, "else")
 	f.PrintLabel(depth+1, "{")
 	f.PrintLabel(depth+2, fmt.Sprintf("env->locals[%d][%d].fragment->length = 1;", patternNumber, varNumber))
 
-	if ctx.isLeftMatching {
-		f.PrintLabel(depth+2, "fragmentOffset++;")
-	} else {
-		f.PrintLabel(depth+2, "fragmentOffset--;")
-	}
+	f.PrintLabel(depth+2, "fragmentOffset++;")
 
 	f.PrintLabel(depth+1, "}")
 	f.PrintLabel(depth, "}")
@@ -45,12 +33,7 @@ func (f *Data) matchingFreeSymbolVar(depth int, ctx *emitterContext, varNumber i
 	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
 	patternNumber := ctx.sentenceInfo.patternIndex
 
-	if ctx.isLeftMatching {
-		f.printOffsetCheck(depth, prevStretchVarNumber, ctx.isLeftMatching, " || memMngr.vterms[fragmentOffset].tag == V_BRACKET_OPEN_TAG || memMngr.vterms[fragmentOffset].tag == V_BRACKET_CLOSE_TAG")
-	} else {
-		f.PrintLabel(depth, "if (fragmentOffset >= rightCheckOffset)")
-		f.printFailBlock(depth, prevStretchVarNumber, true)
-	}
+	f.printOffsetCheck(depth, prevStretchVarNumber, " || memMngr.vterms[fragmentOffset].tag == V_BRACKET_OPEN_TAG || memMngr.vterms[fragmentOffset].tag == V_BRACKET_CLOSE_TAG")
 
 	f.PrintLabel(depth, "else")
 	f.PrintLabel(depth, "{")
@@ -86,8 +69,7 @@ func (f *Data) matchingFreeExprVar(depth int, ctx *emitterContext, varNumber int
 	f.PrintLabel(depth+1, fmt.Sprintf("fragmentOffset = env->locals[%d][%d].fragment->offset + env->locals[%d][%d].fragment->length;", patternNumber, varNumber, patternNumber, varNumber))
 
 	if ctx.isLeftMatching {
-		f.PrintLabel(depth+1, "if (fragmentOffset >= currFrag->offset + currFrag->length)")
-		f.printFailBlock(depth+1, prevStretchVarNumber, true)
+		f.printOffsetCheck(depth, prevStretchVarNumber, "")
 		f.PrintLabel(depth+1, "if (memMngr.vterms[fragmentOffset].tag == V_BRACKET_OPEN_TAG)")
 		f.PrintLabel(depth+1, "{")
 		f.PrintLabel(depth+2, fmt.Sprintf("env->locals[%d][%d].fragment->length += memMngr.vterms[fragmentOffset].inBracketLength;", patternNumber, varNumber))
@@ -97,12 +79,6 @@ func (f *Data) matchingFreeExprVar(depth int, ctx *emitterContext, varNumber int
 	} else {
 		f.PrintLabel(depth+1, fmt.Sprintf("if (env->locals[%d][%d].fragment->length <= 0)", patternNumber, varNumber))
 		f.printFailBlock(depth+1, prevStretchVarNumber, true)
-
-		f.PrintLabel(depth+1, "if (fragmentOffset != rightCheckOffset && memMngr.vterms[fragmentOffset].tag == V_BRACKET_CLOSE_TAG)")
-		f.PrintLabel(depth+1, "{")
-		f.PrintLabel(depth+2, fmt.Sprintf("env->locals[%d][%d].fragment->length -= memMngr.vterms[fragmentOffset].inBracketLength;", patternNumber, varNumber))
-		f.PrintLabel(depth+2, "fragmentOffset -= memMngr.vterms[fragmentOffset].inBracketLength;")
-		f.PrintLabel(depth+1, "}")
 	}
 
 	f.PrintLabel(depth+1, "else")
@@ -114,7 +90,16 @@ func (f *Data) matchingFreeExprVar(depth int, ctx *emitterContext, varNumber int
 		f.PrintLabel(depth+2, fmt.Sprintf("env->locals[%d][%d].fragment->length++;", patternNumber, varNumber))
 	} else {
 		f.PrintLabel(depth+2, "fragmentOffset--;")
-		f.PrintLabel(depth+2, fmt.Sprintf("env->locals[%d][%d].fragment->length--;", patternNumber, varNumber))
+
+		f.PrintLabel(depth+2, "if (memMngr.vterms[fragmentOffset].tag == V_BRACKET_CLOSE_TAG)")
+		f.PrintLabel(depth+2, "{")
+		f.PrintLabel(depth+3, fmt.Sprintf("env->locals[%d][%d].fragment->length -= memMngr.vterms[fragmentOffset].inBracketLength;", patternNumber, varNumber))
+		f.PrintLabel(depth+3, "fragmentOffset -= (memMngr.vterms[fragmentOffset].inBracketLength - 1);")
+		f.PrintLabel(depth+2, "}")
+		f.PrintLabel(depth+2, "else")
+		f.PrintLabel(depth+2, "{")
+		f.PrintLabel(depth+3, fmt.Sprintf("env->locals[%d][%d].fragment->length--;", patternNumber, varNumber))
+		f.PrintLabel(depth+2, "}")
 	}
 
 	f.PrintLabel(depth+1, "}")
