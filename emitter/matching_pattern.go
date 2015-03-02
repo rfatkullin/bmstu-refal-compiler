@@ -230,7 +230,7 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 	matchedEntryPoint := 0
 
 	if !isLocalVar {
-		varInfo = ctx.env[value.Name]
+		varInfo = ctx.funcInfo.Env[value.Name]
 	} else {
 		matchedEntryPoint, isFixedVar = ctx.fixedVars[value.Name]
 	}

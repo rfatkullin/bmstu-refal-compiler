@@ -102,6 +102,7 @@ type Function struct {
 	Rollback  bool
 	Params    Scope
 	Sentences []*Sentence
+	Env       map[string]ScopeVar
 	Index     int
 }
 
@@ -152,6 +153,8 @@ type Unit struct {
 	Builtins        map[string]bool
 	ExtMap          map[string]*FuncHeader
 	GlobMap         map[string]*Function
+	NestedFuncs     map[string]*Function
+	FuncByNumber    map[int]*Function
 	FuncsTotalCount int
 }
 
@@ -242,4 +245,17 @@ func (s *Scope) FindFunc(n string) (index int, level int) {
 	}
 
 	return 0, -1
+}
+
+func (currFunc *Function) setEnv() {
+	currFunc.Env = make(map[string]ScopeVar, 0)
+	s := &currFunc.Params
+
+	for ; s != nil; s = s.Parent {
+		if s.VarMap != nil {
+			for varName, varInfo := range s.VarMap {
+				currFunc.Env[varName] = ScopeVar{Number: len(currFunc.Env), VarType: varInfo.VarType}
+			}
+		}
+	}
 }

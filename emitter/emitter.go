@@ -37,9 +37,6 @@ type emitterContext struct {
 	patternCtx             patternContext
 	isLeftMatching         bool
 	funcInfo               *syntax.Function
-	env                    map[string]syntax.ScopeVar
-	nestedNamedFuncs       []*syntax.Function
-	//allFuncsMap            map[int]*syntax.Function
 }
 
 func (f *Data) mainFunc(depth int, entryFuncName string) {
@@ -102,7 +99,6 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 	sentencesCount := len(currFunc.Sentences)
 	ctx.entryPoint = 0
 	ctx.maxPatternNumber, maxVarsNumber = getMaxPatternsAndVarsCount(currFunc)
-	ctx.setEnv(currFunc)
 	ctx.funcInfo = currFunc
 
 	f.printInitLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
@@ -181,34 +177,13 @@ func (f *Data) predeclareFuncs(depth, funcsNumber int) {
 	f.PrintLabel(depth, "")
 }
 
-func (f *Data) processGlobFuncs(depth int, ctx *emitterContext, globs map[string]*syntax.Function) string {
-
-	//	for _, currFunc := range globs {
-	//		ctx.allFuncsMap[currFunc.Index] = currFunc
-	//	}
-
-	for _, currFunc := range globs {
+func (f *Data) processFuncs(depth int, ctx *emitterContext, funcs map[string]*syntax.Function) {
+	for _, currFunc := range funcs {
 		f.printFuncHeader(depth, f.genFuncName(currFunc.Index))
 		f.processFuncSentences(depth+1, ctx, currFunc)
 		f.PrintLabel(depth, fmt.Sprintf("} // func %s:func_%d\n", currFunc.FuncName, currFunc.Index)) // func block end
 	}
 
-	return fmt.Sprintf("func_%d", globs["Go"].Index)
-}
-
-func (f *Data) processNestedFuncs(depth int, ctx *emitterContext) {
-
-	for _, currFunc := range ctx.nestedNamedFuncs {
-		f.printFuncHeader(depth, f.genFuncName(currFunc.Index))
-		f.processFuncSentences(depth+1, ctx, currFunc)
-
-		funcName := "anonym"
-		if currFunc.HasName {
-			funcName = currFunc.FuncName
-		}
-
-		f.PrintLabel(depth, fmt.Sprintf("} // func %s:func_%d\n", funcName, currFunc.Index)) // func block end
-	}
 }
 
 func processFile(f Data) {
@@ -216,8 +191,6 @@ func processFile(f Data) {
 	depth := 0
 
 	var ctx emitterContext
-	ctx.nestedNamedFuncs = make([]*syntax.Function, 0)
-	//	ctx.allFuncsMap = make(map[int]*syntax.Function, 0)
 
 	f.PrintLabel(depth, fmt.Sprintf("// file:%s\n", f.Name))
 	f.PrintHeaders()
@@ -226,13 +199,10 @@ func processFile(f Data) {
 
 	f.printLiteralsAndHeapsInit(depth, unit)
 
-	entryFuncName := f.processGlobFuncs(depth, &ctx, unit.GlobMap)
+	f.processFuncs(depth, &ctx, unit.GlobMap)
+	f.processFuncs(depth, &ctx, unit.NestedFuncs)
 
-	f.processNestedFuncs(depth, &ctx)
-
-	f.mainFunc(depth, entryFuncName)
-
-	//ctx.funcsKeeper.PrintAllFuncs()
+	f.mainFunc(depth, f.genFuncName(unit.GlobMap["Go"].Index))
 }
 
 func Handle(done chan<- bool, fs <-chan Data) {

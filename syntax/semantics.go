@@ -10,7 +10,7 @@ import (
 )
 
 func analyse(ast chan<- *Unit, ms chan<- messages.Data,
-	exts <-chan *FuncHeader, globals <-chan *Function, nested <-chan *Function, dialect int) {
+	exts <-chan *FuncHeader, globals <-chan *Function, dialect int) {
 	err := func(pos coords.Pos, s string) {
 		ms <- messages.Data{pos, messages.ERROR, s}
 	}
@@ -61,6 +61,8 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 		Builtins:        make(map[string]bool, 16),
 		ExtMap:          make(map[string]*FuncHeader, 16),
 		GlobMap:         make(map[string]*Function, 64),
+		NestedFuncs:     make(map[string]*Function, 8),
+		FuncByNumber:    make(map[int]*Function, 72),
 		FuncsTotalCount: 0,
 	}
 	ready := make(chan bool)
@@ -142,10 +144,17 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 				if t.HasName {
 					if _, level := scope.FindFunc(t.FuncName); level == -1 {
 						scope.AddFunc(t.FuncName, unit.FuncsTotalCount)
+						t.Function.Index = unit.FuncsTotalCount
+						unit.NestedFuncs[t.FuncName] = t.Function
 						unit.FuncsTotalCount++
 					} else {
 						errDuplicate(t.Pos, "nested function")
 					}
+				} else {
+					t.Function.Index = unit.FuncsTotalCount
+					t.FuncName = fmt.Sprintf("AnonymousFunc_%d", unit.FuncsTotalCount)
+					unit.NestedFuncs[t.FuncName] = t.Function
+					unit.FuncsTotalCount++
 				}
 			}
 		}
@@ -294,6 +303,7 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 			} else {
 				unit.GlobMap[g.FuncName] = g
 				unit.GlobMap[g.FuncName].Index = unit.FuncsTotalCount
+				unit.FuncByNumber[unit.GlobMap[g.FuncName].Index] = g
 				unit.FuncsTotalCount++
 			}
 		}
@@ -321,9 +331,10 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 		}
 	}
 
-	for currFunc := range nested {
-		currFunc.Index = unit.FuncsTotalCount
-		unit.FuncsTotalCount++
+	for _, currFunc := range unit.NestedFuncs {
+		unit.FuncByNumber[currFunc.Index] = currFunc
+		currFunc.setEnv()
+		fmt.Printf("Func: %s, env var count: %d\n", currFunc.FuncName, len(currFunc.Env))
 	}
 
 	ast <- &unit
