@@ -102,6 +102,7 @@ type Function struct {
 	Rollback  bool
 	Params    Scope
 	Sentences []*Sentence
+	Index     int
 }
 
 type Sentence struct {
@@ -151,7 +152,7 @@ type Unit struct {
 	Builtins        map[string]bool
 	ExtMap          map[string]*FuncHeader
 	GlobMap         map[string]*Function
-	AnonymousNumber int
+	FuncsTotalCount int
 }
 
 func (f *Function) Len() int { return len(f.Sentences) }
@@ -192,12 +193,10 @@ func (s *Scope) AddAnonymousVar(vt tokens.VarType) (n string) {
 	return
 }
 
-func (s *Scope) AddFunc(n string) {
+func (s *Scope) AddFunc(n string, index int) {
 	if s.FuncMap == nil {
 		s.FuncMap = make(map[string]int, 8)
 	}
-
-	index := len(s.FuncMap)
 	s.FuncMap[n] = index
 }
 
@@ -211,14 +210,14 @@ func (s *Scope) PropagateVar(vt tokens.VarType, n string, level int) {
 	}
 }
 
-func (s *Scope) PropagateFunc(n string, level int) {
+func (s *Scope) PropagateFunc(n string, level, index int) {
 	for i := 0; i < level; i++ {
 		if s.FuncMap != nil {
 			if _, ok := s.FuncMap[n]; ok {
 				return
 			}
 		}
-		s.AddFunc(n)
+		s.AddFunc(n, index)
 		s = s.Parent
 	}
 }
@@ -233,14 +232,14 @@ func (s *Scope) FindVar(vt tokens.VarType, n string) (level int) {
 	return -1
 }
 
-func (s *Scope) FindFunc(n string) (level int) {
-	for level = 0; s != nil; s, level = s.Parent, level+1 {
+func (s *Scope) FindFunc(n string) (index int, level int) {
+	for level := 0; s != nil; s, level = s.Parent, level+1 {
 		if s.FuncMap != nil {
-			if _, ok := s.FuncMap[n]; ok {
-				return
+			if index, ok := s.FuncMap[n]; ok {
+				return index, level
 			}
 		}
 	}
 
-	return -1
+	return 0, -1
 }

@@ -6,8 +6,6 @@ import (
 )
 
 import (
-	fk "bmstu-refal-compiler/emitter/funcs_keeper"
-	sk "bmstu-refal-compiler/emitter/scope_keeper"
 	"bmstu-refal-compiler/syntax"
 )
 
@@ -37,11 +35,11 @@ type emitterContext struct {
 	sentenceInfo           sentenceInfo
 	fixedVars              map[string]int
 	patternCtx             patternContext
-	scopeKeeper            *sk.ScopeKeeper
-	funcsKeeper            *fk.FuncsKeeper
-	currFuncInfo           *fk.FuncInfo
-	nestedNamedFuncs       []*fk.FuncInfo
 	isLeftMatching         bool
+	funcInfo               *syntax.Function
+	env                    map[string]syntax.ScopeVar
+	nestedNamedFuncs       []*syntax.Function
+	//allFuncsMap            map[int]*syntax.Function
 }
 
 func (f *Data) mainFunc(depth int, entryFuncName string) {
@@ -99,17 +97,13 @@ func (f *Data) printFreeLocals(depth, matchingNumber, varsNumber int) {
 	f.PrintLabel(depth, "}")
 }
 
-func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitterContext) {
-
-	//fmt.Printf("Roll back function! %s %t\n", funcInfo.FuncName, funcInfo.Function.Rollback)
+func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *syntax.Function) {
 	maxVarsNumber := 0
-	sentencesCount := len(funcInfo.Function.Sentences)
+	sentencesCount := len(currFunc.Sentences)
 	ctx.entryPoint = 0
-	ctx.maxPatternNumber, maxVarsNumber = getMaxPatternsAndVarsCount(funcInfo.Function)
-	ctx.currFuncInfo = funcInfo
-
-	ctx.scopeKeeper = funcInfo.ScopeKeeper
-	ctx.scopeKeeper.AddFuncScope(funcInfo.FuncName)
+	ctx.maxPatternNumber, maxVarsNumber = getMaxPatternsAndVarsCount(currFunc)
+	ctx.setEnv(currFunc)
+	ctx.funcInfo = currFunc
 
 	f.printInitLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
 
@@ -118,13 +112,10 @@ func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitt
 	f.PrintLabel(depth+1, "switch (*entryPoint)")
 	f.PrintLabel(depth+1, "{")
 
-	for sentenceIndex, sentence := range funcInfo.Function.Sentences {
+	for sentenceIndex, sentence := range currFunc.Sentences {
 
 		ctx.isLeftMatching = true
-		ctx.scopeKeeper.AddSentenceScope(sentenceIndex)
-
 		ctx.fixedVars = make(map[string]int)
-
 		ctx.sentenceInfo.init(sentencesCount, sentenceIndex, sentence)
 
 		ctx.nextSentenceEntryPoint = ctx.entryPoint + ctx.sentenceInfo.patternsCount
@@ -172,8 +163,6 @@ func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitt
 		f.PrintLabel(depth+2, "*entryPoint = -1;")
 		f.PrintLabel(depth+2, "break; //Successful end of sentence")
 		f.PrintLabel(depth+1, "} // Pattern case end")
-
-		ctx.scopeKeeper.PopLastSentenceScope()
 	}
 
 	f.PrintLabel(depth+1, "} // Entry point switch end")
@@ -183,68 +172,43 @@ func (f *Data) processFuncSentences(depth int, funcInfo *fk.FuncInfo, ctx *emitt
 	f.PrintLabel(depth, "return funcRes;")
 }
 
-func (f *Data) predeclareGlobFuncs(depth, startIndex, funcsNumber int) {
+func (f *Data) predeclareFuncs(depth, funcsNumber int) {
 
 	for i := 0; i < funcsNumber; i++ {
-		f.PrintLabel(depth, fmt.Sprintf("struct func_result_t func_%d(int* entryPoint, struct env_t* env, struct lterm_t* fieldOfView);", startIndex+i))
+		f.PrintLabel(depth, fmt.Sprintf("struct func_result_t func_%d(int* entryPoint, struct env_t* env, struct lterm_t* fieldOfView);", i))
 	}
 
 	f.PrintLabel(depth, "")
 }
 
-func (f *Data) processGlobFuncs(depth int, ctx *emitterContext, funcs map[string]*syntax.Function) (entryFuncName string) {
+func (f *Data) processGlobFuncs(depth int, ctx *emitterContext, globs map[string]*syntax.Function) string {
 
-	globs := make([]*fk.FuncInfo, 0)
+	//	for _, currFunc := range globs {
+	//		ctx.allFuncsMap[currFunc.Index] = currFunc
+	//	}
 
-	for funcName, currFunc := range funcs {
-
-		funcInfo := ctx.funcsKeeper.AddFunc(sk.NewScopeKeeper(), currFunc)
-
-		globs = append(globs, funcInfo)
-
-		if funcName == "Go" {
-			entryFuncName = funcInfo.EmittedFuncName
-		}
+	for _, currFunc := range globs {
+		f.printFuncHeader(depth, f.genFuncName(currFunc.Index))
+		f.processFuncSentences(depth+1, ctx, currFunc)
+		f.PrintLabel(depth, fmt.Sprintf("} // func %s:func_%d\n", currFunc.FuncName, currFunc.Index)) // func block end
 	}
 
-	for _, funcInfo := range globs {
-		f.printFuncHeader(depth, funcInfo.EmittedFuncName)
-		f.processFuncSentences(depth+1, funcInfo, ctx)
-		f.PrintLabel(depth, fmt.Sprintf("} // func %s:%s\n", funcInfo.FuncName, funcInfo.EmittedFuncName)) // func block end
-	}
-
-	return
+	return fmt.Sprintf("func_%d", globs["Go"].Index)
 }
 
 func (f *Data) processNestedFuncs(depth int, ctx *emitterContext) {
 
-	for _, funcInfo := range ctx.nestedNamedFuncs {
-		f.printFuncHeader(depth, funcInfo.EmittedFuncName)
-		f.processFuncSentences(depth+1, funcInfo, ctx)
+	for _, currFunc := range ctx.nestedNamedFuncs {
+		f.printFuncHeader(depth, f.genFuncName(currFunc.Index))
+		f.processFuncSentences(depth+1, ctx, currFunc)
 
 		funcName := "anonym"
-
-		if funcInfo.Function.HasName {
-			funcName = funcInfo.FuncName
+		if currFunc.HasName {
+			funcName = currFunc.FuncName
 		}
 
-		f.PrintLabel(depth, fmt.Sprintf("} // func %s:%s\n", funcName, funcInfo.EmittedFuncName)) // func block end
+		f.PrintLabel(depth, fmt.Sprintf("} // func %s:func_%d\n", funcName, currFunc.Index)) // func block end
 	}
-}
-
-func (f *Data) addBuiltins(ctx *emitterContext) int {
-
-	funcsCount := ctx.funcsKeeper.GetFuncsCount()
-
-	ctx.funcsKeeper.AddBuiltinFunc("Prout")
-	ctx.funcsKeeper.AddBuiltinFunc("Card")
-	ctx.funcsKeeper.AddBuiltinFunc("Add")
-	ctx.funcsKeeper.AddBuiltinFunc("Sub")
-	ctx.funcsKeeper.AddBuiltinFunc("Mul")
-	ctx.funcsKeeper.AddBuiltinFunc("Div")
-	ctx.funcsKeeper.AddBuiltinFunc("Mod")
-
-	return ctx.funcsKeeper.GetFuncsCount() - funcsCount
 }
 
 func processFile(f Data) {
@@ -252,14 +216,13 @@ func processFile(f Data) {
 	depth := 0
 
 	var ctx emitterContext
-	ctx.funcsKeeper = fk.NewFuncsKeeper()
-	ctx.nestedNamedFuncs = make([]*fk.FuncInfo, 0)
+	ctx.nestedNamedFuncs = make([]*syntax.Function, 0)
+	//	ctx.allFuncsMap = make(map[int]*syntax.Function, 0)
 
 	f.PrintLabel(depth, fmt.Sprintf("// file:%s\n", f.Name))
 	f.PrintHeaders()
 
-	builtinsNumber := f.addBuiltins(&ctx)
-	f.predeclareGlobFuncs(depth, builtinsNumber, len(unit.GlobMap)+unit.AnonymousNumber)
+	f.predeclareFuncs(depth, unit.FuncsTotalCount)
 
 	f.printLiteralsAndHeapsInit(depth, unit)
 

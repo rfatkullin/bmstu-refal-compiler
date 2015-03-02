@@ -35,11 +35,43 @@ func (f *Data) isLiteral(term *syntax.Term, ctx *emitterContext) bool {
 		return true
 
 	case syntax.COMP:
-		_, yes := f.isFuncName(term.Value.Name, ctx)
-		return !yes
+		if _, ok := f.IsFuncName(ctx, term.Value.Name); !ok {
+			return true
+		} else {
+			return false
+		}
+
 	}
 
 	return false
+}
+
+func (f *Data) genFuncName(index int) string {
+	return fmt.Sprintf("func_%d", index)
+}
+
+func (f *Data) IsFuncName(ctx *emitterContext, name string) (generatedName string, ok bool) {
+	level := -1
+	index := 0
+
+	if index, level = ctx.sentenceInfo.sentence.FindFunc(name); level != -1 {
+		return f.genFuncName(index), true
+	}
+
+	if _, ok := f.Ast.Builtins[name]; ok {
+		return name, true
+	}
+
+	if currFunc, ok := f.Ast.GlobMap[name]; ok {
+		return f.genFuncName(currFunc.Index), true
+	}
+
+	//	fmt.Printf("Search func name: %s\n", name)
+	//	for funcName, _ := range f.Ast.GlobMap {
+	//		fmt.Printf("Glob func: %s\n", funcName)
+	//	}
+
+	return "", false
 }
 
 func (f *Data) ConstructLiteralsFragment(depth int, ctx *emitterContext, terms []*syntax.Term) []*syntax.Term {
@@ -97,7 +129,7 @@ func (f *Data) ConstructFuncCallTerm(depth int, ctx *emitterContext, chainNumber
 	f.PrintLabel(depth, "funcTerm->funcCall->entryPoint = 0;")
 	f.PrintLabel(depth, "funcTerm->funcCall->parentCall = 0;")
 	f.PrintLabel(depth, "funcTerm->funcCall->funcPtr = 0;")
-	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->rollBack = %d;", BoolToInt(ctx.currFuncInfo.Rollback)))
+	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->rollBack = %d;", BoolToInt(ctx.funcInfo.Rollback)))
 	f.PrintLabel(depth, "funcTerm->funcCall->fieldOfView = currTerm->chain;")
 	f.PrintLabel(depth, "//WARN: Correct free currTerm.")
 	f.PrintLabel(depth, "free(currTerm);")
@@ -138,42 +170,39 @@ func (f *Data) ConstructExprInParenthesis(depth int, ctx *emitterContext, chainN
 			terms = f.ConstructLiteralsFragment(depth, ctx, terms)
 		} else {
 			terms = terms[1:]
-		}
 
-		// Вызов функции
-		if term.TermTag == syntax.EVAL {
-			ctx.isFuncCallInConstruct = true
-			*chainNumber++
-			f.ConstructFuncCallTerm(depth, ctx, chainNumber, firstFuncCall, term.Exprs[0].Terms)
-			f.ConcatToCallChain(depth, firstFuncCall)
-		}
-
-		// Выражение в скобках
-		if term.TermTag == syntax.EXPR {
-			*chainNumber++
-			f.ConstructExprInParenthesis(depth, ctx, chainNumber, firstFuncCall, term.Exprs[0].Terms)
-		}
-
-		// Значение переменной
-		if term.TermTag == syntax.VAR {
-			fixedEntryPoint := ctx.fixedVars[term.Value.Name]
-			f.constructVar(depth, fixedEntryPoint, term.Value.Name, ctx)
-		}
-
-		//Имя функции. Создаем функциональный vterm.
-		if term.TermTag == syntax.COMP {
-			//fmt.Printf("Check on functional compound: %s\n", term.Value.Name)
-			if funcInfo, yes := f.isFuncName(term.Value.Name, ctx); yes {
-				//fmt.Printf("There is functional compound: %s\n", term.Value.Name)
-				f.constructFunctionalVTerm(depth, ctx, term, funcInfo)
+			// Вызов функции
+			if term.TermTag == syntax.EVAL {
+				ctx.isFuncCallInConstruct = true
+				*chainNumber++
+				f.ConstructFuncCallTerm(depth, ctx, chainNumber, firstFuncCall, term.Exprs[0].Terms)
+				f.ConcatToCallChain(depth, firstFuncCall)
 			}
-		}
 
-		//Создание вложенной функции. Создание функционального vterm'a
-		if term.TermTag == syntax.FUNC {
-			funcInfo := ctx.funcsKeeper.AddFunc(ctx.scopeKeeper, term.Function)
-			f.constructFunctionalVTerm(depth, ctx, term, funcInfo)
-			ctx.nestedNamedFuncs = append(ctx.nestedNamedFuncs, funcInfo)
+			// Выражение в скобках
+			if term.TermTag == syntax.EXPR {
+				*chainNumber++
+				f.ConstructExprInParenthesis(depth, ctx, chainNumber, firstFuncCall, term.Exprs[0].Terms)
+			}
+
+			// Значение переменной
+			if term.TermTag == syntax.VAR {
+				fixedEntryPoint := ctx.fixedVars[term.Value.Name]
+				f.constructVar(depth, fixedEntryPoint, term.Value.Name, ctx)
+			}
+
+			//Имя функции. Создаем функциональный vterm.
+			if term.TermTag == syntax.COMP {
+				genFuncName, _ := f.IsFuncName(ctx, term.Value.Name)
+				fmt.Printf("Func call: %s\n", term.Value.Name)
+				f.constructFunctionalVTerm(depth, ctx, term, genFuncName)
+			}
+
+			//Создание вложенной функции. Создание функционального vterm'a
+			if term.TermTag == syntax.FUNC {
+				f.constructFunctionalVTerm(depth, ctx, term, f.genFuncName(term.Index))
+				ctx.addNestedFunc(term.Function)
+			}
 		}
 
 		f.ConcatToParentChain(depth, firstTermInParenthesis, currChainNumber)
@@ -192,7 +221,7 @@ func (f *Data) constructVar(depth, fixedEntryPoint int, varName string, ctx *emi
 		f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->locals[%d][%d];", fixedEntryPoint, scopeVar.Number))
 	} else {
 		// Get env var
-		needVarInfo, _ := ctx.currFuncInfo.EnvVarMap[varName]
+		needVarInfo, _ := ctx.env[varName]
 		f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->params[%d];", needVarInfo.Number))
 	}
 }

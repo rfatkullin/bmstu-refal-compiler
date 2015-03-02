@@ -61,7 +61,7 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 		Builtins:        make(map[string]bool, 16),
 		ExtMap:          make(map[string]*FuncHeader, 16),
 		GlobMap:         make(map[string]*Function, 64),
-		AnonymousNumber: 0,
+		FuncsTotalCount: 0,
 	}
 	ready := make(chan bool)
 
@@ -74,14 +74,6 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 					unit.ExtMap[e.FuncName] = e
 				}
 			}
-		}
-
-		ready <- true
-	}()
-
-	go func() {
-		for _ = range nested {
-			unit.AnonymousNumber++
 		}
 
 		ready <- true
@@ -148,8 +140,9 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 				}
 			case FUNC: // Nested function.
 				if t.HasName {
-					if scope.FindFunc(t.FuncName) == -1 {
-						scope.AddFunc(t.FuncName)
+					if _, level := scope.FindFunc(t.FuncName); level == -1 {
+						scope.AddFunc(t.FuncName, unit.FuncsTotalCount)
+						unit.FuncsTotalCount++
 					} else {
 						errDuplicate(t.Pos, "nested function")
 					}
@@ -167,7 +160,7 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 			if tn := e.Terms[0]; tn.TermTag == COMP {
 				if dialect == 5 && !tn.IsIdent {
 					errFuncnameInStringForm(tn.Start)
-				} else if scope.FindFunc(tn.Name) == -1 {
+				} else if _, level := scope.FindFunc(tn.Name); level == -1 {
 					issues[&tn.Start] = tn.Name
 				}
 			} else if dialect == 5 {
@@ -187,8 +180,8 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 				R: // $R modifier.
 				errIllegalModifier(t.Start, t.TermTag)
 			case COMP: // Compound symbol.
-				if level := scope.FindFunc(t.Name); level != -1 {
-					f.Params.PropagateFunc(t.Name, level)
+				if index, level := scope.FindFunc(t.Name); level != -1 {
+					f.Params.PropagateFunc(t.Name, level, index)
 				}
 			case VAR: // Variable.
 				vt, name := t.VarType, t.Name
@@ -300,13 +293,14 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 				errDuplicateGlobal(g.Pos)
 			} else {
 				unit.GlobMap[g.FuncName] = g
+				unit.GlobMap[g.FuncName].Index = unit.FuncsTotalCount
+				unit.FuncsTotalCount++
 			}
 		}
 
 		checkBlock(g, nil)
 	}
 
-	<-ready
 	<-ready
 
 	for pos, name := range issues {
@@ -325,6 +319,11 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 		if e, ok := unit.ExtMap[name]; ok {
 			warn(g.Pos, fmt.Sprintf("hiding external function, defined at %v", e.Pos))
 		}
+	}
+
+	for currFunc := range nested {
+		currFunc.Index = unit.FuncsTotalCount
+		unit.FuncsTotalCount++
 	}
 
 	ast <- &unit

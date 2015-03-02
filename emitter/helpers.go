@@ -59,3 +59,21 @@ func BoolToInt(b bool) int {
 	}
 	return 0
 }
+
+func (ctx *emitterContext) setEnv(currFunc *syntax.Function) {
+	ctx.env = make(map[string]syntax.ScopeVar, 0)
+	s := &currFunc.Params
+
+	for ; s != nil; s = s.Parent {
+		if s.VarMap != nil {
+			for varName, varInfo := range s.VarMap {
+				ctx.env[varName] = syntax.ScopeVar{Number: len(ctx.env), VarType: varInfo.VarType}
+			}
+		}
+	}
+}
+
+func (ctx *emitterContext) addNestedFunc(currFunc *syntax.Function) {
+	ctx.nestedNamedFuncs = append(ctx.nestedNamedFuncs, currFunc)
+	//	ctx.allFuncsMap[currFunc.Index] = currFunc
+}
