@@ -112,19 +112,13 @@ func (f *Data) ConstructFuncCallTerm(depth int, ctx *emitterContext, chainNumber
 
 	terms = f.ConstructExprInParenthesis(depth, ctx, chainNumber, firstFuncCall, terms)
 
-	f.PrintLabel(depth, "funcTerm = (struct lterm_t*)malloc(sizeof(struct lterm_t));")
-	f.PrintLabel(depth, "funcTerm->tag = L_TERM_FUNC_CALL;")
-	f.PrintLabel(depth, "funcTerm->funcCall = (struct func_call_t*)malloc(sizeof(struct func_call_t));")
-	f.PrintLabel(depth, "funcTerm->funcCall->env = (struct env_t*)malloc(sizeof(struct env_t));")
-
+	f.PrintLabel(depth, "funcTerm = allocateFuncCallLTerm();")
 	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->failEntryPoint = %d;", ctx.prevEntryPoint))
 	f.PrintLabel(depth, "funcTerm->funcCall->entryPoint = 0;")
 	f.PrintLabel(depth, "funcTerm->funcCall->parentCall = 0;")
 	f.PrintLabel(depth, "funcTerm->funcCall->funcPtr = 0;")
 	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->rollBack = %d;", BoolToInt(ctx.funcInfo.Rollback)))
 	f.PrintLabel(depth, "funcTerm->funcCall->fieldOfView = currTerm->chain;")
-	f.PrintLabel(depth, "//WARN: Correct free currTerm.")
-	f.PrintLabel(depth, "free(currTerm);")
 
 	f.PrintLabel(depth, "//Finished construction func call")
 	return terms
@@ -134,7 +128,7 @@ func (f *Data) ConcatToCallChain(depth int, firstFuncCall *bool) {
 
 	if *firstFuncCall {
 		f.PrintLabel(depth, "//First call in call chain -- Initialization.")
-		f.PrintLabel(depth, "funcCallChain = (struct lterm_t*)malloc(sizeof(struct lterm_t));")
+		f.PrintLabel(depth, "funcCallChain = allocateChainLTerm(1);")
 		f.PrintLabel(depth, "funcCallChain->next = funcTerm;")
 		f.PrintLabel(depth, "funcCallChain->prev = funcTerm;")
 		*firstFuncCall = false
@@ -268,11 +262,8 @@ func (f *Data) ConstructFuncCallAction(depth int, ctx *emitterContext, terms []*
 }
 
 func (f *Data) printInitializeConstructVars(depth, chainsCount int) {
-	f.PrintLabel(depth, "//WARN: Correct free funcCallChain.")
-	f.PrintLabel(depth, "free(funcCallChain);")
 	f.PrintLabel(depth, "funcCallChain = 0;")
 
-	f.PrintLabel(depth, "//WARN: Correct free prev helper.")
 	f.PrintLabel(depth, fmt.Sprintf("helper = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", chainsCount))
 	f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; ++i)", chainsCount))
 	f.PrintLabel(depth, "{")

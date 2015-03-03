@@ -84,16 +84,6 @@ func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 	f.PrintLabel(depth, "}")
 }
 
-func (f *Data) printFreeLocals(depth, matchingNumber, varsNumber int) {
-
-	f.PrintLabel(depth, "if (funcRes.status != CALL_RESULT)")
-	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, "free(env->locals);")
-	f.PrintLabel(depth+1, "free(env->stretchVarsNumber);")
-	f.PrintLabel(depth+1, "free(env->assembledFOVs);")
-	f.PrintLabel(depth, "}")
-}
-
 func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *syntax.Function) {
 	maxVarsNumber := 0
 	sentencesCount := len(currFunc.Sentences)
@@ -164,7 +154,6 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 	f.PrintLabel(depth+1, "} // Entry point switch end")
 	f.PrintLabel(depth, "} // Main while end")
 
-	f.printFreeLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
 	f.PrintLabel(depth, "return funcRes;")
 }
 
