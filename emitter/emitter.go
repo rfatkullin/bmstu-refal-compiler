@@ -54,7 +54,7 @@ func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 	f.PrintLabel(depth, "struct func_result_t funcRes;")
 	f.PrintLabel(depth, "struct lterm_t* funcCallChain = 0;")
 	f.PrintLabel(depth, "struct fragment_t* currFrag = 0;")
-	f.PrintLabel(depth, "struct lterm_t** helper = 0;")
+	f.PrintLabel(depth, "struct lterm_t* helper = 0;")
 	f.PrintLabel(depth, "struct lterm_t* currTerm = 0;")
 	f.PrintLabel(depth, "struct lterm_t* funcTerm = 0;")
 	f.PrintLabel(depth, "uint64_t fragmentOffset = 0;")

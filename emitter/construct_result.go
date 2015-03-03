@@ -100,10 +100,10 @@ func (f *Data) ConstructLiteralsFragment(depth int, ctx *emitterContext, terms [
 func (f *Data) ConcatToParentChain(depth int, firstTerm bool, chainNumber int) {
 
 	f.PrintLabel(depth, "//Adding term to field chain -- Just concat.")
-	f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->prev->next = currTerm;", chainNumber))
-	f.PrintLabel(depth, fmt.Sprintf("currTerm->prev = helper[%d]->chain->prev;", chainNumber))
-	f.PrintLabel(depth, fmt.Sprintf("helper[%d]->chain->prev = currTerm;", chainNumber))
-	f.PrintLabel(depth, fmt.Sprintf("currTerm->next = helper[%d]->chain;", chainNumber))
+	f.PrintLabel(depth, fmt.Sprintf("helper[%d].chain->prev->next = currTerm;", chainNumber))
+	f.PrintLabel(depth, fmt.Sprintf("currTerm->prev = helper[%d].chain->prev;", chainNumber))
+	f.PrintLabel(depth, fmt.Sprintf("helper[%d].chain->prev = currTerm;", chainNumber))
+	f.PrintLabel(depth, fmt.Sprintf("currTerm->next = helper[%d].chain;", chainNumber))
 }
 
 func (f *Data) ConstructFuncCallTerm(depth int, ctx *emitterContext, chainNumber *int, firstFuncCall *bool, terms []*syntax.Term) []*syntax.Term {
@@ -194,7 +194,7 @@ func (f *Data) ConstructExprInParenthesis(depth int, ctx *emitterContext, chainN
 	}
 
 	f.PrintLabel(depth, "//Finished construction parenthesis. Save in currTerm.")
-	f.PrintLabel(depth, fmt.Sprintf("currTerm = helper[%d];", currChainNumber))
+	f.PrintLabel(depth, fmt.Sprintf("currTerm = &helper[%d];", currChainNumber))
 
 	return terms
 }
@@ -264,14 +264,5 @@ func (f *Data) ConstructFuncCallAction(depth int, ctx *emitterContext, terms []*
 func (f *Data) printInitializeConstructVars(depth, chainsCount int) {
 	f.PrintLabel(depth, "funcCallChain = 0;")
 
-	//f.PrintLabel(depth, fmt.Sprintf("helper = allocateChainLTerm(UINT64_C(%d));", chainsCount))
-	f.PrintLabel(depth, fmt.Sprintf("helper = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", chainsCount))
-	f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; ++i)", chainsCount))
-	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, "helper[i] = (struct lterm_t*)malloc(sizeof(struct lterm_t));")
-	f.PrintLabel(depth+1, "helper[i]->tag = L_TERM_CHAIN_TAG;")
-	f.PrintLabel(depth+1, "helper[i]->chain = (struct lterm_t*)malloc(sizeof(struct lterm_t));")
-	f.PrintLabel(depth+1, "helper[i]->chain->prev = helper[i]->chain;")
-	f.PrintLabel(depth+1, "helper[i]->chain->next = helper[i]->chain;")
-	f.PrintLabel(depth, "}")
+	f.PrintLabel(depth, fmt.Sprintf("helper = allocateChainLTerm(UINT64_C(%d));", chainsCount))
 }
