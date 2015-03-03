@@ -2,7 +2,6 @@ package emitter
 
 import (
 	"fmt"
-	//"io"
 )
 
 import (
@@ -91,9 +90,7 @@ func (f *Data) ConstructLiteralsFragment(depth int, ctx *emitterContext, terms [
 	}
 
 	f.PrintLabel(depth, "//Start construction fragment term.")
-	f.PrintLabel(depth, "currTerm = (struct lterm_t*)malloc(sizeof(struct lterm_t));")
-	f.PrintLabel(depth, "currTerm->tag = L_TERM_FRAGMENT_TAG;")
-	f.PrintLabel(depth, "currTerm->fragment = (struct fragment_t*)malloc(sizeof(struct fragment_t));")
+	f.PrintLabel(depth, "currTerm = allocateFragmentLTerm();")
 	f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = %d;", fragmentOffset))
 	f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->length = %d;", fragmentLength))
 

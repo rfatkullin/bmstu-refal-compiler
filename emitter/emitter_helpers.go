@@ -14,8 +14,6 @@ func genTabs(depth int) string {
 	return strings.Repeat(tab, depth)
 }
 
-//func (f *Data) Comment(s string) { fmt.Fprintf(f, "\t/* %s */\n", s) }
-
 func (f *Data) PrintLabel(depth int, label string) {
 	tabs := genTabs(depth)
 	fmt.Fprintf(f, "%s%s\n", tabs, label)
@@ -145,6 +143,7 @@ func (f *Data) PrintHeaders() {
 	f.PrintLabel(0, "#include <stdlib.h>")
 	f.PrintLabel(0, "#include <stdio.h>\n")
 	f.PrintLabel(0, "#include <memory_manager.h>")
+	f.PrintLabel(0, "#include <allocators.h>")
 	f.PrintLabel(0, "#include <vmachine.h>")
 	f.PrintLabel(0, "#include <builtins.h>")
 	f.PrintLabel(0, "")
