@@ -225,12 +225,11 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 
 	varInfo, isLocalVar := ctx.sentenceInfo.scope.VarMap[value.Name]
 	isFixedVar := true
-	matchedEntryPoint := 0
 
 	if !isLocalVar {
 		varInfo = ctx.funcInfo.Env[value.Name]
 	} else {
-		matchedEntryPoint, isFixedVar = ctx.fixedVars[value.Name]
+		_, isFixedVar = ctx.fixedVars[value.Name]
 	}
 
 	varNumber := varInfo.Number
@@ -240,7 +239,7 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 	case tokens.VT_T:
 		if isFixedVar {
 			if isLocalVar {
-				f.matchingFixedLocalExprVar(depth, ctx, matchedEntryPoint, varNumber)
+				f.matchingFixedLocalExprVar(depth, ctx, varNumber)
 			} else {
 				f.matchingFixedEnvExprVar(depth, ctx, varNumber)
 			}
@@ -253,7 +252,7 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 	case tokens.VT_S:
 		if isFixedVar {
 			if isLocalVar {
-				f.matchingFixedLocalSymbolVar(depth, ctx, matchedEntryPoint, varNumber)
+				f.matchingFixedLocalSymbolVar(depth, ctx, varNumber)
 			} else {
 				f.matchingFixedEnvSymbolVar(depth, ctx, varNumber)
 			}
@@ -268,7 +267,7 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 
 		if isFixedVar {
 			if isLocalVar {
-				f.matchingFixedLocalExprVar(depth, ctx, matchedEntryPoint, varNumber)
+				f.matchingFixedLocalExprVar(depth, ctx, varNumber)
 			} else {
 				f.matchingFixedEnvExprVar(depth, ctx, varNumber)
 			}

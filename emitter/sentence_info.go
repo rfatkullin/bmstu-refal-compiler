@@ -53,7 +53,7 @@ func getPatternsCount(s *syntax.Sentence) int {
 	number := 1
 
 	for _, a := range s.Actions {
-		if a.ActionOp == syntax.COLON {
+		if a.ActionOp == syntax.COLON || a.ActionOp == syntax.DCOLON {
 			number++
 		}
 	}

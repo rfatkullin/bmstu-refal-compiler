@@ -90,7 +90,7 @@ func (f *Data) ConstructLiteralsFragment(depth int, ctx *emitterContext, terms [
 	}
 
 	f.PrintLabel(depth, "//Start construction fragment term.")
-	f.PrintLabel(depth, "currTerm = allocateFragmentLTerm();")
+	f.PrintLabel(depth, "currTerm = allocateFragmentLTerm(1);")
 	f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = %d;", fragmentOffset))
 	f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->length = %d;", fragmentLength))
 
@@ -202,7 +202,7 @@ func (f *Data) ConstructExprInParenthesis(depth int, ctx *emitterContext, chainN
 func (f *Data) constructVar(depth, fixedEntryPoint int, varName string, ctx *emitterContext) {
 
 	if scopeVar, ok := ctx.sentenceInfo.scope.VarMap[varName]; ok {
-		f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->locals[%d][%d];", fixedEntryPoint, scopeVar.Number))
+		f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->locals[%d];", scopeVar.Number))
 	} else {
 		// Get env var
 		needVarInfo, _ := ctx.funcInfo.Env[varName]
@@ -264,6 +264,7 @@ func (f *Data) ConstructFuncCallAction(depth int, ctx *emitterContext, terms []*
 func (f *Data) printInitializeConstructVars(depth, chainsCount int) {
 	f.PrintLabel(depth, "funcCallChain = 0;")
 
+	//f.PrintLabel(depth, fmt.Sprintf("helper = allocateChainLTerm(UINT64_C(%d));", chainsCount))
 	f.PrintLabel(depth, fmt.Sprintf("helper = (struct lterm_t**)malloc(%d * sizeof(struct lterm_t*));", chainsCount))
 	f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; ++i)", chainsCount))
 	f.PrintLabel(depth, "{")

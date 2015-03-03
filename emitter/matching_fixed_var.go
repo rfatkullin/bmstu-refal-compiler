@@ -4,10 +4,10 @@ import (
 	"fmt"
 )
 
-func (f *Data) matchingFixedLocalSymbolVar(depth int, ctx *emitterContext, matchedEntryPoint, varNumber int) {
+func (f *Data) matchingFixedLocalSymbolVar(depth int, ctx *emitterContext, varNumber int) {
 	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
 
-	lterm := fmt.Sprintf("env->locals[%d][%d]", matchedEntryPoint, varNumber)
+	lterm := fmt.Sprintf("env->locals[%d]", varNumber)
 	f.matchingFixedSymbolVar(depth, prevStretchVarNumber, ctx, lterm)
 }
 
@@ -17,10 +17,10 @@ func (f *Data) matchingFixedEnvSymbolVar(depth int, ctx *emitterContext, varNumb
 	f.matchingFixedSymbolVar(depth, prevStretchVarNumber, ctx, lterm)
 }
 
-func (f *Data) matchingFixedLocalExprVar(depth int, ctx *emitterContext, patternNumber, varNumber int) {
+func (f *Data) matchingFixedLocalExprVar(depth int, ctx *emitterContext, varNumber int) {
 	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
 
-	lterm := fmt.Sprintf("env->locals[%d][%d]", patternNumber, varNumber)
+	lterm := fmt.Sprintf("env->locals[%d]", varNumber)
 	f.matchingFixedExprVar(depth, prevStretchVarNumber, ctx, lterm)
 }
 
