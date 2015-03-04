@@ -63,8 +63,10 @@ func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 	f.PrintLabel(depth, "int stretching = 0;")
 	f.PrintLabel(depth, "int i = 0;")
 	f.PrintLabel(depth, "int j = 0;")
-	f.PrintLabel(depth, "if (*entryPoint == 0)")
+	f.PrintLabel(depth, "if (entryStatus == FIRST_CALL)")
 	f.PrintLabel(depth+1, fmt.Sprintf("allocateEnvData(env, %d, %d);", varsNumber, maxPatternNumber))
+	f.PrintLabel(depth, "else if (entryStatus == ROLL_BACK)")
+	f.PrintLabel(depth+1, "stretching = 1;")
 }
 
 func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *syntax.Function) {
@@ -143,7 +145,7 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 func (f *Data) predeclareFuncs(depth, funcsNumber int) {
 
 	for i := 0; i < funcsNumber; i++ {
-		f.PrintLabel(depth, fmt.Sprintf("struct func_result_t func_%d(int* entryPoint, struct env_t* env, struct lterm_t* fieldOfView);", i))
+		f.PrintLabel(depth, fmt.Sprintf("struct func_result_t func_%d(int* entryPoint, struct env_t* env, struct lterm_t* fieldOfView, int entryStatus);", i))
 	}
 
 	f.PrintLabel(depth, "")
