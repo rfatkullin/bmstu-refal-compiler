@@ -83,6 +83,8 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 	f.PrintLabel(depth+1, "switch (*entryPoint)")
 	f.PrintLabel(depth+1, "{")
 
+	fmt.Printf("Func %q is rollback: %t\n", currFunc.FuncName, currFunc.Rollback)
+
 	for sentenceIndex, sentence := range currFunc.Sentences {
 
 		ctx.isLeftMatching = true

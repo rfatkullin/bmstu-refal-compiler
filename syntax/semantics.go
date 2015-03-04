@@ -334,7 +334,6 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 	for _, currFunc := range unit.NestedFuncs {
 		unit.FuncByNumber[currFunc.Index] = currFunc
 		currFunc.setEnv()
-		fmt.Printf("Func: %s, env var count: %d\n", currFunc.FuncName, len(currFunc.Env))
 	}
 
 	ast <- &unit

@@ -229,7 +229,7 @@ func (f *Data) ConstructAssembly(depth int, ctx *emitterContext, resultExpr synt
 		//TO CHECK: Always set funcRes.
 		if ctx.sentenceInfo.isLastAction() {
 			f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = currTerm->chain, .callChain = funcCallChain};")
-		} else if ctx.isFuncCallInConstruct && ctx.sentenceInfo.isNextMatchingAction() {
+		} else if ctx.isFuncCallInConstruct && ctx.sentenceInfo.needToEval() {
 			f.PrintLabel(depth, fmt.Sprintf("*entryPoint = %d;", ctx.entryPoint))
 			f.PrintLabel(depth, "return (struct func_result_t){.status = CALL_RESULT, .fieldChain = currTerm->chain, .callChain = funcCallChain};")
 		}
@@ -239,23 +239,32 @@ func (f *Data) ConstructAssembly(depth int, ctx *emitterContext, resultExpr synt
 func (f *Data) ConstructFuncCallAction(depth int, ctx *emitterContext, terms []*syntax.Term) {
 
 	f.printInitializeConstructVars(depth, 2)
-
 	firstFuncCall := true
-	chainNumber := 0
+	chainNumber := 1
 
-	f.ConstructExprInParenthesis(depth, ctx, &chainNumber, &firstFuncCall, terms)
+	f.ConstructFuncCallTerm(depth, ctx, &chainNumber, &firstFuncCall, terms)
+	f.ConcatToCallChain(depth, &firstFuncCall)
+	f.ConcatToParentChain(depth, true, 0)
 
-	f.PrintLabel(depth, "currTerm->chain->prev->next = fieldOfView->next;")
-	f.PrintLabel(depth, "fieldOfView->next->prev = currTerm->chain->prev;")
+	f.PrintLabel(depth, "struct lterm_t* tmp = funcTerm->funcCall->fieldOfView;")
+	f.PrintLabel(depth, "fieldOfView->prev->next = tmp->prev->next;")
+	f.PrintLabel(depth, "tmp->prev->next = fieldOfView->next;")
+	f.PrintLabel(depth, "fieldOfView->next->prev = tmp->prev;")
+	f.PrintLabel(depth, "tmp->prev = fieldOfView->prev;")
+
+	f.PrintLabel(depth, "currTerm = &helper[0];")
 
 	f.PrintLabel(depth, fmt.Sprintf("*entryPoint = %d;", ctx.entryPoint))
 	f.PrintLabel(depth, "return (struct func_result_t){.status = CALL_RESULT, .fieldChain = currTerm->chain, .callChain = funcCallChain};")
 
 	f.PrintLabel(depth, "//Func call case")
-	f.PrintLabel(depth, fmt.Sprintf("case %d:", ctx.entryPoint))
-	f.PrintLabel(depth, fmt.Sprintf("{"))
+	f.PrintLabel(depth-1, "}")
+	f.PrintLabel(depth-1, fmt.Sprintf("case %d:", ctx.entryPoint))
+	f.PrintLabel(depth-1, "{")
 
-	f.PrintLabel(depth+1, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = fieldOfView, .callChain = 0};")
+	if ctx.sentenceInfo.isLastAction() {
+		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = fieldOfView, .callChain = 0};")
+	}
 
 	ctx.prevEntryPoint = ctx.entryPoint
 	ctx.entryPoint++

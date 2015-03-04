@@ -32,7 +32,7 @@ func (sentenceInfo *sentenceInfo) isLastAction() bool {
 	return sentenceInfo.actionIndex+1 >= sentenceInfo.actionsCount
 }
 
-func (sentenceInfo *sentenceInfo) isNextMatchingAction() bool {
+func (sentenceInfo *sentenceInfo) needToEval() bool {
 
 	if sentenceInfo.isLastAction() {
 		return false
@@ -41,7 +41,11 @@ func (sentenceInfo *sentenceInfo) isNextMatchingAction() bool {
 	actions := sentenceInfo.sentence.Actions
 	index := sentenceInfo.actionIndex
 
-	if actions[index+1].ActionOp == syntax.COLON || actions[index+1].ActionOp == syntax.DCOLON {
+	switch actions[index+1].ActionOp {
+	case syntax.COLON, // ':'
+		syntax.DCOLON, // '::'
+		syntax.TARROW, // '->'
+		syntax.ARROW:  // '=>'
 		return true
 	}
 
