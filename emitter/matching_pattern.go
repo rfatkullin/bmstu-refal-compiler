@@ -154,7 +154,7 @@ func (f *Data) processPatternFail(depth int, ctx *emitterContext) {
 	if ctx.sentenceInfo.patternIndex == 0 || ctx.prevEntryPoint == -1 {
 		f.processFailOfFirstPattern(depth+1, ctx)
 	} else {
-		f.processFailOfCommonPattern(depth+1, ctx.entryPoint-1)
+		f.processFailOfCommonPattern(depth+1, ctx.prevEntryPoint)
 	}
 
 	f.PrintLabel(depth+1, "break;")

@@ -117,7 +117,7 @@ func (f *Data) ConstructFuncCallTerm(depth int, ctx *emitterContext, chainNumber
 	f.PrintLabel(depth, "funcTerm->funcCall->entryPoint = 0;")
 	f.PrintLabel(depth, "funcTerm->funcCall->parentCall = 0;")
 	f.PrintLabel(depth, "funcTerm->funcCall->funcPtr = 0;")
-	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->rollBack = %d;", BoolToInt(ctx.funcInfo.Rollback)))
+	f.PrintLabel(depth, "funcTerm->funcCall->rollback = 0;")
 	f.PrintLabel(depth, "funcTerm->funcCall->fieldOfView = currTerm->chain;")
 
 	f.PrintLabel(depth, "//Finished construction func call")
@@ -257,16 +257,11 @@ func (f *Data) ConstructFuncCallAction(depth int, ctx *emitterContext, terms []*
 	f.PrintLabel(depth, fmt.Sprintf("*entryPoint = %d;", ctx.entryPoint))
 	f.PrintLabel(depth, "return (struct func_result_t){.status = CALL_RESULT, .fieldChain = currTerm->chain, .callChain = funcCallChain};")
 
-	f.PrintLabel(depth, "//Func call case")
 	f.PrintLabel(depth-1, "}")
 	f.PrintLabel(depth-1, fmt.Sprintf("case %d:", ctx.entryPoint))
 	f.PrintLabel(depth-1, "{")
 
-	if ctx.sentenceInfo.isLastAction() {
-		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = fieldOfView, .callChain = 0};")
-	}
-
-	ctx.prevEntryPoint = ctx.entryPoint
+	f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = fieldOfView, .callChain = 0};")
 	ctx.entryPoint++
 }
 
