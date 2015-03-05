@@ -70,9 +70,8 @@ func (f *Data) processPattern(depth int, ctx *emitterContext, terms []*syntax.Te
 
 func (f *Data) printFirstCase(depth int, ctx *emitterContext, term *syntax.Term) {
 
-	if term.TermTag == syntax.VAR && term.VarType != tokens.VT_E {
-
-		if _, ok := ctx.fixedVars[term.Name]; ok {
+	if term.TermTag == syntax.VAR && term.VarType == tokens.VT_E {
+		if _, ok := ctx.fixedVars[term.Name]; !ok {
 			return
 		}
 	}

@@ -61,7 +61,7 @@ func (f *Data) matchingFreeExprVar(depth int, ctx *emitterContext, varNumber int
 	f.PrintLabel(depth, "{")
 
 	f.PrintLabel(depth+1, "stretching = 0;")
-	f.PrintLabel(depth+1, fmt.Sprintf("env->stretchVarsNumber[%d] = %d;", patternNumber, varNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("env->stretchVarsNumber[%d] = %d;", patternNumber, ctx.patternCtx.entryPoint))
 	f.PrintLabel(depth+1, "//Restore last offset at this point")
 
 	f.PrintLabel(depth+1, fmt.Sprintf("fragmentOffset = env->locals[%d].fragment->offset + env->locals[%d].fragment->length;", varNumber, varNumber))
