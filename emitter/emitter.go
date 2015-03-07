@@ -62,6 +62,7 @@ func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 	f.PrintLabel(depth, "int stretchingVarNumber = 0;")
 	f.PrintLabel(depth, "int stretching = 0;")
 	f.PrintLabel(depth, "allocate_result status = OK;")
+	f.PrintLabel(depth, "int success = 1;")
 	f.PrintLabel(depth, "int i = 0;")
 	f.PrintLabel(depth, "int j = 0;")
 	f.PrintLabel(depth, "if (entryStatus == FIRST_CALL)")
@@ -83,8 +84,6 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 	f.PrintLabel(depth, "{")
 	f.PrintLabel(depth+1, "switch (*entryPoint)")
 	f.PrintLabel(depth+1, "{")
-
-	fmt.Printf("Func %q is rollback: %t\n", currFunc.FuncName, currFunc.Rollback)
 
 	for sentenceIndex, sentence := range currFunc.Sentences {
 

@@ -23,10 +23,16 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, term *sy
 	f.PrintLabel(depth, "//Start construction func term.")
 
 	f.PrintLabel(depth, "currTerm = chAllocateFragmentLTerm(1, &status);")
+	f.printCheckGCCondition(depth)
+
 	f.PrintLabel(depth, "currTerm->fragment->offset = chAllocateClosureVTerm(&status);")
-	f.PrintLabel(depth, fmt.Sprintf(
-		"memMngr.vterms[currTerm->fragment->offset].closure = chAllocateClosureStruct(%s, %d, memMngr.vterms[%d].str, %d, &status);",
+	f.printCheckGCCondition(depth)
+
+	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure = "+
+		"chAllocateClosureStruct(%s, %d, memMngr.vterms[%d].str, %d, &status);",
 		emittedName, len(env), term.IndexInLiterals, rollback))
+	f.printCheckGCCondition(depth)
+
 	f.PrintLabel(depth, "currTerm->fragment->length = 1;")
 
 	for needVarName, needVarInfo := range env {
