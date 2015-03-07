@@ -209,7 +209,7 @@ func (f *Data) checkAndAssemblyChain(depth, patternNumber int) {
 func (f *Data) printAssemblyChain(depth, entryPoint int) {
 	f.PrintLabel(depth, "{")
 	f.PrintLabel(depth+1, fmt.Sprintf("env->_FOVs[%d] = fieldOfView;", entryPoint))
-	f.PrintLabel(depth+1, fmt.Sprintf("env->assembledFOVs[%d] = getAssembliedChain(fieldOfView);", entryPoint))
+	f.PrintLabel(depth+1, fmt.Sprintf("env->assembledFOVs[%d] = gcGetAssembliedChain(fieldOfView);", entryPoint))
 	f.PrintLabel(depth, "}")
 }
 

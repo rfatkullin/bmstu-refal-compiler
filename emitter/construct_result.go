@@ -90,7 +90,7 @@ func (f *Data) ConstructLiteralsFragment(depth int, ctx *emitterContext, terms [
 	}
 
 	f.PrintLabel(depth, "//Start construction fragment term.")
-	f.PrintLabel(depth, "currTerm = allocateFragmentLTerm(1);")
+	f.PrintLabel(depth, "currTerm = chAllocateFragmentLTerm(1, &status);")
 	f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = %d;", fragmentOffset))
 	f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->length = %d;", fragmentLength))
 
@@ -112,7 +112,7 @@ func (f *Data) ConstructFuncCallTerm(depth int, ctx *emitterContext, chainNumber
 
 	terms = f.ConstructExprInParenthesis(depth, ctx, chainNumber, firstFuncCall, terms)
 
-	f.PrintLabel(depth, "funcTerm = allocateFuncCallLTerm();")
+	f.PrintLabel(depth, "funcTerm = chAllocateFuncCallLTerm(&status);")
 	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->failEntryPoint = %d;", ctx.prevEntryPoint))
 	f.PrintLabel(depth, "funcTerm->funcCall->fieldOfView = currTerm->chain;")
 
@@ -124,7 +124,7 @@ func (f *Data) ConcatToCallChain(depth int, firstFuncCall *bool) {
 
 	if *firstFuncCall {
 		f.PrintLabel(depth, "//First call in call chain -- Initialization.")
-		f.PrintLabel(depth, "funcCallChain = allocateChainLTerm(1);")
+		f.PrintLabel(depth, "funcCallChain = chAllocateChainLTerm(1, &status);")
 		f.PrintLabel(depth, "funcCallChain->next = funcTerm;")
 		f.PrintLabel(depth, "funcCallChain->prev = funcTerm;")
 		*firstFuncCall = false
@@ -264,5 +264,5 @@ func (f *Data) ConstructFuncCallAction(depth int, ctx *emitterContext, terms []*
 func (f *Data) printInitializeConstructVars(depth, chainsCount int) {
 	f.PrintLabel(depth, "funcCallChain = 0;")
 
-	f.PrintLabel(depth, fmt.Sprintf("helper = allocateChainLTerm(UINT64_C(%d));", chainsCount))
+	f.PrintLabel(depth, fmt.Sprintf("helper = chAllocateChainLTerm(UINT64_C(%d), &status);", chainsCount))
 }

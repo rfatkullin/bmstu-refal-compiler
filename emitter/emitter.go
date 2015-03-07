@@ -61,10 +61,11 @@ func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 	f.PrintLabel(depth, "uint64_t rightCheckOffset = 0;")
 	f.PrintLabel(depth, "int stretchingVarNumber = 0;")
 	f.PrintLabel(depth, "int stretching = 0;")
+	f.PrintLabel(depth, "allocate_result status = OK;")
 	f.PrintLabel(depth, "int i = 0;")
 	f.PrintLabel(depth, "int j = 0;")
 	f.PrintLabel(depth, "if (entryStatus == FIRST_CALL)")
-	f.PrintLabel(depth+1, fmt.Sprintf("allocateEnvData(env, %d, %d);", varsNumber, maxPatternNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("gcAllocateEnvData(env, %d, %d);", varsNumber, maxPatternNumber))
 	f.PrintLabel(depth, "else if (entryStatus == ROLL_BACK)")
 	f.PrintLabel(depth+1, "stretching = 1;")
 }
