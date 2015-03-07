@@ -114,10 +114,6 @@ func (f *Data) ConstructFuncCallTerm(depth int, ctx *emitterContext, chainNumber
 
 	f.PrintLabel(depth, "funcTerm = allocateFuncCallLTerm();")
 	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->failEntryPoint = %d;", ctx.prevEntryPoint))
-	f.PrintLabel(depth, "funcTerm->funcCall->entryPoint = 0;")
-	f.PrintLabel(depth, "funcTerm->funcCall->parentCall = 0;")
-	f.PrintLabel(depth, "funcTerm->funcCall->funcPtr = 0;")
-	f.PrintLabel(depth, "funcTerm->funcCall->rollback = 0;")
 	f.PrintLabel(depth, "funcTerm->funcCall->fieldOfView = currTerm->chain;")
 
 	f.PrintLabel(depth, "//Finished construction func call")
