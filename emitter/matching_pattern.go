@@ -192,10 +192,10 @@ func (f *Data) checkAndAssemblyChain(depth, patternNumber int) {
 	f.PrintLabel(depth, "{")
 
 	if prevPatternNumber == -1 {
-		f.PrintLabel(depth+1, fmt.Sprintf("if (env->_FOVs[%d] != fieldOfView)", patternNumber))
+		f.PrintLabel(depth+1, fmt.Sprintf("if (env->fovs[%d] != fieldOfView)", patternNumber))
 		f.printAssemblyChain(depth+1, patternNumber)
 	} else {
-		f.PrintLabel(depth+1, fmt.Sprintf("if (env->_FOVs[%d] == fieldOfView)", prevPatternNumber))
+		f.PrintLabel(depth+1, fmt.Sprintf("if (env->fovs[%d] == fieldOfView)", prevPatternNumber))
 		f.printGetPrevAssembledFOV(depth+1, prevPatternNumber, patternNumber)
 		f.PrintLabel(depth+1, "else")
 		f.printAssemblyChain(depth+1, patternNumber)
@@ -208,14 +208,14 @@ func (f *Data) checkAndAssemblyChain(depth, patternNumber int) {
 
 func (f *Data) printAssemblyChain(depth, entryPoint int) {
 	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, fmt.Sprintf("env->_FOVs[%d] = fieldOfView;", entryPoint))
+	f.PrintLabel(depth+1, fmt.Sprintf("env->fovs[%d] = fieldOfView;", entryPoint))
 	f.PrintLabel(depth+1, fmt.Sprintf("env->assembledFOVs[%d] = gcGetAssembliedChain(fieldOfView);", entryPoint))
 	f.PrintLabel(depth, "}")
 }
 
 func (f *Data) printGetPrevAssembledFOV(depth, prevEntryPoint, entryPoint int) {
 	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, fmt.Sprintf("env->_FOVs[%d] = fieldOfView;", entryPoint))
+	f.PrintLabel(depth+1, fmt.Sprintf("env->fovs[%d] = fieldOfView;", entryPoint))
 	f.PrintLabel(depth+1, fmt.Sprintf("env->assembledFOVs[%d] = env->assembledFOVs[%d];", entryPoint, prevEntryPoint))
 	f.PrintLabel(depth, "}")
 }

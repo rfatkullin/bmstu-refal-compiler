@@ -123,7 +123,7 @@ func (f *Data) printLiteralsAndHeapsInit(depth int, unit *syntax.Unit) {
 
 	f.initLiterals(depth+1, unit.GlobMap)
 
-	f.PrintLabel(depth+1, fmt.Sprintf("initHeaps(2, %d);", f.CurrTermNum))
+	f.PrintLabel(depth+1, fmt.Sprintf("initHeaps(%d);", f.CurrTermNum))
 
 	//fmt.Fprintf(f, "%sdebugLiteralsPrint();\n", tabs)
 	f.PrintLabel(depth, "} // __initLiteralData()\n")
