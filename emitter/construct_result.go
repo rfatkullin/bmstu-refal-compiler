@@ -116,7 +116,6 @@ func (f *Data) ConstructFuncCallTerm(depth int, ctx *emitterContext, chainNumber
 	f.PrintLabel(depth, "funcTerm = chAllocateFuncCallLTerm(&status);")
 	f.printCheckGCCondition(depth)
 	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->failEntryPoint = %d;", ctx.prevEntryPoint))
-	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->env->fovsCount = %d;", ctx.maxPatternNumber))
 	f.PrintLabel(depth, "funcTerm->funcCall->fieldOfView = currTerm->chain;")
 
 	f.PrintLabel(depth, "//Finished construction func call")

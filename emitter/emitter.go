@@ -30,6 +30,7 @@ type emitterContext struct {
 	entryPoint             int
 	prevEntryPoint         int
 	maxPatternNumber       int
+	maxVarsNumber          int
 	nextSentenceEntryPoint int
 	isFuncCallInConstruct  bool
 	sentenceInfo           sentenceInfo
@@ -72,13 +73,12 @@ func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 }
 
 func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *syntax.Function) {
-	maxVarsNumber := 0
 	sentencesCount := len(currFunc.Sentences)
 	ctx.entryPoint = 0
-	ctx.maxPatternNumber, maxVarsNumber = getMaxPatternsAndVarsCount(currFunc)
+	ctx.maxPatternNumber, ctx.maxVarsNumber = getMaxPatternsAndVarsCount(currFunc)
 	ctx.funcInfo = currFunc
 
-	f.printInitLocals(depth, ctx.maxPatternNumber, maxVarsNumber)
+	f.printInitLocals(depth, ctx.maxPatternNumber, ctx.maxVarsNumber)
 
 	f.PrintLabel(depth, "while(*entryPoint >= 0)")
 	f.PrintLabel(depth, "{")
