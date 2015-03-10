@@ -45,7 +45,7 @@ func (f *Data) matchingFixedExprVar(depth, prevStretchVarNumber int, ctx *emitte
 	f.PrintLabel(depth+1, fmt.Sprintf("if((%s.tag != %s.tag)", checkTerm, patternTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_CHAR_TAG && %s.ch != %s.ch)", checkTerm, checkTerm, patternTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_IDENT_TAG && !UStrCmp(%s.str, %s.str))", checkTerm, checkTerm, patternTerm))
-	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_INT_NUM_TAG && %s.intNum != %s.intNum)", checkTerm, checkTerm, patternTerm))
+	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_INT_NUM_TAG && intCmp(%s.intNum, %s.intNum))", checkTerm, checkTerm, patternTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_DOUBLE_NUM_TAG && doubleCmp(%s.doubleNum, %s.doubleNum))", checkTerm, checkTerm, patternTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| ((%s.tag == V_BRACKET_OPEN_TAG || %s.tag == V_BRACKET_CLOSE_TAG) && %s.inBracketLength != %s.inBracketLength))", checkTerm, checkTerm, checkTerm, patternTerm))
 	f.PrintLabel(depth+1, "break;")
@@ -68,7 +68,7 @@ func (f *Data) matchingFixedSymbolVar(depth, prevStretchVarNumber int, ctx *emit
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag != %s.tag)", checkTerm, patternTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_CHAR_TAG && %s.ch != %s.ch)", checkTerm, checkTerm, patternTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_IDENT_TAG && !UStrCmp(%s.str, %s.str))", checkTerm, checkTerm, patternTerm))
-	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_INT_NUM_TAG && %s.intNum != %s.intNum)", checkTerm, checkTerm, patternTerm))
+	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_INT_NUM_TAG && intCmp(%s.intNum, %s.intNum))", checkTerm, checkTerm, patternTerm))
 	f.PrintLabel(depth+1, fmt.Sprintf("|| (%s.tag == V_DOUBLE_NUM_TAG && doubleCmp(%s.doubleNum, %s.doubleNum)))", checkTerm, checkTerm, patternTerm))
 
 	f.printFailBlock(depth, prevStretchVarNumber, true)

@@ -11,7 +11,7 @@ func (f *Data) matchingIntLiteral(depth int, ctx *emitterContext, index int) {
 	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, "")
 
 	f.PrintLabel(depth, fmt.Sprintf("if (memMngr.vterms[fragmentOffset].tag != V_INT_NUM_TAG || "+
-		"!IntCmp(memMngr.vterms[fragmentOffset].intNum, memMngr.vterms[UINT64_C(%d)].intNum))", index))
+		"intCmp(memMngr.vterms[fragmentOffset].intNum, memMngr.vterms[UINT64_C(%d)].intNum))", index))
 	f.printFailBlock(depth, ctx.patternCtx.prevEntryPoint, true)
 
 	f.PrintLabel(depth, "fragmentOffset++;")
