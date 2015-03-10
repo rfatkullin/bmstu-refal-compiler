@@ -101,10 +101,7 @@ func (f *Data) ConstructLiteralsFragment(depth int, ctx *emitterContext, terms [
 func (f *Data) ConcatToParentChain(depth int, firstTerm bool, chainNumber int) {
 
 	f.PrintLabel(depth, "//Adding term to field chain -- Just concat.")
-	f.PrintLabel(depth, fmt.Sprintf("helper[%d].chain->prev->next = currTerm;", chainNumber))
-	f.PrintLabel(depth, fmt.Sprintf("currTerm->prev = helper[%d].chain->prev;", chainNumber))
-	f.PrintLabel(depth, fmt.Sprintf("helper[%d].chain->prev = currTerm;", chainNumber))
-	f.PrintLabel(depth, fmt.Sprintf("currTerm->next = helper[%d].chain;", chainNumber))
+	f.PrintLabel(depth, fmt.Sprintf("ADD_TO_CHAIN(helper[%d].chain, currTerm);", chainNumber))
 }
 
 func (f *Data) ConstructFuncCallTerm(depth int, ctx *emitterContext, chainNumber *int, firstFuncCall *bool, terms []*syntax.Term) []*syntax.Term {
@@ -253,11 +250,7 @@ func (f *Data) ConstructFuncCallAction(depth int, ctx *emitterContext, terms []*
 	f.ConcatToCallChain(depth+1, &firstFuncCall)
 	f.ConcatToParentChain(depth+1, true, 0)
 
-	f.PrintLabel(depth+1, "struct lterm_t* tmp = funcTerm->funcCall->fieldOfView;")
-	f.PrintLabel(depth+1, "fieldOfView->prev->next = tmp->prev->next;")
-	f.PrintLabel(depth+1, "tmp->prev->next = fieldOfView->next;")
-	f.PrintLabel(depth+1, "fieldOfView->next->prev = tmp->prev;")
-	f.PrintLabel(depth+1, "tmp->prev = fieldOfView->prev;")
+	f.PrintLabel(depth+1, "CONCAT_CHAINS(fieldOfView, funcTerm->funcCall->fieldOfView);")
 
 	f.PrintLabel(depth+1, "currTerm = &helper[0];")
 
