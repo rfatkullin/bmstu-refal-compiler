@@ -12,12 +12,14 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, term *sy
 
 	env := make(map[string]syntax.ScopeVar, 0)
 	rollback := 0
+	named := true
 
 	// == -1 --> Builtins(no rollbacks, no env), != -1 --> Globs or Nested
 	if funcIndex != -1 {
 		currFunc := f.Ast.FuncByNumber[funcIndex]
 		env = currFunc.Env
 		rollback = BoolToInt(currFunc.Rollback)
+		named = currFunc.HasName
 	}
 
 	f.PrintLabel(depth, "//Start construction func term.")
@@ -28,9 +30,16 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, term *sy
 	f.PrintLabel(depth, "currTerm->fragment->offset = chAllocateClosureVTerm(&status);")
 	f.printCheckGCCondition(depth)
 
-	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure = "+
-		"chAllocateClosureStruct(%s, %d, memMngr.vterms[%d].str, %d, &status);",
-		emittedName, len(env), term.IndexInLiterals, rollback))
+	if named {
+		f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure = "+
+			"chAllocateClosureStruct(%s, %d, memMngr.vterms[%d].str, %d, &status);",
+			emittedName, len(env), term.IndexInLiterals, rollback))
+	} else {
+		f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure = "+
+			"chAllocateClosureStruct(%s, %d, 0, %d, &status);",
+			emittedName, len(env), rollback))
+	}
+
 	f.printCheckGCCondition(depth)
 
 	f.PrintLabel(depth, "currTerm->fragment->length = 1;")

@@ -36,8 +36,10 @@ func (f *Data) matchingCompLiteral(depth int, ctx *emitterContext, index int) {
 
 	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, "")
 
-	f.PrintLabel(depth, fmt.Sprintf("if (memMngr.vterms[fragmentOffset].tag != V_IDENT_TAG || "+
-		"!UStrCmp(memMngr.vterms[fragmentOffset].str, memMngr.vterms[UINT64_C(%d)].str))", index))
+	f.PrintLabel(depth, fmt.Sprintf("if (!((memMngr.vterms[fragmentOffset].tag == V_IDENT_TAG && "+
+		"ustrEq(memMngr.vterms[fragmentOffset].str, memMngr.vterms[UINT64_C(%d)].str)) || "+
+		"(memMngr.vterms[fragmentOffset].tag == V_CLOSURE_TAG && "+
+		"ustrEq(memMngr.vterms[fragmentOffset].closure->ident, memMngr.vterms[UINT64_C(%d)].str))))", index, index))
 	f.printFailBlock(depth, ctx.patternCtx.prevEntryPoint, true)
 
 	f.PrintLabel(depth, "fragmentOffset++;")

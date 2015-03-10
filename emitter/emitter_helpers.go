@@ -40,7 +40,7 @@ func (f *Data) initActionLiterals(depth int, expr syntax.Expr) {
 			break
 
 		case syntax.COMP:
-			f.initIdentVTerm(depth, term)
+			f.initIdentVTerm(depth, term, term.Value.Name)
 			break
 
 		case syntax.INT:
@@ -58,6 +58,9 @@ func (f *Data) initActionLiterals(depth int, expr syntax.Expr) {
 			break
 
 		case syntax.FUNC:
+			if term.Function.HasName {
+				f.initIdentVTerm(depth, term, term.FuncName)
+			}
 			f.initFuncLiterals(depth, term.Function)
 			break
 		}
@@ -65,7 +68,6 @@ func (f *Data) initActionLiterals(depth int, expr syntax.Expr) {
 }
 
 func (f *Data) initFuncLiterals(depth int, currFunc *syntax.Function) {
-
 	for _, s := range currFunc.Sentences {
 		f.initActionLiterals(depth, s.Pattern)
 		for _, a := range s.Actions {
@@ -105,8 +107,7 @@ func (f *Data) initFloatVTerm(depth int, term *syntax.Term) {
 }
 
 // Инициализация vterm_t для идентификатора
-func (f *Data) initIdentVTerm(depth int, term *syntax.Term) {
-	ident := term.Value.Name
+func (f *Data) initIdentVTerm(depth int, term *syntax.Term, ident string) {
 	runesStr := GetStrOfRunes(ident)
 
 	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct v_term){.tag = V_IDENT_TAG, .str = allocateVStringLiteral((uint32_t[]){%s}, UINT64_C(%d))};",
