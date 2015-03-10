@@ -115,7 +115,7 @@ func (f *Data) matchingTerms(depth int, inBrackets bool, ctx *emitterContext, te
 			f.matchingExpr(depth, ctx, term.Exprs[0].Terms)
 			break
 		case syntax.FLOAT:
-			//TO DO
+			f.mathcingDoubleLiteral(depth, ctx, term.IndexInLiterals)
 			break
 		}
 	}

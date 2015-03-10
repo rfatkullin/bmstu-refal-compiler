@@ -17,6 +17,19 @@ func (f *Data) matchingIntLiteral(depth int, ctx *emitterContext, index int) {
 	f.PrintLabel(depth, "fragmentOffset++;")
 }
 
+func (f *Data) mathcingDoubleLiteral(depth int, ctx *emitterContext, index int) {
+
+	f.PrintLabel(depth-1, "//Matching double literal")
+
+	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, "")
+
+	f.PrintLabel(depth, fmt.Sprintf("if (memMngr.vterms[fragmentOffset].tag != V_DOUBLE_NUM_TAG || "+
+		"doubleCmp(memMngr.vterms[fragmentOffset].doubleNum, memMngr.vterms[UINT64_C(%d)].doubleNum))", index))
+	f.printFailBlock(depth, ctx.patternCtx.prevEntryPoint, true)
+
+	f.PrintLabel(depth, "fragmentOffset++;")
+}
+
 func (f *Data) matchingCompLiteral(depth int, ctx *emitterContext, index int) {
 
 	f.PrintLabel(depth-1, "//Matching indetificator literal")
