@@ -70,7 +70,7 @@ func (f *Data) processPattern(depth int, ctx *emitterContext, terms []*syntax.Te
 
 func (f *Data) printFirstCase(depth int, ctx *emitterContext, term *syntax.Term) {
 
-	if term.TermTag == syntax.VAR && term.VarType == tokens.VT_E {
+	if term.TermTag == syntax.VAR && (term.VarType == tokens.VT_E || term.VarType == tokens.VT_V) {
 		if _, ok := ctx.fixedVars[term.Name]; !ok {
 			return
 		}
@@ -262,7 +262,7 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 		}
 		break
 
-	case tokens.VT_E:
+	case tokens.VT_E, tokens.VT_V:
 
 		if isFixedVar {
 			if isLocalVar {
@@ -273,7 +273,11 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 		} else {
 			f.PrintLabel(depth-1, fmt.Sprintf("case %d:", ctx.patternCtx.entryPoint))
 
-			f.matchingFreeExprVar(depth, ctx, varNumber)
+			if value.VarType == tokens.VT_E {
+				f.matchingFreeExprVar(depth, ctx, varNumber)
+			} else {
+				f.matchingFreeVExprVar(depth, ctx, varNumber)
+			}
 
 			ctx.fixedVars[value.Name] = ctx.sentenceInfo.patternIndex
 			ctx.patternCtx.prevEntryPoint = ctx.patternCtx.entryPoint

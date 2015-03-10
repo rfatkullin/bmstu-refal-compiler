@@ -42,8 +42,6 @@ func (f *Data) matchingFreeSymbolVar(depth int, ctx *emitterContext, varNumber i
 }
 
 func (f *Data) matchingFreeExprVar(depth int, ctx *emitterContext, varNumber int) {
-	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
-	patternNumber := ctx.sentenceInfo.patternIndex
 
 	f.PrintLabel(depth, "if (!stretching) // Just init values")
 	f.PrintLabel(depth, "{")
@@ -58,6 +56,14 @@ func (f *Data) matchingFreeExprVar(depth int, ctx *emitterContext, varNumber int
 
 	f.PrintLabel(depth, "}")
 	f.PrintLabel(depth, "else // stretching")
+
+	f.varStretching(depth, varNumber, ctx)
+}
+
+func (f *Data) varStretching(depth, varNumber int, ctx *emitterContext) {
+	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
+	patternNumber := ctx.sentenceInfo.patternIndex
+
 	f.PrintLabel(depth, "{")
 
 	f.PrintLabel(depth+1, "stretching = 0;")
@@ -102,4 +108,14 @@ func (f *Data) matchingFreeExprVar(depth int, ctx *emitterContext, varNumber int
 
 	f.PrintLabel(depth+1, "}")
 	f.PrintLabel(depth, "}")
+}
+
+func (f *Data) matchingFreeVExprVar(depth int, ctx *emitterContext, varNumber int) {
+	f.PrintLabel(depth, "if (!stretching) // Just init values")
+	f.PrintLabel(depth, "{")
+	f.matchingFreeTermVar(depth+1, ctx, varNumber)
+	f.PrintLabel(depth, "}")
+	f.PrintLabel(depth, "else // stretching")
+
+	f.varStretching(depth, varNumber, ctx)
 }
