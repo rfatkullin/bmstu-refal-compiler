@@ -144,10 +144,10 @@ func (f *Data) PrintHeaders() {
 	f.PrintLabel(0, "#include <stdlib.h>")
 	f.PrintLabel(0, "#include <stdio.h>\n")
 	f.PrintLabel(0, "#include <memory_manager.h>")
-	f.PrintLabel(0, "#include <data_allocators.h>")
-	f.PrintLabel(0, "#include <vterm_allocators.h>")
+	f.PrintLabel(0, "#include <allocators/vterm_alloc.h>")
+	f.PrintLabel(0, "#include <allocators/data_alloc.h>")
 	f.PrintLabel(0, "#include <vmachine.h>")
-	f.PrintLabel(0, "#include <builtins.h>")
+	f.PrintLabel(0, "#include <builtins/builtins.h>")
 	f.PrintLabel(0, "")
 }
 
