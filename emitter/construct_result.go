@@ -197,12 +197,17 @@ func (f *Data) ConstructExprInParenthesis(depth int, ctx *emitterContext, chainN
 
 func (f *Data) constructVar(depth, fixedEntryPoint int, varName string, ctx *emitterContext) {
 
+	f.PrintLabel(depth, "currTerm = chAllocateFragmentLTerm(1, &status);")
+	f.printCheckGCCondition(depth)
+
 	if scopeVar, ok := ctx.sentenceInfo.scope.VarMap[varName]; ok {
-		f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->locals[%d];", scopeVar.Number))
+		f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = env->locals[%d].fragment->offset;", scopeVar.Number))
+		f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->length = env->locals[%d].fragment->length;", scopeVar.Number))
 	} else {
 		// Get env var
 		needVarInfo, _ := ctx.funcInfo.Env[varName]
-		f.PrintLabel(depth, fmt.Sprintf("currTerm = &env->params[%d];", needVarInfo.Number))
+		f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = env->params[%d].fragment->offset;", needVarInfo.Number))
+		f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->length = env->params[%d].fragment->length;", needVarInfo.Number))
 	}
 }
 
