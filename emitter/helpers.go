@@ -38,6 +38,10 @@ func GetStrOfBytes(num *big.Int) (str string, sign int, count int) {
 	strs := make([]string, 0)
 	bytes := num.Bytes()
 
+	if len(bytes) == 0 {
+		return "0", 0, 1
+	}
+
 	for _, byteVal := range num.Bytes() {
 		strs = append(strs, fmt.Sprintf("%d", byteVal))
 	}
