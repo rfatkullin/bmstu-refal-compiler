@@ -119,15 +119,13 @@ func (f *Data) initIdentVTerm(depth int, term *syntax.Term, ident string) {
 
 func (f *Data) printLiteralsAndHeapsInit(depth int, unit *syntax.Unit) {
 
-	f.PrintLabel(depth, "void __initLiteralData()\n{")
+	f.PrintLabel(depth, "void initLiteralData()\n{")
 	f.PrintLabel(depth+1, "initAllocator(1024 * 1024 * 1024);")
 
 	f.initLiterals(depth+1, unit.GlobMap)
 
-	f.PrintLabel(depth+1, fmt.Sprintf("initHeaps(%d);", f.CurrTermNum))
-
 	//fmt.Fprintf(f, "%sdebugLiteralsPrint();\n", tabs)
-	f.PrintLabel(depth, "} // __initLiteralData()\n")
+	f.PrintLabel(depth, "} // initLiteralData()\n")
 }
 
 func (f *Data) initLiterals(depth int, funcs map[string]*syntax.Function) {
