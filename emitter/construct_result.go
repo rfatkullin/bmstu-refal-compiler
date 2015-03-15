@@ -255,7 +255,7 @@ func (f *Data) ConstructFuncCallAction(depth int, ctx *emitterContext, terms []*
 	f.ConcatToCallChain(depth+1, &firstFuncCall)
 	f.ConcatToParentChain(depth+1, true, 0)
 
-	f.PrintLabel(depth+1, "CONCAT_CHAINS(fieldOfView, funcTerm->funcCall->fieldOfView);")
+	f.PrintLabel(depth+1, "CONCAT_CHAINS(funcTerm->funcCall->fieldOfView, fieldOfView);")
 
 	f.PrintLabel(depth+1, "currTerm = &helper[0];")
 
