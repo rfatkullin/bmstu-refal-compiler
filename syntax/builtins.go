@@ -86,5 +86,7 @@ var Builtins = map[int]map[string]bool{
 		"Arg":    true,
 		"Lower":  true,
 		"Upper":  true,
+		"Numb":   true,
+		"Symb":   true,
 	},
 }
