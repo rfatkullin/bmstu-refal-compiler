@@ -180,7 +180,15 @@ func processFile(f Data) {
 	f.processFuncs(depth, &ctx, unit.GlobMap)
 	f.processFuncs(depth, &ctx, unit.NestedFuncs)
 
-	f.mainFunc(depth, f.genFuncName(unit.GlobMap["Go"].Index))
+	var goFunc *syntax.Function = nil
+	var ok bool = false
+	if goFunc, ok = unit.GlobMap["Go"]; !ok {
+		if goFunc, ok = unit.GlobMap["GO"]; !ok {
+			panic("Can't find entry point func! There is must be GO or Go func.")
+		}
+	}
+
+	f.mainFunc(depth, f.genFuncName(goFunc.Index))
 }
 
 func Handle(done chan<- bool, fs <-chan Data) {
