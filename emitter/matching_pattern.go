@@ -15,7 +15,7 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.T
 	f.PrintLabel(depth, fmt.Sprintf("case %d:", ctx.entryPoint))
 	f.PrintLabel(depth, fmt.Sprintf("{"))
 
-	f.checkAndAssemblyChain(depth+1, ctx.sentenceInfo.patternIndex)
+	f.checkAndAssemblyChain(depth+1, ctx)
 
 	f.PrintLabel(depth+1, "fragmentOffset = currFrag->offset;")
 	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = env->stretchVarsNumber[%d];", ctx.sentenceInfo.patternIndex))
@@ -170,7 +170,7 @@ func (f *Data) processFailOfFirstPattern(depth int, ctx *emitterContext) {
 		f.PrintLabel(depth, "//First pattern of current sentence -> jump to first pattern of next sentence!")
 		f.PrintLabel(depth, "stretching = 0;")
 		f.PrintLabel(depth, fmt.Sprintf("*entryPoint = %d;", ctx.nextSentenceEntryPoint))
-		f.initSretchVarNumbers(depth, ctx.maxPatternNumber)
+		f.clearHelpers(depth, ctx.maxPatternNumber)
 	}
 }
 
@@ -179,45 +179,50 @@ func (f *Data) processFailOfCommonPattern(depth, prevEntryPoint int) {
 	f.PrintLabel(depth, fmt.Sprintf("*entryPoint = %d;", prevEntryPoint))
 }
 
-func (f *Data) initSretchVarNumbers(depth, maxPatternNumber int) {
+func (f *Data) clearHelpers(depth, maxPatternNumber int) {
 
-	f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < %d; ++i )", maxPatternNumber))
-	f.PrintLabel(depth+1, "env->stretchVarsNumber[i] = 0;")
+	if maxPatternNumber > 0 {
+		f.PrintLabel(depth, "env->stretchVarsNumber[0] = 0;")
+
+		f.PrintLabel(depth, fmt.Sprintf("for (i = 1; i < %d; ++i )", maxPatternNumber))
+		f.PrintLabel(depth, "{")
+		f.PrintLabel(depth+1, "env->stretchVarsNumber[i] = 0;")
+		f.PrintLabel(depth+1, "env->fovs[i] = 0;")
+		f.PrintLabel(depth+1, "env->assembledFOVs[i] = 0;")
+		f.PrintLabel(depth, "}")
+	}
 }
 
-func (f *Data) checkAndAssemblyChain(depth, patternNumber int) {
-	prevPatternNumber := patternNumber - 1
+// TO FIX: with GC.
+func (f *Data) checkAndAssemblyChain(depth int, ctx *emitterContext) {
+	patternIndex := ctx.sentenceInfo.patternIndex
 
 	f.PrintLabel(depth, "if (!stretching)")
 	f.PrintLabel(depth, "{")
 
-	if prevPatternNumber == -1 {
-		f.PrintLabel(depth+1, fmt.Sprintf("if (env->fovs[%d] != fieldOfView)", patternNumber))
-		f.printAssemblyChain(depth+1, patternNumber)
+	if patternIndex == 0 {
+		if ctx.sentenceInfo.index == 0 {
+			f.PrintLabel(depth+1, "{")
+			f.PrintLabel(depth+2, "env->fovs[0] = fieldOfView;")
+			f.PrintLabel(depth+2, "env->assembledFOVs[0] = gcGetAssembliedChain(fieldOfView);")
+			f.PrintLabel(depth+1, "}")
+		}
 	} else {
-		f.PrintLabel(depth+1, fmt.Sprintf("if (env->fovs[%d] == fieldOfView)", prevPatternNumber))
-		f.printGetPrevAssembledFOV(depth+1, prevPatternNumber, patternNumber)
+		f.PrintLabel(depth+1, fmt.Sprintf("if (env->fovs[%d] == fieldOfView)", patternIndex-1))
+		f.PrintLabel(depth+1, "{")
+		f.PrintLabel(depth+2, fmt.Sprintf("env->fovs[%d] = fieldOfView;", patternIndex-1))
+		f.PrintLabel(depth+2, fmt.Sprintf("env->assembledFOVs[%d] = env->assembledFOVs[%d];", patternIndex, patternIndex-1))
+		f.PrintLabel(depth+1, "}")
 		f.PrintLabel(depth+1, "else")
-		f.printAssemblyChain(depth+1, patternNumber)
+		f.PrintLabel(depth+1, "{")
+		f.PrintLabel(depth+2, fmt.Sprintf("env->fovs[%d] = fieldOfView;", patternIndex))
+		f.PrintLabel(depth+2, fmt.Sprintf("env->assembledFOVs[%d] = gcGetAssembliedChain(fieldOfView);", patternIndex))
+		f.PrintLabel(depth+1, "}")
 	}
 
 	f.PrintLabel(depth, "}")
-	f.PrintLabel(depth, fmt.Sprintf("currFrag = env->assembledFOVs[%d]->fragment;", patternNumber))
+	f.PrintLabel(depth, fmt.Sprintf("currFrag = env->assembledFOVs[%d]->fragment;", patternIndex))
 	f.PrintLabel(depth, "rightCheckOffset = currFrag->offset + currFrag->length;")
-}
-
-func (f *Data) printAssemblyChain(depth, entryPoint int) {
-	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, fmt.Sprintf("env->fovs[%d] = fieldOfView;", entryPoint))
-	f.PrintLabel(depth+1, fmt.Sprintf("env->assembledFOVs[%d] = gcGetAssembliedChain(fieldOfView);", entryPoint))
-	f.PrintLabel(depth, "}")
-}
-
-func (f *Data) printGetPrevAssembledFOV(depth, prevEntryPoint, entryPoint int) {
-	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, fmt.Sprintf("env->fovs[%d] = fieldOfView;", entryPoint))
-	f.PrintLabel(depth+1, fmt.Sprintf("env->assembledFOVs[%d] = env->assembledFOVs[%d];", entryPoint, prevEntryPoint))
-	f.PrintLabel(depth, "}")
 }
 
 func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Value) {
