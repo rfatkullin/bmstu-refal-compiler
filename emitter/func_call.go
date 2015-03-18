@@ -30,14 +30,14 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, term *sy
 	f.PrintLabel(depth, "currTerm->fragment->offset = chAllocateClosureVTerm(&status);")
 	f.printCheckGCCondition(depth)
 
+	target := "memMngr.vterms[currTerm->fragment->offset]"
+
 	if named {
-		f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure = "+
-			"chAllocateClosureStruct(%s, %d, memMngr.vterms[%d].str, %d, &status);",
-			emittedName, len(env), term.IndexInLiterals, rollback))
+		f.PrintLabel(depth, fmt.Sprintf("%s.closure = chAllocateClosureStruct(%s, %d, memMngr.vterms[%d].str, %d, &status);",
+			target, emittedName, len(env), term.IndexInLiterals, rollback))
 	} else {
-		f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure = "+
-			"chAllocateClosureStruct(%s, %d, 0, %d, &status);",
-			emittedName, len(env), rollback))
+		f.PrintLabel(depth, fmt.Sprintf("%s.closure = chAllocateClosureStruct(%s, %d, 0, %d, &status);",
+			target, emittedName, len(env), rollback))
 	}
 
 	f.printCheckGCCondition(depth)
@@ -45,15 +45,18 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, term *sy
 	f.PrintLabel(depth, "currTerm->fragment->length = 1;")
 
 	for needVarName, needVarInfo := range env {
-
 		if parentLocalVarNumber, ok := ctx.sentenceInfo.scope.VarMap[needVarName]; ok {
-			f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure->params[%d] = env->locals[%d];",
-				needVarInfo.Number, parentLocalVarNumber.Number))
+			f.PrintLabel(depth, fmt.Sprintf("%s.closure->params[%d].fragment->offset = _currFuncCall->env->locals[%d].fragment->offset;",
+				target, needVarInfo.Number, parentLocalVarNumber.Number))
+			f.PrintLabel(depth, fmt.Sprintf("%s.closure->params[%d].fragment->length = _currFuncCall->env->locals[%d].fragment->length;",
+				target, needVarInfo.Number, parentLocalVarNumber.Number))
 		} else {
 			//Get from env of parent func
 			parentEnvVarInfo, _ := env[needVarName]
-			f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[currTerm->fragment->offset].closure->params[%d] = env->params[%d];",
-				needVarInfo.Number, parentEnvVarInfo.Number))
+			f.PrintLabel(depth, fmt.Sprintf("%s.closure->params[%d].fragment->offset = _currFuncCall->env->params[%d].fragment->offset;",
+				target, needVarInfo.Number, parentEnvVarInfo.Number))
+			f.PrintLabel(depth, fmt.Sprintf("%s.closure->params[%d].fragment->length = _currFuncCall->env->params[%d].fragment->length;",
+				target, needVarInfo.Number, parentEnvVarInfo.Number))
 		}
 	}
 

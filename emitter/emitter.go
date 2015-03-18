@@ -32,7 +32,7 @@ type emitterContext struct {
 	maxPatternNumber       int
 	maxVarsNumber          int
 	nextSentenceEntryPoint int
-	isFuncCallInConstruct  bool
+	isThereFuncCall        bool
 	sentenceInfo           sentenceInfo
 	fixedVars              map[string]int
 	patternCtx             patternContext
@@ -55,21 +55,17 @@ func (f *Data) mainFunc(depth int, entryFuncName string) {
 func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 
 	f.PrintLabel(depth, "struct func_result_t funcRes;")
-	f.PrintLabel(depth, "struct lterm_t* funcCallChain = 0;")
 	f.PrintLabel(depth, "struct fragment_t* currFrag = 0;")
-	f.PrintLabel(depth, "struct lterm_t* helper = 0;")
-	f.PrintLabel(depth, "struct lterm_t* currTerm = 0;")
-	f.PrintLabel(depth, "struct lterm_t* funcTerm = 0;")
+	f.PrintLabel(depth, "struct lterm_t* workFieldOfView = 0;")
 	f.PrintLabel(depth, "uint64_t fragmentOffset = 0;")
 	f.PrintLabel(depth, "uint64_t rightCheckOffset = 0;")
 	f.PrintLabel(depth, "int stretchingVarNumber = 0;")
 	f.PrintLabel(depth, "int stretching = 0;")
-	f.PrintLabel(depth, "allocate_result status = OK;")
 	f.PrintLabel(depth, "int success = 1;")
 	f.PrintLabel(depth, "int i = 0;")
 	f.PrintLabel(depth, "int j = 0;")
 	f.PrintLabel(depth, "if (entryStatus == FIRST_CALL)")
-	f.PrintLabel(depth+1, fmt.Sprintf("gcAllocateEnvData(env, %d, %d);", varsNumber, maxPatternNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("gcAllocateEnvData(_currFuncCall->env, %d, %d);", varsNumber, maxPatternNumber))
 	f.PrintLabel(depth, "else if (entryStatus == ROLL_BACK)")
 	f.PrintLabel(depth+1, "stretching = 1;")
 }
@@ -82,9 +78,9 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 
 	f.printInitLocals(depth, ctx.maxPatternNumber, ctx.maxVarsNumber)
 
-	f.PrintLabel(depth, "while(*entryPoint >= 0)")
+	f.PrintLabel(depth, "while(_currFuncCall->entryPoint >= 0)")
 	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, "switch (*entryPoint)")
+	f.PrintLabel(depth+1, "switch (_currFuncCall->entryPoint)")
 	f.PrintLabel(depth+1, "{")
 
 	for sentenceIndex, sentence := range currFunc.Sentences {
@@ -135,7 +131,7 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 			}
 		}
 
-		f.PrintLabel(depth+2, "*entryPoint = -1;")
+		f.PrintLabel(depth+2, "_currFuncCall->entryPoint = -1;")
 		f.PrintLabel(depth+2, "break; //Successful end of sentence")
 		f.PrintLabel(depth+1, "} // Pattern case end")
 	}
@@ -149,7 +145,7 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 func (f *Data) predeclareFuncs(depth, funcsNumber int) {
 
 	for i := 0; i < funcsNumber; i++ {
-		f.PrintLabel(depth, fmt.Sprintf("struct func_result_t func_%d(int* entryPoint, struct env_t* env, struct lterm_t* fieldOfView, int entryStatus);", i))
+		f.PrintLabel(depth, fmt.Sprintf("struct func_result_t func_%d(int entryStatus);", i))
 	}
 
 	f.PrintLabel(depth, "")
