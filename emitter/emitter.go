@@ -89,7 +89,8 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 		ctx.fixedVars = make(map[string]int)
 		ctx.sentenceInfo.init(sentencesCount, sentenceIndex, sentence)
 
-		ctx.nextSentenceEntryPoint = ctx.entryPoint + ctx.sentenceInfo.patternsCount
+		ctx.nextSentenceEntryPoint = ctx.entryPoint +
+			ctx.sentenceInfo.patternsCount + 2*ctx.sentenceInfo.callActionsCount
 		ctx.prevEntryPoint = -1
 
 		f.matchingPattern(depth+1, ctx, sentence.Pattern.Terms)

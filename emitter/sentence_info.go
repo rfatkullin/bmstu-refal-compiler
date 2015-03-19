@@ -5,15 +5,16 @@ import (
 )
 
 type sentenceInfo struct {
-	index         int
-	patternIndex  int
-	actionIndex   int
-	patternsCount int
-	actionsCount  int
-	isLastPattern bool
-	isLast        bool
-	scope         *syntax.Scope
-	sentence      *syntax.Sentence
+	index            int
+	patternIndex     int
+	actionIndex      int
+	patternsCount    int
+	callActionsCount int
+	actionsCount     int
+	isLastPattern    bool
+	isLast           bool
+	scope            *syntax.Scope
+	sentence         *syntax.Sentence
 }
 
 func (sentenceInfo *sentenceInfo) init(sentencesCount, sentenceIndex int, s *syntax.Sentence) {
@@ -21,6 +22,7 @@ func (sentenceInfo *sentenceInfo) init(sentencesCount, sentenceIndex int, s *syn
 	sentenceInfo.sentence = s
 	sentenceInfo.scope = &s.Scope
 	sentenceInfo.patternsCount = getPatternsCount(s)
+	sentenceInfo.callActionsCount = getCallActionsCount(s)
 	sentenceInfo.isLast = sentenceIndex == sentencesCount-1
 	sentenceInfo.isLastPattern = sentenceInfo.patternsCount == 1
 	sentenceInfo.patternIndex = 0
@@ -58,6 +60,18 @@ func getPatternsCount(s *syntax.Sentence) int {
 
 	for _, a := range s.Actions {
 		if a.ActionOp == syntax.COLON || a.ActionOp == syntax.DCOLON {
+			number++
+		}
+	}
+
+	return number
+}
+
+func getCallActionsCount(s *syntax.Sentence) int {
+	number := 0
+
+	for _, a := range s.Actions {
+		if a.ActionOp == syntax.ARROW || a.ActionOp == syntax.TARROW {
 			number++
 		}
 	}
