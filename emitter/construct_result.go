@@ -294,6 +294,8 @@ func (f *Data) printInitializeConstructVars(depth, chainsCount int) {
 
 func (f *Data) setGCOpenBorder(depth int) {
 	f.PrintLabel(depth, "do { // GC block")
+	f.PrintLabel(depth+1, "if(!success)")
+	f.PrintLabel(depth+2, "collectGarbage();")
 	f.PrintLabel(depth+1, "success = 1;")
 }
 
