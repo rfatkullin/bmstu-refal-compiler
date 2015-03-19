@@ -199,18 +199,16 @@ func (f *Data) checkAndAssemblyChain(depth int, ctx *emitterContext) {
 	f.PrintLabel(depth, "if (!stretching)")
 	f.PrintLabel(depth, "{")
 
-	if patternIndex == 0 {
-		if ctx.sentenceInfo.index == 0 {
-			f.PrintLabel(depth+1, "// First sentence in func, first pattern in sentence.")
-			f.PrintLabel(depth+1, "_currFuncCall->env->fovs[0] = _currFuncCall->fieldOfView;")
-			f.PrintLabel(depth+1, "_currFuncCall->env->assembledFOVs[0] = gcGetAssembliedChain(_currFuncCall->fieldOfView);")
-			f.PrintLabel(depth+1, "_currFuncCall->fieldOfView = 0;")
-		} else {
-			f.PrintLabel(depth+1, "// First pattern in sentence. Get fov, assembledFOVs from first pattern of prev sentence!")
-		}
-	} else {
-		f.PrintLabel(depth+1, "// Pattern in middle of sentence.")
-		f.PrintLabel(depth+1, "if (workFieldOfView != 0)")
+	f.PrintLabel(depth+1, "if (_currFuncCall->fieldOfView)")
+	f.PrintLabel(depth+1, "{")
+	f.PrintLabel(depth+2, fmt.Sprintf("_currFuncCall->env->fovs[%d] = _currFuncCall->fieldOfView;", patternIndex))
+	f.PrintLabel(depth+2, fmt.Sprintf("_currFuncCall->env->assembledFOVs[%d] = gcGetAssembliedChain(_currFuncCall->fieldOfView);",
+		patternIndex))
+	f.PrintLabel(depth+2, "_currFuncCall->fieldOfView = 0;")
+	f.PrintLabel(depth+1, "}")
+
+	if ctx.sentenceInfo.patternIndex != 0 {
+		f.PrintLabel(depth+1, "else if (workFieldOfView != 0)")
 		f.PrintLabel(depth+1, "{")
 		f.PrintLabel(depth+2, "// There is assembly action in previous actions -> get this result.")
 		f.PrintLabel(depth+2, fmt.Sprintf("_currFuncCall->env->fovs[%d] = workFieldOfView;", patternIndex))
@@ -219,25 +217,23 @@ func (f *Data) checkAndAssemblyChain(depth int, ctx *emitterContext) {
 		f.PrintLabel(depth+1, "}")
 		f.PrintLabel(depth+1, "else")
 		f.PrintLabel(depth+1, "{")
-		f.PrintLabel(depth+2, "if (_currFuncCall->fieldOfView)")
-		f.PrintLabel(depth+2, "{")
-		f.PrintLabel(depth+3, fmt.Sprintf("_currFuncCall->env->fovs[%d] = _currFuncCall->fieldOfView;", patternIndex))
-		f.PrintLabel(depth+3, fmt.Sprintf("_currFuncCall->env->assembledFOVs[%d] = gcGetAssembliedChain(_currFuncCall->fieldOfView);",
-			patternIndex))
-		f.PrintLabel(depth+3, "_currFuncCall->fieldOfView = 0;")
-		f.PrintLabel(depth+2, "}")
-		f.PrintLabel(depth+2, "else")
-		f.PrintLabel(depth+2, "{")
-		f.PrintLabel(depth+3, "// There are no assemblies in previous actions => use prev pattern fieldOfView.")
-		f.PrintLabel(depth+3, fmt.Sprintf("_currFuncCall->env->fovs[%d] = _currFuncCall->env->fovs[%d];",
-			patternIndex, patternIndex-1))
-		f.PrintLabel(depth+3, fmt.Sprintf("_currFuncCall->env->assembledFOVs[%d] = _currFuncCall->env->assembledFOVs[%d];",
-			patternIndex, patternIndex-1))
-		f.PrintLabel(depth+2, "}")
+		if ctx.sentenceInfo.patternIndex == 0 {
+			f.PrintLabel(depth+2, "// There are no assemblies in previous actions => use prev pattern fieldOfView.")
+			f.PrintLabel(depth+2, fmt.Sprintf("_currFuncCall->env->fovs[%d] = _currFuncCall->env->fovs[0];",
+				patternIndex))
+			f.PrintLabel(depth+2, fmt.Sprintf("_currFuncCall->env->assembledFOVs[%d] = _currFuncCall->env->assembledFOVs[0];",
+				patternIndex))
+		} else {
+			f.PrintLabel(depth+2, "// There are no assemblies in previous actions => use prev pattern fieldOfView.")
+			f.PrintLabel(depth+2, fmt.Sprintf("_currFuncCall->env->fovs[%d] = _currFuncCall->env->fovs[%d];",
+				patternIndex, patternIndex-1))
+			f.PrintLabel(depth+2, fmt.Sprintf("_currFuncCall->env->assembledFOVs[%d] = _currFuncCall->env->assembledFOVs[%d];",
+				patternIndex, patternIndex-1))
+		}
 		f.PrintLabel(depth+1, "}")
 	}
 
-	f.PrintLabel(depth, "}")
+	f.PrintLabel(depth, "} // !stretching")
 	f.PrintLabel(depth, fmt.Sprintf("currFrag = _currFuncCall->env->assembledFOVs[%d]->fragment;", patternIndex))
 	f.PrintLabel(depth, "rightCheckOffset = currFrag->offset + currFrag->length;")
 }

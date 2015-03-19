@@ -20,6 +20,7 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, term *sy
 		env = currFunc.Env
 		rollback = BoolToInt(currFunc.Rollback)
 		named = currFunc.HasName
+		//fmt.Printf("Func name: %s\n", currFunc.FuncName)
 	}
 
 	f.PrintLabel(depth, "//Start construction func term.")

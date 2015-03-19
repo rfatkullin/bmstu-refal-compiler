@@ -110,22 +110,24 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 				break
 
 			case syntax.COLON: // ':'
-				f.PrintLabel(depth+1, "} // Pattern case end\n")
+				f.PrintLabel(depth+1, "} // Pattern or Call Action case end\n")
 				f.matchingPattern(depth+1, ctx, a.Expr.Terms)
 				break
 
 			case syntax.DCOLON: // '::'
 				ctx.prevEntryPoint = -1
-				f.PrintLabel(depth+1, "} // Pattern case end\n")
+				f.PrintLabel(depth+1, "} // Pattern or Call Action case end\n")
 				f.matchingPattern(depth+1, ctx, a.Expr.Terms)
 				break
 
 			case syntax.TARROW: // '->'
+				f.PrintLabel(depth+1, "} // Pattern or Call Action case end\n")
 				f.ConstructFuncCallAction(depth+2, ctx, a.Expr.Terms)
 				break
 
 			case syntax.ARROW: // '=>'
 				ctx.prevEntryPoint = -1
+				f.PrintLabel(depth+1, "} // Pattern or Call Action case end\n")
 				f.ConstructFuncCallAction(depth+2, ctx, a.Expr.Terms)
 				break
 			}

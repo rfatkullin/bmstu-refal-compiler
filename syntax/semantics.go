@@ -273,6 +273,12 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 						a.ActionOp = ARROW
 						t.Params.Parent = &f.Params
 						checkBlock(t.Function, scope)
+
+						t.Function.Index = unit.FuncsTotalCount
+						t.FuncName = fmt.Sprintf("AnonymousFunc_%d", unit.FuncsTotalCount)
+						unit.NestedFuncs[t.FuncName] = t.Function
+						unit.FuncsTotalCount++
+
 						return
 					} else {
 						checkPattern(f, s, e)
