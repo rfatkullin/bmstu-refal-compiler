@@ -254,7 +254,9 @@ func (currFunc *Function) setEnv() {
 	for ; s != nil; s = s.Parent {
 		if s.VarMap != nil {
 			for varName, varInfo := range s.VarMap {
-				currFunc.Env[varName] = ScopeVar{Number: len(currFunc.Env), VarType: varInfo.VarType}
+				if _, ok := currFunc.Env[varName]; !ok {
+					currFunc.Env[varName] = ScopeVar{Number: len(currFunc.Env), VarType: varInfo.VarType}
+				}
 			}
 		}
 	}
