@@ -53,7 +53,7 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, term *sy
 				target, needVarInfo.Number, parentLocalVarNumber.Number))
 		} else {
 			//Get from env of parent func
-			parentEnvVarInfo, _ := env[needVarName]
+			parentEnvVarInfo, _ := ctx.funcInfo.Env[needVarName]
 			f.PrintLabel(depth, fmt.Sprintf("%s.closure->params[%d].fragment->offset = _currFuncCall->env->params[%d].fragment->offset;",
 				target, needVarInfo.Number, parentEnvVarInfo.Number))
 			f.PrintLabel(depth, fmt.Sprintf("%s.closure->params[%d].fragment->length = _currFuncCall->env->params[%d].fragment->length;",
