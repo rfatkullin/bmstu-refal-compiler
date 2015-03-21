@@ -123,7 +123,7 @@ func (f *Data) ConcatToCallChain(depth int, firstFuncCall *bool) {
 
 	if *firstFuncCall {
 		f.PrintLabel(depth, "//First call in call chain -- Initialization.")
-		f.PrintLabel(depth, "funcCallChain = chAllocateChainLTerm(1, &status);")
+		f.PrintLabel(depth, "funcCallChain = chAllocateSimpleChainLTerm(&status);")
 		f.printCheckGCCondition(depth)
 		f.PrintLabel(depth, "funcCallChain->next = funcTerm;")
 		f.PrintLabel(depth, "funcCallChain->prev = funcTerm;")
@@ -307,7 +307,7 @@ func (f *Data) printInitializeConstructVars(depth, chainsCount int) {
 	f.PrintLabel(depth, "struct lterm_t* currTerm = 0;")
 	f.PrintLabel(depth, "struct lterm_t* funcTerm = 0;")
 
-	f.PrintLabel(depth, fmt.Sprintf("helper = chAllocateChainLTerm(UINT64_C(%d), &status);", chainsCount))
+	f.PrintLabel(depth, fmt.Sprintf("helper = chAllocateChainKeeperLTerm(UINT64_C(%d), &status);", chainsCount))
 	f.printCheckGCCondition(depth)
 }
 
