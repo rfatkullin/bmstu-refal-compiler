@@ -301,7 +301,7 @@ func (f *Data) ConstructFuncCallAction(depth int, ctx *emitterContext, terms []*
 }
 
 func (f *Data) printInitializeConstructVars(depth, chainsCount int) {
-	f.PrintLabel(depth, "allocate_result status = OK;")
+	f.PrintLabel(depth, "allocate_result status = GC_OK;")
 	f.PrintLabel(depth, "struct lterm_t* funcCallChain = 0;")
 	f.PrintLabel(depth, "struct lterm_t* helper = 0;")
 	f.PrintLabel(depth, "struct lterm_t* currTerm = 0;")
@@ -323,7 +323,7 @@ func (f *Data) setGCCloseBorder(depth int) {
 }
 
 func (f *Data) printCheckGCCondition(depth int) {
-	f.PrintLabel(depth, "if (status == NEED_CLEAN)")
+	f.PrintLabel(depth, "if (status == GC_NEED_CLEAN)")
 	f.PrintLabel(depth, "{")
 	f.PrintLabel(depth+1, "success = 0;")
 	f.PrintLabel(depth+1, "continue;")
