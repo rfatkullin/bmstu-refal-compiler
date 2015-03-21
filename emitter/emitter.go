@@ -67,7 +67,7 @@ func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 	f.PrintLabel(depth, "if (entryStatus == FIRST_CALL)")
 	f.PrintLabel(depth, "{")
 	f.PrintLabel(depth+1, fmt.Sprintf("checkAndCleanHeaps(0, ENV_SIZE(%d, %d));", varsNumber, maxPatternNumber))
-	f.PrintLabel(depth+1, fmt.Sprintf("allocateEnvData(_currFuncCall->env, %d, %d);", varsNumber, maxPatternNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("allocateEnvData(CURR_FUNC_CALL->env, %d, %d);", varsNumber, maxPatternNumber))
 	f.PrintLabel(depth, "}")
 	f.PrintLabel(depth, "else if (entryStatus == ROLL_BACK)")
 	f.PrintLabel(depth+1, "stretching = 1;")
@@ -81,9 +81,9 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 
 	f.printInitLocals(depth, ctx.maxPatternNumber, ctx.maxVarsNumber)
 
-	f.PrintLabel(depth, "while(_currFuncCall->entryPoint >= 0)")
+	f.PrintLabel(depth, "while(CURR_FUNC_CALL->entryPoint >= 0)")
 	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, "switch (_currFuncCall->entryPoint)")
+	f.PrintLabel(depth+1, "switch (CURR_FUNC_CALL->entryPoint)")
 	f.PrintLabel(depth+1, "{")
 
 	for sentenceIndex, sentence := range currFunc.Sentences {
@@ -137,7 +137,7 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 			}
 		}
 
-		f.PrintLabel(depth+2, "_currFuncCall->entryPoint = -1;")
+		f.PrintLabel(depth+2, "CURR_FUNC_CALL->entryPoint = -1;")
 		f.PrintLabel(depth+2, "break; //Successful end of sentence")
 		f.PrintLabel(depth+1, "} // Pattern case end")
 	}

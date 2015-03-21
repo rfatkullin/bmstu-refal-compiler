@@ -7,27 +7,27 @@ import (
 func (f *Data) matchingFixedLocalSymbolVar(depth int, ctx *emitterContext, varNumber int) {
 	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
 
-	lterm := fmt.Sprintf("_currFuncCall->env->locals[%d]", varNumber)
+	lterm := fmt.Sprintf("CURR_FUNC_CALL->env->locals[%d]", varNumber)
 	f.matchingFixedSymbolVar(depth, prevStretchVarNumber, ctx, lterm)
 }
 
 func (f *Data) matchingFixedEnvSymbolVar(depth int, ctx *emitterContext, varNumber int) {
 	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
-	lterm := fmt.Sprintf("_currFuncCall->env->params[%d]", varNumber)
+	lterm := fmt.Sprintf("CURR_FUNC_CALL->env->params[%d]", varNumber)
 	f.matchingFixedSymbolVar(depth, prevStretchVarNumber, ctx, lterm)
 }
 
 func (f *Data) matchingFixedLocalExprVar(depth int, ctx *emitterContext, varNumber int) {
 	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
 
-	lterm := fmt.Sprintf("_currFuncCall->env->locals[%d]", varNumber)
+	lterm := fmt.Sprintf("CURR_FUNC_CALL->env->locals[%d]", varNumber)
 	f.matchingFixedExprVar(depth, prevStretchVarNumber, ctx, lterm)
 }
 
 func (f *Data) matchingFixedEnvExprVar(depth int, ctx *emitterContext, varNumber int) {
 	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
 
-	lterm := fmt.Sprintf("_currFuncCall->env->params[%d]", varNumber)
+	lterm := fmt.Sprintf("CURR_FUNC_CALL->env->params[%d]", varNumber)
 	f.matchingFixedExprVar(depth, prevStretchVarNumber, ctx, lterm)
 }
 
