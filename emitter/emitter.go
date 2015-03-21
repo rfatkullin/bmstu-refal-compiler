@@ -65,7 +65,10 @@ func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 	f.PrintLabel(depth, "int i = 0;")
 	f.PrintLabel(depth, "int j = 0;")
 	f.PrintLabel(depth, "if (entryStatus == FIRST_CALL)")
-	f.PrintLabel(depth+1, fmt.Sprintf("gcAllocateEnvData(_currFuncCall->env, %d, %d);", varsNumber, maxPatternNumber))
+	f.PrintLabel(depth, "{")
+	f.PrintLabel(depth+1, fmt.Sprintf("checkAndCleanHeaps(0, ENV_SIZE(%d, %d));", varsNumber, maxPatternNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("allocateEnvData(_currFuncCall->env, %d, %d);", varsNumber, maxPatternNumber))
+	f.PrintLabel(depth, "}")
 	f.PrintLabel(depth, "else if (entryStatus == ROLL_BACK)")
 	f.PrintLabel(depth+1, "stretching = 1;")
 }

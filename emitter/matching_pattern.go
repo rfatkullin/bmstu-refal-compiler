@@ -202,9 +202,10 @@ func (f *Data) checkAndAssemblyChain(depth int, ctx *emitterContext) {
 	f.PrintLabel(depth+1, "if (_currFuncCall->fieldOfView)")
 	f.PrintLabel(depth+1, "{")
 	f.PrintLabel(depth+2, fmt.Sprintf("_currFuncCall->env->fovs[%d] = _currFuncCall->fieldOfView;", patternIndex))
-	f.PrintLabel(depth+2, fmt.Sprintf("_currFuncCall->env->assembledFOVs[%d] = gcGetAssembliedChain(_currFuncCall->fieldOfView);",
-		patternIndex))
 	f.PrintLabel(depth+2, "_currFuncCall->fieldOfView = 0;")
+	f.PrintLabel(depth+2, fmt.Sprintf("_currFuncCall->env->assembledFOVs[%d] = gcGetAssembliedChain(_currFuncCall->env->fovs[%d]);",
+		patternIndex, patternIndex))
+
 	f.PrintLabel(depth+1, "}")
 
 	if ctx.sentenceInfo.patternIndex != 0 {
