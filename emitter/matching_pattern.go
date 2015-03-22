@@ -203,8 +203,8 @@ func (f *Data) checkAndAssemblyChain(depth int, ctx *emitterContext) {
 	f.PrintLabel(depth+1, "{")
 	f.PrintLabel(depth+2, fmt.Sprintf("CURR_FUNC_CALL->env->fovs[%d] = CURR_FUNC_CALL->fieldOfView;", patternIndex))
 	f.PrintLabel(depth+2, "CURR_FUNC_CALL->fieldOfView = 0;")
-	f.PrintLabel(depth+2, fmt.Sprintf("CURR_FUNC_CALL->env->assembledFOVs[%d] = gcGetAssembliedChain(CURR_FUNC_CALL->env->fovs[%d]);",
-		patternIndex, patternIndex))
+	f.PrintLabel(depth+2, fmt.Sprintf("struct lterm_t* tmpFragmentTerm = gcGetAssembliedChain(CURR_FUNC_CALL->env->fovs[%d]);", patternIndex))
+	f.PrintLabel(depth+2, fmt.Sprintf("CURR_FUNC_CALL->env->assembledFOVs[%d] = tmpFragmentTerm;", patternIndex))
 
 	f.PrintLabel(depth+1, "}")
 
