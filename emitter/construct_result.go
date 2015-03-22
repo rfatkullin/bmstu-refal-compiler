@@ -301,7 +301,6 @@ func (f *Data) ConstructFuncCallAction(depth int, ctx *emitterContext, terms []*
 }
 
 func (f *Data) printInitializeConstructVars(depth, chainsCount int) {
-	f.PrintLabel(depth, "allocate_result status = GC_OK;")
 	f.PrintLabel(depth, "struct lterm_t* funcCallChain = 0;")
 	f.PrintLabel(depth, "struct lterm_t* helper = 0;")
 	f.PrintLabel(depth, "struct lterm_t* currTerm = 0;")
@@ -313,19 +312,24 @@ func (f *Data) printInitializeConstructVars(depth, chainsCount int) {
 
 func (f *Data) setGCOpenBorder(depth int) {
 	f.PrintLabel(depth, "do { // GC block")
-	f.PrintLabel(depth+1, "if(!success)")
+	f.PrintLabel(depth+1, "if(prevStatus == GC_NEED_CLEAN)")
+	f.PrintLabel(depth+2, "PRINT_AND_EXIT(GC_MEMORY_OVERFLOW_MSG);")
+
+	f.PrintLabel(depth+1, "if(status == GC_NEED_CLEAN)")
+	f.PrintLabel(depth+1, "{")
 	f.PrintLabel(depth+2, "collectGarbage();")
-	f.PrintLabel(depth+1, "success = 1;")
+	f.PrintLabel(depth+2, "prevStatus = GC_NEED_CLEAN;")
+	f.PrintLabel(depth+2, "status = GC_OK;")
+	f.PrintLabel(depth+1, "}")
 }
 
 func (f *Data) setGCCloseBorder(depth int) {
-	f.PrintLabel(depth, "} while (!success); // GC block")
+	f.PrintLabel(depth, "} while (status != GC_OK); // GC block")
 }
 
 func (f *Data) printCheckGCCondition(depth int) {
 	f.PrintLabel(depth, "if (status == GC_NEED_CLEAN)")
 	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, "success = 0;")
 	f.PrintLabel(depth+1, "continue;")
 	f.PrintLabel(depth, "}")
 }

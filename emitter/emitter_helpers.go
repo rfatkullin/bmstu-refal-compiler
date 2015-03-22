@@ -120,7 +120,6 @@ func (f *Data) initIdentVTerm(depth int, term *syntax.Term, ident string) {
 func (f *Data) printLiteralsAndHeapsInit(depth int, unit *syntax.Unit) {
 
 	f.PrintLabel(depth, "void initLiteralData()\n{")
-	f.PrintLabel(depth+1, "initAllocator(10 * 1024);")
 
 	f.initLiterals(depth+1, unit.GlobMap)
 

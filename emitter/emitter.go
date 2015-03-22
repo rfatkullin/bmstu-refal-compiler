@@ -44,6 +44,7 @@ func (f *Data) mainFunc(depth int, entryFuncName string) {
 
 	f.PrintLabel(depth, "int main(int argc, char** argv)")
 	f.PrintLabel(depth, "{")
+	f.PrintLabel(depth+1, "initAllocator(getHeapSize(argc, argv));")
 	f.PrintLabel(depth+1, "initLiteralData();")
 	f.PrintLabel(depth+1, fmt.Sprintf("uint64_t vtermOffset = initArgsData(UINT64_C(%d), argc, argv);", f.CurrTermNum))
 	f.PrintLabel(depth+1, "initHeaps(vtermOffset);")
@@ -61,7 +62,8 @@ func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 	f.PrintLabel(depth, "uint64_t rightCheckOffset = 0;")
 	f.PrintLabel(depth, "int stretchingVarNumber = 0;")
 	f.PrintLabel(depth, "int stretching = 0;")
-	f.PrintLabel(depth, "int success = 1;")
+	f.PrintLabel(depth, "int status = GC_OK;")
+	f.PrintLabel(depth, "int prevStatus = GC_OK;")
 	f.PrintLabel(depth, "int i = 0;")
 	f.PrintLabel(depth, "int j = 0;")
 	f.PrintLabel(depth, "if (entryStatus == FIRST_CALL)")
