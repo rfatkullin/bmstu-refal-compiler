@@ -47,9 +47,9 @@ func (f *Data) matchingCompLiteral(depth int, ctx *emitterContext, index int) {
 
 func (f *Data) matchingStrLiteral(depth int, ctx *emitterContext, strLen, index int) {
 
-	f.PrintLabel(depth-1, "//Matching string literal")
+	f.PrintLabel(depth, "//Matching string literal")
 
-	f.PrintLabel(depth, fmt.Sprintf("if (fragmentOffset + UINT64_C(%d) - 1 >= rightCheckOffset)", strLen))
+	f.PrintLabel(depth, fmt.Sprintf("if (fragmentOffset + UINT64_C(%d) - 1 >= rightBound)", strLen))
 	f.printFailBlock(depth, ctx.patternCtx.prevEntryPoint, true)
 
 	f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < UINT64_C(%d); i++)", strLen))

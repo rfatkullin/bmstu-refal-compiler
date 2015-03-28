@@ -31,6 +31,7 @@ type emitterContext struct {
 	prevEntryPoint         int
 	maxPatternNumber       int
 	maxVarsNumber          int
+	maxBracketsNumber      int
 	nextSentenceEntryPoint int
 	isThereFuncCall        bool
 	sentenceInfo           sentenceInfo
@@ -38,6 +39,8 @@ type emitterContext struct {
 	patternCtx             patternContext
 	isLeftMatching         bool
 	funcInfo               *syntax.Function
+	bracketsParentIndex    int
+	bracketsIndex          int
 }
 
 func (f *Data) mainFunc(depth int, entryFuncName string) {
@@ -53,13 +56,16 @@ func (f *Data) mainFunc(depth int, entryFuncName string) {
 	f.PrintLabel(depth, "}")
 }
 
-func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
+func (f *Data) printInitLocals(depth int, ctx *emitterContext) {
+	maxPatternNumber := ctx.maxPatternNumber
+	maxVarsNumber := ctx.maxVarsNumber
+	maxBracketsNumber := ctx.maxBracketsNumber
 
 	f.PrintLabel(depth, "struct func_result_t funcRes;")
 	f.PrintLabel(depth, "struct fragment_t* currFrag = 0;")
 	f.PrintLabel(depth, "struct lterm_t* workFieldOfView = 0;")
 	f.PrintLabel(depth, "uint64_t fragmentOffset = 0;")
-	f.PrintLabel(depth, "uint64_t rightCheckOffset = 0;")
+	f.PrintLabel(depth, "uint64_t rightBound = 0;")
 	f.PrintLabel(depth, "int stretchingVarNumber = 0;")
 	f.PrintLabel(depth, "int stretching = 0;")
 	f.PrintLabel(depth, "int status = GC_OK;")
@@ -68,8 +74,8 @@ func (f *Data) printInitLocals(depth, maxPatternNumber, varsNumber int) {
 	f.PrintLabel(depth, "int j = 0;")
 	f.PrintLabel(depth, "if (entryStatus == FIRST_CALL)")
 	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, fmt.Sprintf("checkAndCleanHeaps(0, ENV_SIZE(%d, %d));", varsNumber, maxPatternNumber))
-	f.PrintLabel(depth+1, fmt.Sprintf("allocateEnvData(CURR_FUNC_CALL->env, %d, %d);", varsNumber, maxPatternNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("checkAndCleanHeaps(0, ENV_SIZE(%d, %d));", maxVarsNumber, maxPatternNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("initEnvData(CURR_FUNC_CALL->env, %d, %d, %d);", maxVarsNumber, maxPatternNumber, maxBracketsNumber))
 	f.PrintLabel(depth, "}")
 	f.PrintLabel(depth, "else if (entryStatus == ROLL_BACK)")
 	f.PrintLabel(depth+1, "stretching = 1;")
@@ -79,9 +85,10 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 	sentencesCount := len(currFunc.Sentences)
 	ctx.entryPoint = 0
 	ctx.maxPatternNumber, ctx.maxVarsNumber = getMaxPatternsAndVarsCount(currFunc)
+	ctx.maxBracketsNumber = getMaxBracketsCountInFunc(currFunc)
 	ctx.funcInfo = currFunc
 
-	f.printInitLocals(depth, ctx.maxPatternNumber, ctx.maxVarsNumber)
+	f.printInitLocals(depth, ctx)
 
 	f.PrintLabel(depth, "while(CURR_FUNC_CALL->entryPoint >= 0)")
 	f.PrintLabel(depth, "{")
@@ -97,6 +104,8 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 		ctx.nextSentenceEntryPoint = ctx.entryPoint +
 			ctx.sentenceInfo.patternsCount + 2*ctx.sentenceInfo.callActionsCount
 		ctx.prevEntryPoint = -1
+		ctx.bracketsIndex = 0
+		ctx.bracketsParentIndex = 0
 
 		f.matchingPattern(depth+1, ctx, sentence.Pattern.Terms)
 
