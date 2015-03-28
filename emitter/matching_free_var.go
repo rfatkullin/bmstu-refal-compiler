@@ -57,7 +57,7 @@ func (f *Data) varStretching(depth, varNumber int, ctx *emitterContext) {
 	f.PrintLabel(depth+1, "stretching = 0;")
 	f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->stretchVarsNumber[%d] = %d;", patternNumber, ctx.patternCtx.entryPoint))
 
-	f.PrintLabel(depth+1, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->bracketsOffset[%d]);", ctx.bracketsIndex))
+	f.PrintLabel(depth+1, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->bracketsOffset[%d]);", ctx.bracketsCurrentIndex))
 
 	f.PrintLabel(depth+1, "//Restore last offset at this point")
 	f.PrintLabel(depth+1, fmt.Sprintf("fragmentOffset = CURR_FUNC_CALL->env->locals[%d].fragment->offset + "+

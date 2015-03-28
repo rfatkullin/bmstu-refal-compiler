@@ -114,7 +114,6 @@ func (f *Data) matchingTerms(depth int, inBrackets bool, ctx *emitterContext, te
 			f.matchingIntLiteral(depth, ctx, term.IndexInLiterals)
 			break
 		case syntax.EXPR:
-			ctx.bracketsIndex++
 			f.matchingExpr(depth, ctx, term.Exprs[0].Terms)
 			break
 		case syntax.FLOAT:
@@ -136,9 +135,11 @@ func (f *Data) matchingTerms(depth int, inBrackets bool, ctx *emitterContext, te
 
 func (f *Data) matchingExpr(depth int, ctx *emitterContext, terms []*syntax.Term) {
 
-	bracketsIndex := ctx.bracketsIndex
-	currBracketsParentIndex := ctx.bracketsParentIndex
-	ctx.bracketsParentIndex = bracketsIndex
+	ctx.bracketsNumerator++
+
+	tmpBracketsCurrIndex := ctx.bracketsCurrentIndex
+	bracketsIndex := ctx.bracketsNumerator
+	ctx.bracketsCurrentIndex = bracketsIndex
 
 	f.PrintLabel(depth, "//Check ().")
 	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, " || memMngr.vterms[fragmentOffset].tag != V_BRACKETS_TAG")
@@ -152,12 +153,12 @@ func (f *Data) matchingExpr(depth int, ctx *emitterContext, terms []*syntax.Term
 
 	f.checkConsumeAllFragment(depth, ctx.patternCtx.prevEntryPoint)
 
-	f.PrintLabel(depth, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->bracketsOffset[%d]);", currBracketsParentIndex))
+	f.PrintLabel(depth, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->bracketsOffset[%d]);", tmpBracketsCurrIndex))
 	f.PrintLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FUNC_CALL->env->bracketsOffset[%d] + 1;", bracketsIndex))
 
 	f.PrintLabel(depth, "//End check in () terms.")
 
-	ctx.bracketsParentIndex = currBracketsParentIndex
+	ctx.bracketsCurrentIndex = tmpBracketsCurrIndex
 }
 
 func (f *Data) processPatternFail(depth int, ctx *emitterContext) {

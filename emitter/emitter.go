@@ -39,8 +39,8 @@ type emitterContext struct {
 	patternCtx             patternContext
 	isLeftMatching         bool
 	funcInfo               *syntax.Function
-	bracketsParentIndex    int
-	bracketsIndex          int
+	bracketsCurrentIndex   int
+	bracketsNumerator      int
 }
 
 func (f *Data) mainFunc(depth int, entryFuncName string) {
@@ -104,8 +104,8 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 		ctx.nextSentenceEntryPoint = ctx.entryPoint +
 			ctx.sentenceInfo.patternsCount + 2*ctx.sentenceInfo.callActionsCount
 		ctx.prevEntryPoint = -1
-		ctx.bracketsIndex = 0
-		ctx.bracketsParentIndex = 0
+		ctx.bracketsNumerator = 0
+		ctx.bracketsCurrentIndex = 0
 
 		f.matchingPattern(depth+1, ctx, sentence.Pattern.Terms)
 
