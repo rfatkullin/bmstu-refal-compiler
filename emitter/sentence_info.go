@@ -31,7 +31,7 @@ func (sentenceInfo *sentenceInfo) init(sentencesCount, sentenceIndex int, s *syn
 
 func (sentenceInfo *sentenceInfo) isLastAction() bool {
 
-	return sentenceInfo.actionIndex+1 >= sentenceInfo.actionsCount
+	return sentenceInfo.actionIndex >= sentenceInfo.actionsCount
 }
 
 func (sentenceInfo *sentenceInfo) needToEval() bool {
@@ -43,7 +43,8 @@ func (sentenceInfo *sentenceInfo) needToEval() bool {
 	actions := sentenceInfo.sentence.Actions
 	index := sentenceInfo.actionIndex
 
-	switch actions[index+1].ActionOp {
+	// index == actual index + 1
+	switch actions[index].ActionOp {
 	case syntax.COLON, // ':'
 		syntax.DCOLON, // '::'
 		syntax.TARROW, // '->'

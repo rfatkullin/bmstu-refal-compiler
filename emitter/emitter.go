@@ -27,8 +27,6 @@ type patternContext struct {
 }
 
 type emitterContext struct {
-	entryPoint             int
-	prevEntryPoint         int
 	maxPatternNumber       int
 	maxVarsNumber          int
 	maxBracketsNumber      int
@@ -41,6 +39,74 @@ type emitterContext struct {
 	funcInfo               *syntax.Function
 	bracketsCurrentIndex   int
 	bracketsNumerator      int
+	entryPoints            []*entryPoint
+	entryPointNumerator    int
+}
+
+type entryPoint struct {
+	entryPoint  int
+	actionIndex int
+}
+
+func (ctx *emitterContext) addPrevEntryPoint(newEntryPoint, newActionIndex int) {
+	ctx.entryPoints = append(ctx.entryPoints, &entryPoint{entryPoint: newEntryPoint, actionIndex: newActionIndex})
+}
+
+func (ctx *emitterContext) clearEntryPoints() {
+	ctx.entryPoints = make([]*entryPoint, 0)
+}
+
+func (ctx *emitterContext) getPrevEntryPoint() int {
+	actionIndex := ctx.sentenceInfo.actionIndex
+
+	if actionIndex == 0 {
+		return -1
+	}
+
+	actionIndex--
+
+	assemblyPresents := false
+	s := ctx.sentenceInfo.sentence
+
+	for i := len(ctx.entryPoints) - 1; i >= 0; i-- {
+		if (s.Actions[ctx.entryPoints[i].actionIndex].ActionOp == syntax.COMMA) ||
+			(s.Actions[ctx.entryPoints[i].actionIndex].ActionOp != syntax.REPLACE) {
+			assemblyPresents = true
+		}
+
+		if (s.Actions[ctx.entryPoints[i].actionIndex].ActionOp == syntax.COLON) ||
+			(s.Actions[ctx.entryPoints[i].actionIndex].ActionOp != syntax.DCOLON) &&
+				assemblyPresents {
+			return ctx.entryPoints[i].entryPoint
+		}
+	}
+
+	return -1
+}
+
+func (ctx *emitterContext) needToAssembly() bool {
+	actionIndex := ctx.sentenceInfo.actionIndex
+
+	// Sentence Pattern
+	if actionIndex == 0 {
+		return true
+	}
+
+	// Sentence actions
+
+	actionIndex--
+
+	if actionIndex == 0 {
+		return false
+	}
+
+	prevActionOp := ctx.sentenceInfo.sentence.Actions[actionIndex-1].ActionOp
+
+	if prevActionOp == syntax.COLON || prevActionOp == syntax.DCOLON {
+		return false
+	}
+
+	return true
 }
 
 func (f *Data) mainFunc(depth int, entryFuncName string) {
@@ -63,7 +129,6 @@ func (f *Data) printInitLocals(depth int, ctx *emitterContext) {
 
 	f.PrintLabel(depth, "struct func_result_t funcRes;")
 	f.PrintLabel(depth, "struct fragment_t* currFrag = 0;")
-	f.PrintLabel(depth, "struct lterm_t* workFieldOfView = 0;")
 	f.PrintLabel(depth, "uint64_t fragmentOffset = 0;")
 	f.PrintLabel(depth, "uint64_t rightBound = 0;")
 	f.PrintLabel(depth, "int stretchingVarNumber = 0;")
@@ -81,9 +146,11 @@ func (f *Data) printInitLocals(depth int, ctx *emitterContext) {
 	f.PrintLabel(depth+1, "stretching = 1;")
 }
 
-func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *syntax.Function) {
+func (f *Data) processFuncSentences(depth int, currFunc *syntax.Function) {
 	sentencesCount := len(currFunc.Sentences)
-	ctx.entryPoint = 0
+	ctx := &emitterContext{}
+
+	ctx.entryPointNumerator = 0
 	ctx.maxPatternNumber, ctx.maxVarsNumber = getMaxPatternsAndVarsCount(currFunc)
 	ctx.maxBracketsNumber = getMaxBracketsCountInFunc(currFunc)
 	ctx.funcInfo = currFunc
@@ -101,17 +168,18 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 		ctx.fixedVars = make(map[string]int)
 		ctx.sentenceInfo.init(sentencesCount, sentenceIndex, sentence)
 
-		ctx.nextSentenceEntryPoint = ctx.entryPoint +
+		ctx.nextSentenceEntryPoint = ctx.entryPointNumerator +
 			ctx.sentenceInfo.patternsCount + 2*ctx.sentenceInfo.callActionsCount
-		ctx.prevEntryPoint = -1
 		ctx.bracketsNumerator = 0
 		ctx.bracketsCurrentIndex = 0
+		ctx.sentenceInfo.actionIndex = 0
+		ctx.clearEntryPoints()
 
 		f.matchingPattern(depth+1, ctx, sentence.Pattern.Terms)
 
 		for index, a := range sentence.Actions {
 
-			ctx.sentenceInfo.actionIndex = index
+			ctx.sentenceInfo.actionIndex = index + 1
 
 			switch a.ActionOp {
 
@@ -120,7 +188,7 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 				break
 
 			case syntax.REPLACE: // '='
-				ctx.prevEntryPoint = -1
+				ctx.clearEntryPoints()
 				f.ConstructAssembly(depth+2, ctx, a.Expr)
 				break
 
@@ -130,7 +198,7 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 				break
 
 			case syntax.DCOLON: // '::'
-				ctx.prevEntryPoint = -1
+				ctx.clearEntryPoints()
 				f.PrintLabel(depth+1, "} // Pattern or Call Action case end\n")
 				f.matchingPattern(depth+1, ctx, a.Expr.Terms)
 				break
@@ -141,7 +209,7 @@ func (f *Data) processFuncSentences(depth int, ctx *emitterContext, currFunc *sy
 				break
 
 			case syntax.ARROW: // '=>'
-				ctx.prevEntryPoint = -1
+				ctx.clearEntryPoints()
 				f.PrintLabel(depth+1, "} // Pattern or Call Action case end\n")
 				f.ConstructFuncCallAction(depth+2, ctx, a.Expr.Terms)
 				break
@@ -168,10 +236,10 @@ func (f *Data) predeclareFuncs(depth, funcsNumber int) {
 	f.PrintLabel(depth, "")
 }
 
-func (f *Data) processFuncs(depth int, ctx *emitterContext, funcs map[string]*syntax.Function) {
+func (f *Data) processFuncs(depth int, funcs map[string]*syntax.Function) {
 	for _, currFunc := range funcs {
 		f.printFuncHeader(depth, f.genFuncName(currFunc.Index))
-		f.processFuncSentences(depth+1, ctx, currFunc)
+		f.processFuncSentences(depth+1, currFunc)
 		f.PrintLabel(depth, fmt.Sprintf("} // func %s:func_%d\n", currFunc.FuncName, currFunc.Index)) // func block end
 	}
 
@@ -181,8 +249,6 @@ func processFile(f Data) {
 	unit := f.Ast
 	depth := 0
 
-	var ctx emitterContext
-
 	f.PrintLabel(depth, fmt.Sprintf("// file:%s\n", f.Name))
 	f.PrintHeaders()
 
@@ -190,8 +256,8 @@ func processFile(f Data) {
 
 	f.printLiteralsAndHeapsInit(depth, unit)
 
-	f.processFuncs(depth, &ctx, unit.GlobMap)
-	f.processFuncs(depth, &ctx, unit.NestedFuncs)
+	f.processFuncs(depth, unit.GlobMap)
+	f.processFuncs(depth, unit.NestedFuncs)
 
 	var goFunc *syntax.Function = nil
 	var ok bool = false

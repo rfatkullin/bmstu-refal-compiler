@@ -112,7 +112,7 @@ func (f *Data) ConstructFuncCallTerm(depth int, ctx *emitterContext, chainNumber
 
 	f.PrintLabel(depth, "funcTerm = chAllocateFuncCallLTerm(&status);")
 	f.printCheckGCCondition(depth)
-	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->failEntryPoint = %d;", ctx.prevEntryPoint))
+	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->failEntryPoint = %d;", ctx.getPrevEntryPoint()))
 	f.PrintLabel(depth, "funcTerm->funcCall->fieldOfView = currTerm->chain;")
 
 	f.PrintLabel(depth, "//Finished construction func call")
@@ -230,14 +230,12 @@ func (f *Data) ConstructAssembly(depth int, ctx *emitterContext, resultExpr synt
 
 		f.ConstructExprInParenthesis(depth+1, ctx, &chainNumber, &firstFuncCall, resultExpr.Terms)
 
-		//TO CHECK: Always set funcRes.
-		if ctx.sentenceInfo.isLastAction() {
-			f.PrintLabel(depth+1, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = currTerm->chain, .callChain = funcCallChain};")
-		} else if ctx.isThereFuncCall && ctx.sentenceInfo.needToEval() {
-			f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", ctx.entryPoint))
+		if ctx.isThereFuncCall && ctx.sentenceInfo.needToEval() {
+			f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", ctx.entryPointNumerator))
 			f.PrintLabel(depth+1, "return (struct func_result_t){.status = CALL_RESULT, .fieldChain = currTerm->chain, .callChain = funcCallChain};")
 		} else {
-			f.PrintLabel(depth+1, "workFieldOfView = currTerm->chain;")
+			f.PrintLabel(depth+1, "CURR_FUNC_CALL->env->workFieldOfView = currTerm->chain;")
+			f.PrintLabel(depth+1, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = currTerm->chain, .callChain = funcCallChain};")
 		}
 
 		f.setGCCloseBorder(depth)
@@ -247,7 +245,7 @@ func (f *Data) ConstructAssembly(depth int, ctx *emitterContext, resultExpr synt
 func (f *Data) ConstructFuncCallAction(depth int, ctx *emitterContext, terms []*syntax.Term) {
 
 	f.PrintLabel(depth-1, fmt.Sprintf("//Sentence: %d, Call Action", ctx.sentenceInfo.index))
-	f.PrintLabel(depth-1, fmt.Sprintf("case %d:", ctx.entryPoint))
+	f.PrintLabel(depth-1, fmt.Sprintf("case %d:", ctx.entryPointNumerator))
 	f.PrintLabel(depth-1, fmt.Sprintf("{"))
 
 	f.PrintLabel(depth, "//Start construction func call action.")
@@ -263,41 +261,32 @@ func (f *Data) ConstructFuncCallAction(depth int, ctx *emitterContext, terms []*
 	f.ConcatToCallChain(depth+1, &firstFuncCall)
 	f.ConcatToParentChain(depth+1, true, 0)
 
-	f.PrintLabel(depth+1, "if (CURR_FUNC_CALL->fieldOfView)")
+	f.PrintLabel(depth+1, "if (CURR_FUNC_CALL->env->workFieldOfView)")
 	f.PrintLabel(depth+1, "{")
-	f.PrintLabel(depth+2, "// There is assembly with func calls -> get this result.")
-	f.PrintLabel(depth+2, "CONCAT_CHAINS(funcTerm->funcCall->fieldOfView, CURR_FUNC_CALL->fieldOfView);")
-	f.PrintLabel(depth+2, "CURR_FUNC_CALL->fieldOfView = 0;")
-	f.PrintLabel(depth+1, "}")
-	f.PrintLabel(depth+1, "else if (workFieldOfView != 0)")
-	f.PrintLabel(depth+1, "{")
-	f.PrintLabel(depth+2, "// There is assembly action in previous actions -> get this result.")
-	f.PrintLabel(depth+2, "CONCAT_CHAINS(funcTerm->funcCall->fieldOfView, workFieldOfView);")
+	f.PrintLabel(depth+2, "CONCAT_CHAINS(funcTerm->funcCall->fieldOfView, CURR_FUNC_CALL->env->workFieldOfView);")
+	f.PrintLabel(depth+2, "CURR_FUNC_CALL->env->workFieldOfView = 0;")
 	f.PrintLabel(depth+1, "}")
 	f.PrintLabel(depth+1, "else")
 	f.PrintLabel(depth+1, "{")
-	f.PrintLabel(depth+2, fmt.Sprintf("CHECK_ALLOCATION_CONTINUE(workFieldOfView,"+
-		" chCopyFieldOfView(CURR_FUNC_CALL->env->fovs[%d], &status), status);", ctx.sentenceInfo.patternIndex-1))
-	f.PrintLabel(depth+2, "CONCAT_CHAINS(funcTerm->funcCall->fieldOfView, workFieldOfView);")
+	f.PrintLabel(depth+2, "CONCAT_CHAINS(funcTerm->funcCall->fieldOfView, CURR_FUNC_CALL->fieldOfView);")
+	f.PrintLabel(depth+2, "CURR_FUNC_CALL->fieldOfView = 0;")
 	f.PrintLabel(depth+1, "}")
 
-	f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", ctx.entryPoint+1))
+	f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", ctx.entryPointNumerator+1))
 	f.PrintLabel(depth+1, "return (struct func_result_t){.status = CALL_RESULT, .fieldChain = helper[0].chain, .callChain = funcCallChain};")
 
 	f.setGCCloseBorder(depth)
 
 	f.PrintLabel(depth-1, "} // Pattern or Call Action case end\n")
 
-	ctx.entryPoint++
+	ctx.entryPointNumerator++
 
-	f.PrintLabel(depth-1, fmt.Sprintf("case %d:", ctx.entryPoint))
+	f.PrintLabel(depth-1, fmt.Sprintf("case %d:", ctx.entryPointNumerator))
 	f.PrintLabel(depth-1, "{")
 
-	f.PrintLabel(depth, "workFieldOfView = CURR_FUNC_CALL->fieldOfView;")
-	f.PrintLabel(depth, "CURR_FUNC_CALL->fieldOfView = 0;")
-	f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = workFieldOfView, .callChain = 0};")
+	f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = CURR_FUNC_CALL->env->workFieldOfView, .callChain = 0};")
 
-	ctx.entryPoint++
+	ctx.entryPointNumerator++
 }
 
 func (f *Data) printInitializeConstructVars(depth, chainsCount int) {

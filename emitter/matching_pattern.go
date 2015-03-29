@@ -12,7 +12,7 @@ import (
 func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.Term) {
 
 	f.PrintLabel(depth, fmt.Sprintf("//Sentence: %d, Pattern: %d", ctx.sentenceInfo.index, ctx.sentenceInfo.patternIndex))
-	f.PrintLabel(depth, fmt.Sprintf("case %d:", ctx.entryPoint))
+	f.PrintLabel(depth, fmt.Sprintf("case %d:", ctx.entryPointNumerator))
 	f.PrintLabel(depth, fmt.Sprintf("{"))
 
 	f.checkAndAssemblyChain(depth+1, ctx)
@@ -33,8 +33,8 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.T
 
 	f.processPatternFail(depth+1, ctx)
 
-	ctx.prevEntryPoint = ctx.entryPoint
-	ctx.entryPoint++
+	ctx.addPrevEntryPoint(ctx.entryPointNumerator, ctx.sentenceInfo.actionIndex)
+	ctx.entryPointNumerator++
 	ctx.sentenceInfo.patternIndex++
 }
 
@@ -150,11 +150,12 @@ func (f *Data) processPatternFail(depth int, ctx *emitterContext) {
 	f.PrintLabel(depth, "if (stretchingVarNumber < 0)")
 	f.PrintLabel(depth, "{")
 
+	prevEntryPoint := ctx.getPrevEntryPoint()
 	//First pattern in current sentence
-	if ctx.sentenceInfo.patternIndex == 0 || ctx.prevEntryPoint == -1 {
+	if ctx.sentenceInfo.patternIndex == 0 || prevEntryPoint == -1 {
 		f.processFailOfFirstPattern(depth+1, ctx)
 	} else {
-		f.processFailOfCommonPattern(depth+1, ctx.prevEntryPoint)
+		f.processFailOfCommonPattern(depth+1, prevEntryPoint)
 	}
 
 	f.PrintLabel(depth+1, "break;")
@@ -186,40 +187,22 @@ func (f *Data) checkAndAssemblyChain(depth int, ctx *emitterContext) {
 	f.PrintLabel(depth, "if (!stretching)")
 	f.PrintLabel(depth, "{")
 
-	f.PrintLabel(depth+1, "if (CURR_FUNC_CALL->fieldOfView)")
-	f.PrintLabel(depth+1, "{")
-	f.PrintLabel(depth+2, fmt.Sprintf("CURR_FUNC_CALL->env->fovs[%d] = CURR_FUNC_CALL->fieldOfView;", patternIndex))
-	f.PrintLabel(depth+2, "CURR_FUNC_CALL->fieldOfView = 0;")
-	f.PrintLabel(depth+2, fmt.Sprintf("uint64_t tmpFragmentOffset = gcGetAssembliedChain(CURR_FUNC_CALL->env->fovs[%d]);", patternIndex))
-	f.PrintLabel(depth+2, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = tmpFragmentOffset;", patternIndex))
-
-	f.PrintLabel(depth+1, "}")
-
-	if ctx.sentenceInfo.patternIndex != 0 {
-		f.PrintLabel(depth+1, "else if (workFieldOfView != 0)")
-		f.PrintLabel(depth+1, "{")
-		f.PrintLabel(depth+2, "// There is assembly action in previous actions -> get this result.")
-		f.PrintLabel(depth+2, fmt.Sprintf("CURR_FUNC_CALL->env->fovs[%d] = workFieldOfView;", patternIndex))
-		f.PrintLabel(depth+2, "uint64_t tmpFragmentOffset = gcGetAssembliedChain(workFieldOfView);")
-		f.PrintLabel(depth+2, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = tmpFragmentOffset;", patternIndex))
-		f.PrintLabel(depth+2, "workFieldOfView = 0;")
-		f.PrintLabel(depth+1, "}")
-		f.PrintLabel(depth+1, "else")
-		f.PrintLabel(depth+1, "{")
-		if ctx.sentenceInfo.patternIndex == 0 {
-			f.PrintLabel(depth+2, "// There are no assemblies in previous actions => use prev pattern fieldOfView.")
-			f.PrintLabel(depth+2, fmt.Sprintf("CURR_FUNC_CALL->env->fovs[%d] = CURR_FUNC_CALL->env->fovs[0];",
-				patternIndex))
-			f.PrintLabel(depth+2, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = CURR_FUNC_CALL->env->assembled[0];",
-				patternIndex))
+	if ctx.sentenceInfo.actionIndex == 0 {
+		if ctx.sentenceInfo.index == 0 {
+			f.PrintLabel(depth+1, "uint64_t tmpFragmentOffset = gcGetAssembliedChain(CURR_FUNC_CALL->fieldOfView);")
+			f.PrintLabel(depth+1, "CURR_FUNC_CALL->env->assembled[0] = tmpFragmentOffset;")
 		} else {
-			f.PrintLabel(depth+2, "// There are no assemblies in previous actions => use prev pattern fieldOfView.")
-			f.PrintLabel(depth+2, fmt.Sprintf("CURR_FUNC_CALL->env->fovs[%d] = CURR_FUNC_CALL->env->fovs[%d];",
-				patternIndex, patternIndex-1))
-			f.PrintLabel(depth+2, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = CURR_FUNC_CALL->env->assembled[%d];",
+			f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = CURR_FUNC_CALL->env->assembled[0];",
+				patternIndex))
+		}
+	} else {
+		if ctx.needToAssembly() {
+			f.PrintLabel(depth+1, "uint64_t tmpFragmentOffset = gcGetAssembliedChain(CURR_FUNC_CALL->env->workFieldOfView);")
+			f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = tmpFragmentOffset;", patternIndex))
+		} else {
+			f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = CURR_FUNC_CALL->env->assembled[%d];",
 				patternIndex, patternIndex-1))
 		}
-		f.PrintLabel(depth+1, "}")
 	}
 
 	f.PrintLabel(depth, "} // !stretching")
