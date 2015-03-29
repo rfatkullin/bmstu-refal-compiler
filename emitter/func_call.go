@@ -47,16 +47,16 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, term *sy
 
 	for needVarName, needVarInfo := range env {
 		if parentLocalVarNumber, ok := ctx.sentenceInfo.scope.VarMap[needVarName]; ok {
-			f.PrintLabel(depth, fmt.Sprintf("%s.closure->params[%d].fragment->offset = CURR_FUNC_CALL->env->locals[%d].fragment->offset;",
+			f.PrintLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->offset = (CURR_FUNC_CALL->env->locals + %d)->offset;",
 				target, needVarInfo.Number, parentLocalVarNumber.Number))
-			f.PrintLabel(depth, fmt.Sprintf("%s.closure->params[%d].fragment->length = CURR_FUNC_CALL->env->locals[%d].fragment->length;",
+			f.PrintLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->length = (CURR_FUNC_CALL->env->locals + %d)->length;",
 				target, needVarInfo.Number, parentLocalVarNumber.Number))
 		} else {
 			//Get from env of parent func
 			parentEnvVarInfo, _ := ctx.funcInfo.Env[needVarName]
-			f.PrintLabel(depth, fmt.Sprintf("%s.closure->params[%d].fragment->offset = CURR_FUNC_CALL->env->params[%d].fragment->offset;",
+			f.PrintLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->offset = (CURR_FUNC_CALL->env->params + %d)->offset;",
 				target, needVarInfo.Number, parentEnvVarInfo.Number))
-			f.PrintLabel(depth, fmt.Sprintf("%s.closure->params[%d].fragment->length = CURR_FUNC_CALL->env->params[%d].fragment->length;",
+			f.PrintLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->length = (CURR_FUNC_CALL->env->params + %d)->length;",
 				target, needVarInfo.Number, parentEnvVarInfo.Number))
 		}
 	}

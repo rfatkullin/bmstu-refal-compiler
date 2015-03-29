@@ -201,13 +201,13 @@ func (f *Data) constructVar(depth, fixedEntryPoint int, varName string, ctx *emi
 	f.printCheckGCCondition(depth)
 
 	if scopeVar, ok := ctx.sentenceInfo.scope.VarMap[varName]; ok {
-		f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = CURR_FUNC_CALL->env->locals[%d].fragment->offset;", scopeVar.Number))
-		f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->length = CURR_FUNC_CALL->env->locals[%d].fragment->length;", scopeVar.Number))
+		f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = (CURR_FUNC_CALL->env->locals + %d)->offset;", scopeVar.Number))
+		f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->length = (CURR_FUNC_CALL->env->locals + %d)->length;", scopeVar.Number))
 	} else {
 		// Get env var
 		needVarInfo, _ := ctx.funcInfo.Env[varName]
-		f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = CURR_FUNC_CALL->env->params[%d].fragment->offset;", needVarInfo.Number))
-		f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->length = CURR_FUNC_CALL->env->params[%d].fragment->length;", needVarInfo.Number))
+		f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = (CURR_FUNC_CALL->env->params + %d)->offset;", needVarInfo.Number))
+		f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->length = (CURR_FUNC_CALL->env->params + %d)->length;", needVarInfo.Number))
 	}
 }
 

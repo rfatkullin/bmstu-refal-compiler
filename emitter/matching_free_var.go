@@ -10,8 +10,8 @@ func (f *Data) matchingFreeTermVar(depth int, ctx *emitterContext, varNumber int
 	f.printOffsetCheck(depth, prevStretchVarNumber, "")
 	f.PrintLabel(depth, "else")
 	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->locals[%d].fragment->offset = fragmentOffset;", varNumber))
-	f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->locals[%d].fragment->length = 1;", varNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->offset = fragmentOffset;", varNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->length = 1;", varNumber))
 	f.PrintLabel(depth+1, "fragmentOffset++;")
 	f.PrintLabel(depth, "}")
 }
@@ -23,8 +23,8 @@ func (f *Data) matchingFreeSymbolVar(depth int, ctx *emitterContext, varNumber i
 
 	f.PrintLabel(depth, "else")
 	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->locals[%d].fragment->offset = fragmentOffset;", varNumber))
-	f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->locals[%d].fragment->length = 1;", varNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->offset = fragmentOffset;", varNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->length = 1;", varNumber))
 	f.PrintLabel(depth+1, "fragmentOffset++;")
 	f.PrintLabel(depth, "}")
 }
@@ -33,13 +33,13 @@ func (f *Data) matchingFreeExprVar(depth int, ctx *emitterContext, varNumber int
 
 	f.PrintLabel(depth, "if (!stretching) // Just init values")
 	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->locals[%d].fragment->offset = fragmentOffset;", varNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->offset = fragmentOffset;", varNumber))
 
 	if ctx.isLeftMatching {
-		f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->locals[%d].fragment->length = 0;", varNumber))
+		f.PrintLabel(depth+1, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->length = 0;", varNumber))
 	} else {
-		f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->locals[%d].fragment->length = rightBound - fragmentOffset;", varNumber))
-		f.PrintLabel(depth+1, fmt.Sprintf("fragmentOffset += CURR_FUNC_CALL->env->locals[%d].fragment->length;", varNumber))
+		f.PrintLabel(depth+1, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->length = rightBound - fragmentOffset;", varNumber))
+		f.PrintLabel(depth+1, fmt.Sprintf("fragmentOffset += (CURR_FUNC_CALL->env->locals + %d)->length;", varNumber))
 	}
 
 	f.PrintLabel(depth, "}")
@@ -60,13 +60,13 @@ func (f *Data) varStretching(depth, varNumber int, ctx *emitterContext) {
 	f.PrintLabel(depth+1, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->bracketsOffset[%d]);", ctx.bracketsCurrentIndex))
 
 	f.PrintLabel(depth+1, "//Restore last offset at this point")
-	f.PrintLabel(depth+1, fmt.Sprintf("fragmentOffset = CURR_FUNC_CALL->env->locals[%d].fragment->offset + "+
-		" CURR_FUNC_CALL->env->locals[%d].fragment->length;", varNumber, varNumber))
+	f.PrintLabel(depth+1, fmt.Sprintf("fragmentOffset = (CURR_FUNC_CALL->env->locals + %d)->offset + "+
+		" (CURR_FUNC_CALL->env->locals + %d)->length;", varNumber, varNumber))
 
 	if ctx.isLeftMatching {
 		f.printOffsetCheck(depth+1, prevStretchVarNumber, "")
 	} else {
-		f.PrintLabel(depth+1, fmt.Sprintf("if (CURR_FUNC_CALL->env->locals[%d].fragment->length <= 0)", varNumber))
+		f.PrintLabel(depth+1, fmt.Sprintf("if ((CURR_FUNC_CALL->env->locals + %d)->length <= 0)", varNumber))
 		f.printFailBlock(depth+1, prevStretchVarNumber, true)
 	}
 
@@ -76,10 +76,10 @@ func (f *Data) varStretching(depth, varNumber int, ctx *emitterContext) {
 
 	if ctx.isLeftMatching {
 		f.PrintLabel(depth+2, "fragmentOffset++;")
-		f.PrintLabel(depth+2, fmt.Sprintf("CURR_FUNC_CALL->env->locals[%d].fragment->length++;", varNumber))
+		f.PrintLabel(depth+2, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->length++;", varNumber))
 	} else {
 		f.PrintLabel(depth+2, "fragmentOffset--;")
-		f.PrintLabel(depth+2, fmt.Sprintf("CURR_FUNC_CALL->env->locals[%d].fragment->length--;", varNumber))
+		f.PrintLabel(depth+2, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->length--;", varNumber))
 	}
 
 	f.PrintLabel(depth+1, "}")
