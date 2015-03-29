@@ -38,7 +38,7 @@ func (f *Data) matchingFreeExprVar(depth int, ctx *emitterContext, varNumber int
 	if ctx.isLeftMatching {
 		f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->locals[%d].fragment->length = 0;", varNumber))
 	} else {
-		f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->locals[%d].fragment->length = rightCheckOffset - fragmentOffset;", varNumber))
+		f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->locals[%d].fragment->length = rightBound - fragmentOffset;", varNumber))
 		f.PrintLabel(depth+1, fmt.Sprintf("fragmentOffset += CURR_FUNC_CALL->env->locals[%d].fragment->length;", varNumber))
 	}
 

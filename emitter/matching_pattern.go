@@ -88,15 +88,7 @@ func (f *Data) matchingTerms(depth int, inBrackets bool, ctx *emitterContext, te
 		return
 	}
 
-	/*
-		if terms[0].TermTag == syntax.R {
-			ctx.isLeftMatching = false
-
-			if inBrackets {
-				f.PrintLabel(depth, "rightCheckOffset = fragmentOffset + memMngr.vterms[fragmentOffset-1].inBracketLength - 2;")
-			}
-		}
-	*/
+	ctx.isLeftMatching = !(terms[0].TermTag == syntax.R)
 
 	for _, term := range terms {
 
@@ -121,14 +113,6 @@ func (f *Data) matchingTerms(depth int, inBrackets bool, ctx *emitterContext, te
 			break
 		}
 	}
-
-	/*
-		if !ctx.isLeftMatching && inBrackets {
-			f.PrintLabel(depth, "if (fragmentOffset < rightCheckOffset)")
-			f.printFailBlock(depth, ctx.patternCtx.prevEntryPoint, true)
-			f.PrintLabel(depth, "rightCheckOffset = fragmentOffset + currFrag->length;")
-		}
-	*/
 
 	ctx.isLeftMatching = parentMatchingOrder
 }
