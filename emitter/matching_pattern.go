@@ -189,16 +189,14 @@ func (f *Data) checkAndAssemblyChain(depth int, ctx *emitterContext) {
 
 	if ctx.sentenceInfo.actionIndex == 0 {
 		if ctx.sentenceInfo.index == 0 {
-			f.PrintLabel(depth+1, "uint64_t tmpFragmentOffset = gcGetAssembliedChain(CURR_FUNC_CALL->fieldOfView);")
-			f.PrintLabel(depth+1, "CURR_FUNC_CALL->env->assembled[0] = tmpFragmentOffset;")
+			f.PrintLabel(depth+1, "ASSEMBLY_FIELD(0, CURR_FUNC_CALL->fieldOfView);")
 		} else {
 			f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = CURR_FUNC_CALL->env->assembled[0];",
 				patternIndex))
 		}
 	} else {
 		if ctx.needToAssembly() {
-			f.PrintLabel(depth+1, "uint64_t tmpFragmentOffset = gcGetAssembliedChain(CURR_FUNC_CALL->env->workFieldOfView);")
-			f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = tmpFragmentOffset;", patternIndex))
+			f.PrintLabel(depth+1, fmt.Sprintf("ASSEMBLY_FIELD(%d, CURR_FUNC_CALL->env->workFieldOfView);", patternIndex))
 		} else {
 			f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = CURR_FUNC_CALL->env->assembled[%d];",
 				patternIndex, patternIndex-1))
