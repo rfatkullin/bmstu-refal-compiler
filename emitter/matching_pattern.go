@@ -126,7 +126,7 @@ func (f *Data) matchingExpr(depth int, ctx *emitterContext, terms []*syntax.Term
 	ctx.bracketsCurrentIndex = bracketsIndex
 
 	f.PrintLabel(depth, "//Check ().")
-	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, " || memMngr.vterms[fragmentOffset].tag != V_BRACKETS_TAG")
+	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, " || _memMngr.vterms[fragmentOffset].tag != V_BRACKETS_TAG")
 
 	f.PrintLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->env->bracketsOffset[%d] = fragmentOffset;", bracketsIndex))
 	f.PrintLabel(depth, "rightBound = RIGHT_BOUND(fragmentOffset);")

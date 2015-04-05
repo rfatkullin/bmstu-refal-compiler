@@ -10,8 +10,8 @@ func (f *Data) matchingIntLiteral(depth int, ctx *emitterContext, index int) {
 
 	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, "")
 
-	f.PrintLabel(depth, fmt.Sprintf("if (memMngr.vterms[fragmentOffset].tag != V_INT_NUM_TAG || "+
-		"intCmp(memMngr.vterms[fragmentOffset].intNum, memMngr.vterms[UINT64_C(%d)].intNum))", index))
+	f.PrintLabel(depth, fmt.Sprintf("if (_memMngr.vterms[fragmentOffset].tag != V_INT_NUM_TAG || "+
+		"intCmp(_memMngr.vterms[fragmentOffset].intNum, _memMngr.vterms[UINT64_C(%d)].intNum))", index))
 	f.printFailBlock(depth, ctx.patternCtx.prevEntryPoint, true)
 
 	f.PrintLabel(depth, "fragmentOffset++;")
@@ -23,8 +23,8 @@ func (f *Data) mathcingDoubleLiteral(depth int, ctx *emitterContext, index int) 
 
 	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, "")
 
-	f.PrintLabel(depth, fmt.Sprintf("if (memMngr.vterms[fragmentOffset].tag != V_DOUBLE_NUM_TAG || "+
-		"doubleCmp(memMngr.vterms[fragmentOffset].doubleNum, memMngr.vterms[UINT64_C(%d)].doubleNum))", index))
+	f.PrintLabel(depth, fmt.Sprintf("if (_memMngr.vterms[fragmentOffset].tag != V_DOUBLE_NUM_TAG || "+
+		"doubleCmp(_memMngr.vterms[fragmentOffset].doubleNum, _memMngr.vterms[UINT64_C(%d)].doubleNum))", index))
 	f.printFailBlock(depth, ctx.patternCtx.prevEntryPoint, true)
 
 	f.PrintLabel(depth, "fragmentOffset++;")
@@ -36,10 +36,10 @@ func (f *Data) matchingCompLiteral(depth int, ctx *emitterContext, index int) {
 
 	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, "")
 
-	f.PrintLabel(depth, fmt.Sprintf("if (!((memMngr.vterms[fragmentOffset].tag == V_IDENT_TAG && "+
-		"ustrEq(memMngr.vterms[fragmentOffset].str, memMngr.vterms[UINT64_C(%d)].str)) || "+
-		"(memMngr.vterms[fragmentOffset].tag == V_CLOSURE_TAG && "+
-		"ustrEq(memMngr.vterms[fragmentOffset].closure->ident, memMngr.vterms[UINT64_C(%d)].str))))", index, index))
+	f.PrintLabel(depth, fmt.Sprintf("if (!((_memMngr.vterms[fragmentOffset].tag == V_IDENT_TAG && "+
+		"ustrEq(_memMngr.vterms[fragmentOffset].str, _memMngr.vterms[UINT64_C(%d)].str)) || "+
+		"(_memMngr.vterms[fragmentOffset].tag == V_CLOSURE_TAG && "+
+		"ustrEq(_memMngr.vterms[fragmentOffset].closure->ident, _memMngr.vterms[UINT64_C(%d)].str))))", index, index))
 	f.printFailBlock(depth, ctx.patternCtx.prevEntryPoint, true)
 
 	f.PrintLabel(depth, "fragmentOffset++;")
@@ -55,8 +55,8 @@ func (f *Data) matchingStrLiteral(depth int, ctx *emitterContext, strLen, index 
 	f.PrintLabel(depth, fmt.Sprintf("for (i = 0; i < UINT64_C(%d); i++)", strLen))
 	f.PrintLabel(depth, "{")
 
-	f.PrintLabel(depth+1, fmt.Sprintf("if (memMngr.vterms[fragmentOffset + i].tag != V_CHAR_TAG || "+
-		"memMngr.vterms[fragmentOffset + i].ch != memMngr.vterms[UINT64_C(%d) + i].ch)", index))
+	f.PrintLabel(depth+1, fmt.Sprintf("if (_memMngr.vterms[fragmentOffset + i].tag != V_CHAR_TAG || "+
+		"_memMngr.vterms[fragmentOffset + i].ch != _memMngr.vterms[UINT64_C(%d) + i].ch)", index))
 	f.printFailBlock(depth+1, ctx.patternCtx.prevEntryPoint, true)
 
 	f.PrintLabel(depth, "}")

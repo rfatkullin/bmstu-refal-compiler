@@ -19,7 +19,7 @@ func (f *Data) matchingFreeTermVar(depth int, ctx *emitterContext, varNumber int
 func (f *Data) matchingFreeSymbolVar(depth int, ctx *emitterContext, varNumber int) {
 	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
 
-	f.printOffsetCheck(depth, prevStretchVarNumber, " || memMngr.vterms[fragmentOffset].tag == V_BRACKETS_TAG")
+	f.printOffsetCheck(depth, prevStretchVarNumber, " || _memMngr.vterms[fragmentOffset].tag == V_BRACKETS_TAG")
 
 	f.PrintLabel(depth, "else")
 	f.PrintLabel(depth, "{")

@@ -31,10 +31,10 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, term *sy
 	f.PrintLabel(depth, "currTerm->fragment->offset = chAllocateClosureVTerm(&status);")
 	f.printCheckGCCondition(depth)
 
-	target := "memMngr.vterms[currTerm->fragment->offset]"
+	target := "_memMngr.vterms[currTerm->fragment->offset]"
 
 	if named {
-		f.PrintLabel(depth, fmt.Sprintf("%s.closure = chAllocateClosureStruct(%s, %d, memMngr.vterms[%d].str, %d, &status);",
+		f.PrintLabel(depth, fmt.Sprintf("%s.closure = chAllocateClosureStruct(%s, %d, _memMngr.vterms[%d].str, %d, &status);",
 			target, emittedName, len(env), term.IndexInLiterals, rollback))
 	} else {
 		f.PrintLabel(depth, fmt.Sprintf("%s.closure = chAllocateClosureStruct(%s, %d, 0, %d, &status);",

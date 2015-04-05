@@ -80,7 +80,7 @@ func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 	term.IndexInLiterals = f.CurrTermNum
 
 	for i := 0; i < len(term.Value.Str); i++ {
-		f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct vterm_t){.tag = V_CHAR_TAG, .ch = %d};", f.CurrTermNum, term.Value.Str[i]))
+		f.PrintLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_CHAR_TAG, .ch = %d};", f.CurrTermNum, term.Value.Str[i]))
 		f.CurrTermNum++
 	}
 }
@@ -90,7 +90,7 @@ func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
 	bytesStr, sign, bytesCount := GetStrOfBytes(term.Value.Int)
 
-	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct vterm_t){.tag = V_INT_NUM_TAG,"+
+	f.PrintLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_INT_NUM_TAG,"+
 		" .intNum = allocateIntNumberLiteral((uint8_t[]){%s}, %d, UINT64_C(%d))};",
 		f.CurrTermNum, bytesStr, sign, bytesCount))
 
@@ -101,7 +101,7 @@ func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
 // Инициализация vterm_t для литералов вещественного типа
 func (f *Data) initFloatVTerm(depth int, term *syntax.Term) {
 
-	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct vterm_t){.tag = V_DOUBLE_NUM_TAG, .doubleNum = %f};", f.CurrTermNum, term.Value.Float))
+	f.PrintLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_DOUBLE_NUM_TAG, .doubleNum = %f};", f.CurrTermNum, term.Value.Float))
 	term.IndexInLiterals = f.CurrTermNum
 	f.CurrTermNum++
 }
@@ -110,7 +110,7 @@ func (f *Data) initFloatVTerm(depth int, term *syntax.Term) {
 func (f *Data) initIdentVTerm(depth int, term *syntax.Term, ident string) {
 	runesStr := GetStrOfRunes(ident)
 
-	f.PrintLabel(depth, fmt.Sprintf("memMngr.vterms[%d] = (struct vterm_t){.tag = V_IDENT_TAG, .str = allocateVStringLiteral((uint32_t[]){%s}, UINT64_C(%d))};",
+	f.PrintLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_IDENT_TAG, .str = allocateVStringLiteral((uint32_t[]){%s}, UINT64_C(%d))};",
 		f.CurrTermNum, runesStr, utf8.RuneCountInString(ident)))
 
 	term.IndexInLiterals = f.CurrTermNum

@@ -45,7 +45,7 @@ func (f *Data) matchingFixedExprVar(depth, prevStretchVarNumber int, ctx *emitte
 func (f *Data) matchingFixedSymbolVar(depth, prevStretchVarNumber int, ctx *emitterContext, lterm string) {
 
 	f.PrintLabel(depth, "if (fragmentOffset >= rightBound ")
-	f.PrintLabel(depth, fmt.Sprintf("|| (memMngr.vterms[fragmentOffset].tag == V_BRACKETS_TAG) "+
+	f.PrintLabel(depth, fmt.Sprintf("|| (_memMngr.vterms[fragmentOffset].tag == V_BRACKETS_TAG) "+
 		"|| (!eqSymbol(fragmentOffset, %s->offset)))", lterm))
 	f.printFailBlock(depth, prevStretchVarNumber, true)
 
