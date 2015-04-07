@@ -143,6 +143,7 @@ func (f *Data) PrintHeaders() {
 
 	f.PrintLabel(0, "#include <vmachine.h>")
 	f.PrintLabel(0, "#include <memory_manager.h>")
+	f.PrintLabel(0, "#include <defines/gc_macros.h>")
 	f.PrintLabel(0, "#include <builtins/builtins.h>")
 	f.PrintLabel(0, "#include <allocators/data_alloc.h>")
 	f.PrintLabel(0, "#include <allocators/vterm_alloc.h>")
