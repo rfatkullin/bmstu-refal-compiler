@@ -113,7 +113,7 @@ func (f *Data) mainFunc(depth int, entryFuncName string) {
 
 	f.PrintLabel(depth, "int main(int argc, char** argv)")
 	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, "initAllocator(getHeapSize(argc, argv));")
+	f.PrintLabel(depth+1, "initAllocator(getHeapSizeFromCmdArgs(argc, argv));")
 	f.PrintLabel(depth+1, "initLiteralData();")
 	f.PrintLabel(depth+1, fmt.Sprintf("uint64_t vtermOffset = initArgsData(UINT64_C(%d), argc, argv);", f.CurrTermNum))
 	f.PrintLabel(depth+1, "initHeaps(vtermOffset);")
