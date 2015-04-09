@@ -123,12 +123,15 @@ func (f *Data) printLiteralsAndHeapsInit(depth int, unit *syntax.Unit) {
 
 	f.initLiterals(depth+1, unit.GlobMap)
 
-	//fmt.Fprintf(f, "%sdebugLiteralsPrint();\n", tabs)
 	f.PrintLabel(depth, "} // initLiteralData()\n")
 }
 
 func (f *Data) initLiterals(depth int, funcs map[string]*syntax.Function) {
 
+	// Dummy-vterm. Обращение к vterm'у с нулевым смещением - признак ошибки.
+	f.PrintLabel(depth, "_memMngr.vterms[0] = (struct vterm_t){.tag = V_CHAR_TAG, .ch = 0}; // dummy-vterm.")
+
+	f.CurrTermNum = 1
 	for _, currFunc := range funcs {
 		f.initFuncLiterals(depth, currFunc)
 	}
