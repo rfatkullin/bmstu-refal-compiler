@@ -20,28 +20,26 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, term *sy
 		env = currFunc.Env
 		rollback = BoolToInt(currFunc.Rollback)
 		named = currFunc.HasName
-		//fmt.Printf("Func name: %s\n", currFunc.FuncName)
 	}
 
 	f.PrintLabel(depth, "//Start construction func term.")
 
-	f.PrintLabel(depth, "currTerm = chAllocateFragmentLTerm(1, &status);")
-	f.printCheckGCCondition(depth)
+	f.printCheckGCCondition(depth, "currTerm", "chAllocateFragmentLTerm(1, &status)")
 
-	f.PrintLabel(depth, "currTerm->fragment->offset = chAllocateClosureVTerm(&status);")
-	f.printCheckGCCondition(depth)
+	f.printCheckGCCondition(depth, "currTerm->fragment->offset", "chAllocateClosureVTerm(&status)")
 
 	target := "_memMngr.vterms[currTerm->fragment->offset]"
+	varStr := fmt.Sprintf("%s.closure", target)
+	funcCallStr := ""
 
 	if named {
-		f.PrintLabel(depth, fmt.Sprintf("%s.closure = chAllocateClosureStruct(%s, %d, _memMngr.vterms[%d].str, %d, &status);",
-			target, emittedName, len(env), term.IndexInLiterals, rollback))
+		funcCallStr = fmt.Sprintf("chAllocateClosureStruct(%s, %d, _memMngr.vterms[%d].str, %d, &status)",
+			emittedName, len(env), term.IndexInLiterals, rollback)
 	} else {
-		f.PrintLabel(depth, fmt.Sprintf("%s.closure = chAllocateClosureStruct(%s, %d, 0, %d, &status);",
-			target, emittedName, len(env), rollback))
+		funcCallStr = fmt.Sprintf("chAllocateClosureStruct(%s, %d, 0, %d, &status)", emittedName, len(env), rollback)
 	}
 
-	f.printCheckGCCondition(depth)
+	f.printCheckGCCondition(depth, varStr, funcCallStr)
 
 	f.PrintLabel(depth, "currTerm->fragment->length = 1;")
 

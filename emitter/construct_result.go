@@ -90,8 +90,7 @@ func (f *Data) ConstructLiteralsFragment(depth int, ctx *emitterContext, terms [
 	}
 
 	f.PrintLabel(depth, "//Start construction fragment term.")
-	f.PrintLabel(depth, "currTerm = chAllocateFragmentLTerm(1, &status);")
-	f.printCheckGCCondition(depth)
+	f.printCheckGCCondition(depth, "currTerm", "chAllocateFragmentLTerm(1, &status)")
 	f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = %d;", fragmentOffset))
 	f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->length = %d;", fragmentLength))
 
@@ -110,8 +109,7 @@ func (f *Data) ConstructFuncCallTerm(depth int, ctx *emitterContext, chainNumber
 
 	terms = f.ConstructExprInParenthesis(depth, ctx, chainNumber, firstFuncCall, terms)
 
-	f.PrintLabel(depth, "funcTerm = chAllocateFuncCallLTerm(&status);")
-	f.printCheckGCCondition(depth)
+	f.printCheckGCCondition(depth, "funcTerm", "chAllocateFuncCallLTerm(&status)")
 	f.PrintLabel(depth, fmt.Sprintf("funcTerm->funcCall->failEntryPoint = %d;", ctx.getPrevEntryPoint()))
 	f.PrintLabel(depth, "funcTerm->funcCall->fieldOfView = currTerm->chain;")
 
@@ -123,8 +121,7 @@ func (f *Data) ConcatToCallChain(depth int, firstFuncCall *bool) {
 
 	if *firstFuncCall {
 		f.PrintLabel(depth, "//First call in call chain -- Initialization.")
-		f.PrintLabel(depth, "funcCallChain = chAllocateSimpleChainLTerm(&status);")
-		f.printCheckGCCondition(depth)
+		f.printCheckGCCondition(depth, "funcCallChain", "chAllocateSimpleChainLTerm(&status)")
 		f.PrintLabel(depth, "funcCallChain->next = funcTerm;")
 		f.PrintLabel(depth, "funcCallChain->prev = funcTerm;")
 		*firstFuncCall = false
@@ -197,8 +194,7 @@ func (f *Data) ConstructExprInParenthesis(depth int, ctx *emitterContext, chainN
 
 func (f *Data) constructVar(depth, fixedEntryPoint int, varName string, ctx *emitterContext) {
 
-	f.PrintLabel(depth, "currTerm = chAllocateFragmentLTerm(1, &status);")
-	f.printCheckGCCondition(depth)
+	f.printCheckGCCondition(depth, "currTerm", "chAllocateFragmentLTerm(1, &status)")
 
 	if scopeVar, ok := ctx.sentenceInfo.scope.VarMap[varName]; ok {
 		f.PrintLabel(depth, fmt.Sprintf("currTerm->fragment->offset = (CURR_FUNC_CALL->env->locals + %d)->offset;", scopeVar.Number))
@@ -295,8 +291,7 @@ func (f *Data) printInitializeConstructVars(depth, chainsCount int) {
 	f.PrintLabel(depth, "struct lterm_t* currTerm = 0;")
 	f.PrintLabel(depth, "struct lterm_t* funcTerm = 0;")
 
-	f.PrintLabel(depth, fmt.Sprintf("helper = chAllocateChainKeeperLTerm(UINT64_C(%d), &status);", chainsCount))
-	f.printCheckGCCondition(depth)
+	f.printCheckGCCondition(depth, "helper", fmt.Sprintf("chAllocateChainKeeperLTerm(UINT64_C(%d), &status)", chainsCount))
 }
 
 func (f *Data) setGCOpenBorder(depth int) {
@@ -316,9 +311,7 @@ func (f *Data) setGCCloseBorder(depth int) {
 	f.PrintLabel(depth, "} while (status != GC_OK); // GC block")
 }
 
-func (f *Data) printCheckGCCondition(depth int) {
-	f.PrintLabel(depth, "if (status == GC_NEED_CLEAN)")
-	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, "continue;")
-	f.PrintLabel(depth, "}")
+func (f *Data) printCheckGCCondition(depth int, varStr, funcCallStr string) {
+
+	f.PrintLabel(depth, fmt.Sprintf("CHECK_ALLOCATION_CONTINUE(%s, %s, status);", varStr, funcCallStr))
 }
