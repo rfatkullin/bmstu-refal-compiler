@@ -9,11 +9,6 @@ import (
 	"bmstu-refal-compiler/syntax"
 )
 
-type funcData struct {
-	*syntax.Function
-	emittedName string
-}
-
 type Data struct {
 	Name string
 	Ast  *syntax.Unit
