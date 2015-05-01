@@ -20,16 +20,12 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.T
 	f.PrintLabel(depth+1, "fragmentOffset = currFrag->offset;")
 	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = CURR_FUNC_CALL->env->stretchVarsNumber[%d];", ctx.sentenceInfo.patternIndex))
 
-	f.PrintLabel(depth+1, "while (stretchingVarNumber >= 0)")
-	f.PrintLabel(depth+1, "{")
+	f.checkFragmentLength(depth+1, terms)
 
-	if len(terms) == 0 {
-		f.processEmptyPattern(depth+1, ctx)
-	} else {
-		f.processPattern(depth+1, ctx, terms)
+	if len(terms) > 0 {
+		f.PrintLabel(depth+1, "else")
+		f.processPattern(depth+2, ctx, terms)
 	}
-
-	f.PrintLabel(depth+1, "} // Pattern while\n")
 
 	f.processPatternFail(depth+1, ctx)
 
@@ -45,6 +41,9 @@ func (f *Data) processEmptyPattern(depth int, ctx *emitterContext) {
 }
 
 func (f *Data) processPattern(depth int, ctx *emitterContext, terms []*syntax.Term) {
+
+	f.PrintLabel(depth, "while (stretchingVarNumber >= 0)")
+	f.PrintLabel(depth, "{")
 
 	f.PrintLabel(depth+1, "//From what stretchable variable start?")
 	f.PrintLabel(depth+1, "switch (stretchingVarNumber)")
@@ -66,6 +65,8 @@ func (f *Data) processPattern(depth int, ctx *emitterContext, terms []*syntax.Te
 	f.PrintLabel(depth+2, "else")
 	f.PrintLabel(depth+3, "break; // Success!")
 	f.PrintLabel(depth+1, "}")
+
+	f.PrintLabel(depth, "} // Pattern while\n")
 }
 
 func (f *Data) printFirstCase(depth int, ctx *emitterContext, term *syntax.Term) {
@@ -117,6 +118,31 @@ func (f *Data) matchingTerms(depth int, inBrackets bool, ctx *emitterContext, te
 	ctx.isLeftMatching = parentMatchingOrder
 }
 
+func (f *Data) getMinLengthForTerms(terms []*syntax.Term) int {
+	length := 0
+
+	for _, term := range terms {
+
+		switch term.TermTag {
+		case syntax.VAR:
+			varType := term.Value.VarType
+			if varType == tokens.VT_T || varType == tokens.VT_S ||
+				varType == tokens.VT_V {
+				length += 1
+			}
+			break
+		case syntax.STR:
+			length += len(term.Value.Str)
+			break
+		case syntax.COMP, syntax.INT, syntax.EXPR, syntax.FLOAT:
+			length += 1
+			break
+		}
+	}
+
+	return length
+}
+
 func (f *Data) matchingExpr(depth int, ctx *emitterContext, terms []*syntax.Term) {
 
 	ctx.bracketsNumerator++
@@ -160,6 +186,17 @@ func (f *Data) processPatternFail(depth int, ctx *emitterContext) {
 
 	f.PrintLabel(depth+1, "break;")
 	f.PrintLabel(depth, "}")
+}
+
+func (f *Data) checkFragmentLength(depth int, terms []*syntax.Term) {
+
+	if len(terms) == 0 {
+		f.PrintLabel(depth, "if (currFrag->length != 0)")
+	} else {
+		f.PrintLabel(depth, fmt.Sprintf("if (currFrag->length < %d)", f.getMinLengthForTerms(terms)))
+	}
+
+	f.printFailBlock(depth, -1, false)
 }
 
 func (f *Data) processFailOfFirstPattern(depth int, ctx *emitterContext) {
