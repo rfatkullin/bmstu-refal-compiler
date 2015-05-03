@@ -233,9 +233,10 @@ func (f *Data) predeclareFuncs(depth, funcsNumber int) {
 
 func (f *Data) processFuncs(depth int, funcs map[string]*syntax.Function) {
 	for _, currFunc := range funcs {
+		f.PrintLabel(depth, fmt.Sprintf("// %s", currFunc.FuncName))
 		f.printFuncHeader(depth, f.genFuncName(currFunc.Index))
 		f.processFuncSentences(depth+1, currFunc)
-		f.PrintLabel(depth, fmt.Sprintf("} // func %s:func_%d\n", currFunc.FuncName, currFunc.Index)) // func block end
+		f.PrintLabel(depth, fmt.Sprintf("} // %s\n", currFunc.FuncName))
 	}
 
 }

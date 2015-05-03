@@ -12,32 +12,22 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, term *sy
 
 	env := make(map[string]syntax.ScopeVar, 0)
 	rollback := 0
-	named := true
 
 	// == -1 --> Builtins(no rollbacks, no env), != -1 --> Globs or Nested
 	if funcIndex != -1 {
 		currFunc := f.Ast.FuncByNumber[funcIndex]
 		env = currFunc.Env
 		rollback = BoolToInt(currFunc.Rollback)
-		named = currFunc.HasName
 	}
 
 	f.PrintLabel(depth, "//Start construction func term.")
-
 	f.printCheckGCCondition(depth, "currTerm", "chAllocateFragmentLTerm(1, &status)")
-
 	f.printCheckGCCondition(depth, "currTerm->fragment->offset", "chAllocateClosureVTerm(&status)")
 
 	target := "_memMngr.vterms[currTerm->fragment->offset]"
 	varStr := fmt.Sprintf("%s.closure", target)
-	funcCallStr := ""
-
-	if named {
-		funcCallStr = fmt.Sprintf("chAllocateClosureStruct(%s, %d, _memMngr.vterms[%d].str, %d, &status)",
-			emittedName, len(env), term.IndexInLiterals, rollback)
-	} else {
-		funcCallStr = fmt.Sprintf("chAllocateClosureStruct(%s, %d, 0, %d, &status)", emittedName, len(env), rollback)
-	}
+	funcCallStr := fmt.Sprintf("chAllocateClosureStruct(%s, %d, _memMngr.vterms[%d].str, %d, &status)",
+		emittedName, len(env), term.IndexInLiterals, rollback)
 
 	f.printCheckGCCondition(depth, varStr, funcCallStr)
 

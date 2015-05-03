@@ -58,9 +58,13 @@ func (f *Data) initActionLiterals(depth int, expr syntax.Expr) {
 			break
 
 		case syntax.FUNC:
-			if term.Function.HasName {
+			if !term.Function.HasName {
+				term.Function.HasName = true
+				term.FuncName = fmt.Sprintf("AnonymFunc_%d", f.CurrTermNum)
 				f.initIdentVTerm(depth, term, term.FuncName)
 			}
+
+			f.initIdentVTerm(depth, term, term.FuncName)
 			f.initFuncLiterals(depth, term.Function)
 			break
 		}
