@@ -22,22 +22,22 @@ func ConstructEmitterData(name string, ast *syntax.Unit, io io.WriteCloser) Emit
 }
 
 func Handle(done chan<- bool, fs <-chan EmitterData) {
-	for emitter := range fs {
-		processFile(emitter)
-		emitter.Close()
+	for emt := range fs {
+		processFile(emt)
+		emt.Close()
 		done <- true
 	}
 }
 
-func processFile(emitter EmitterData) {
-	unit := emitter.Ast
+func processFile(emt EmitterData) {
+	unit := emt.Ast
 	depth := 0
 
-	emitter.printHeadersAndDefs(depth, unit.FuncsTotalCount)
-	emitter.printLiteralsAndHeapsInit(depth, unit)
+	emt.printHeadersAndDefs(depth, unit.FuncsTotalCount)
+	emt.printLiteralsAndHeapsInit(depth, unit)
 
-	emitter.processFuncs(depth, unit.GlobMap)
-	emitter.processFuncs(depth, unit.NestedFuncs)
+	emt.processFuncs(depth, unit.GlobMap)
+	emt.processFuncs(depth, unit.NestedFuncs)
 
 	var goFunc *syntax.Function = nil
 	var ok bool = false
@@ -47,42 +47,42 @@ func processFile(emitter EmitterData) {
 		}
 	}
 
-	emitter.mainFunc(depth, emitter.genFuncName(goFunc.Index))
+	emt.mainFunc(depth, emt.genFuncName(goFunc.Index))
 }
 
-func (emitter *EmitterData) printHeadersAndDefs(depth, funcsTotalCount int) {
+func (emt *EmitterData) printHeadersAndDefs(depth, funcsTotalCount int) {
 
-	emitter.printLabel(depth, "#include <stdlib.h>")
-	emitter.printLabel(depth, "#include <stdio.h>\n")
+	emt.printLabel(depth, "#include <stdlib.h>")
+	emt.printLabel(depth, "#include <stdio.h>\n")
 
-	emitter.printLabel(depth, "#include <vmachine.h>")
-	emitter.printLabel(depth, "#include <memory_manager.h>")
-	emitter.printLabel(depth, "#include <defines/gc_macros.h>")
-	emitter.printLabel(depth, "#include <builtins/builtins.h>")
-	emitter.printLabel(depth, "#include <allocators/data_alloc.h>")
-	emitter.printLabel(depth, "#include <allocators/vterm_alloc.h>")
-	emitter.printLabel(depth, "#include <defines/data_struct_sizes.h>")
+	emt.printLabel(depth, "#include <vmachine.h>")
+	emt.printLabel(depth, "#include <memory_manager.h>")
+	emt.printLabel(depth, "#include <defines/gc_macros.h>")
+	emt.printLabel(depth, "#include <builtins/builtins.h>")
+	emt.printLabel(depth, "#include <allocators/data_alloc.h>")
+	emt.printLabel(depth, "#include <allocators/vterm_alloc.h>")
+	emt.printLabel(depth, "#include <defines/data_struct_sizes.h>")
 
-	emitter.printLabel(depth, "")
+	emt.printLabel(depth, "")
 
 	for i := 0; i < funcsTotalCount; i++ {
-		emitter.printLabel(depth, fmt.Sprintf("struct func_result_t func_%d(int entryStatus);", i))
+		emt.printLabel(depth, fmt.Sprintf("struct func_result_t func_%d(int entryStatus);", i))
 	}
 
-	emitter.printLabel(depth, "")
+	emt.printLabel(depth, "")
 }
 
-func (emitter *EmitterData) processFuncs(depth int, funcs map[string]*syntax.Function) {
+func (emt *EmitterData) processFuncs(depth int, funcs map[string]*syntax.Function) {
 	for _, currFunc := range funcs {
-		emitter.printLabel(depth, fmt.Sprintf("// %s", currFunc.FuncName))
-		emitter.printLabel(depth, fmt.Sprintf("struct func_result_t %s(int entryStatus) \n{", emitter.genFuncName(currFunc.Index)))
-		emitter.processFuncSentences(depth+1, currFunc)
-		emitter.printLabel(depth, fmt.Sprintf("} // %s\n", currFunc.FuncName))
+		emt.printLabel(depth, fmt.Sprintf("// %s", currFunc.FuncName))
+		emt.printLabel(depth, fmt.Sprintf("struct func_result_t %s(int entryStatus) \n{", emt.genFuncName(currFunc.Index)))
+		emt.processFuncSentences(depth+1, currFunc)
+		emt.printLabel(depth, fmt.Sprintf("} // %s\n", currFunc.FuncName))
 	}
 
 }
 
-func (emitter *EmitterData) processFuncSentences(depth int, currFunc *syntax.Function) {
+func (emt *EmitterData) processFuncSentences(depth int, currFunc *syntax.Function) {
 	sentencesCount := len(currFunc.Sentences)
 	ctx := &emitterContext{}
 
@@ -91,12 +91,12 @@ func (emitter *EmitterData) processFuncSentences(depth int, currFunc *syntax.Fun
 	ctx.maxBracketsNumber = getMaxBracketsCountInFunc(currFunc)
 	ctx.funcInfo = currFunc
 
-	emitter.printInitLocals(depth, ctx)
+	emt.printInitLocals(depth, ctx)
 
-	emitter.printLabel(depth, "while(CURR_FUNC_CALL->entryPoint >= 0)")
-	emitter.printLabel(depth, "{")
-	emitter.printLabel(depth+1, "switch (CURR_FUNC_CALL->entryPoint)")
-	emitter.printLabel(depth+1, "{")
+	emt.printLabel(depth, "while(CURR_FUNC_CALL->entryPoint >= 0)")
+	emt.printLabel(depth, "{")
+	emt.printLabel(depth+1, "switch (CURR_FUNC_CALL->entryPoint)")
+	emt.printLabel(depth+1, "{")
 
 	for sentenceIndex, sentence := range currFunc.Sentences {
 
@@ -111,7 +111,7 @@ func (emitter *EmitterData) processFuncSentences(depth int, currFunc *syntax.Fun
 		ctx.sentenceInfo.actionIndex = 0
 		ctx.clearEntryPoints()
 
-		emitter.matchingPattern(depth+1, ctx, sentence.Pattern.Terms)
+		emt.matchingPattern(depth+1, ctx, sentence.Pattern.Terms)
 
 		for index, a := range sentence.Actions {
 
@@ -120,82 +120,82 @@ func (emitter *EmitterData) processFuncSentences(depth int, currFunc *syntax.Fun
 			switch a.ActionOp {
 
 			case syntax.COMMA: // ','
-				emitter.constructAssembly(depth+2, ctx, a.Expr)
+				emt.constructAssembly(depth+2, ctx, a.Expr)
 				break
 
 			case syntax.REPLACE: // '='
 				ctx.clearEntryPoints()
-				emitter.constructAssembly(depth+2, ctx, a.Expr)
+				emt.constructAssembly(depth+2, ctx, a.Expr)
 				break
 
 			case syntax.COLON: // ':'
-				emitter.printLabel(depth+1, "} // Pattern or Call Action case end\n")
-				emitter.matchingPattern(depth+1, ctx, a.Expr.Terms)
+				emt.printLabel(depth+1, "} // Pattern or Call Action case end\n")
+				emt.matchingPattern(depth+1, ctx, a.Expr.Terms)
 				break
 
 			case syntax.DCOLON: // '::'
 				ctx.clearEntryPoints()
-				emitter.printLabel(depth+1, "} // Pattern or Call Action case end\n")
-				emitter.matchingPattern(depth+1, ctx, a.Expr.Terms)
+				emt.printLabel(depth+1, "} // Pattern or Call Action case end\n")
+				emt.matchingPattern(depth+1, ctx, a.Expr.Terms)
 				break
 
 			case syntax.TARROW: // '->'
-				emitter.printLabel(depth+1, "} // Pattern or Call Action case end\n")
-				emitter.constructFuncCallAction(depth+2, ctx, a.Expr.Terms)
+				emt.printLabel(depth+1, "} // Pattern or Call Action case end\n")
+				emt.constructFuncCallAction(depth+2, ctx, a.Expr.Terms)
 				break
 
 			case syntax.ARROW: // '=>'
 				ctx.clearEntryPoints()
-				emitter.printLabel(depth+1, "} // Pattern or Call Action case end\n")
-				emitter.constructFuncCallAction(depth+2, ctx, a.Expr.Terms)
+				emt.printLabel(depth+1, "} // Pattern or Call Action case end\n")
+				emt.constructFuncCallAction(depth+2, ctx, a.Expr.Terms)
 				break
 			}
 		}
 
-		emitter.printLabel(depth+2, "CURR_FUNC_CALL->entryPoint = -1;")
-		emitter.printLabel(depth+2, "break; //Successful end of sentence")
-		emitter.printLabel(depth+1, "} // Pattern case end")
+		emt.printLabel(depth+2, "CURR_FUNC_CALL->entryPoint = -1;")
+		emt.printLabel(depth+2, "break; //Successful end of sentence")
+		emt.printLabel(depth+1, "} // Pattern case end")
 	}
 
-	emitter.printLabel(depth+1, "} // Entry point switch end")
-	emitter.printLabel(depth, "} // Main while end")
+	emt.printLabel(depth+1, "} // Entry point switch end")
+	emt.printLabel(depth, "} // Main while end")
 
-	emitter.printLabel(depth, "return funcRes;")
+	emt.printLabel(depth, "return funcRes;")
 }
 
-func (emitter *EmitterData) printInitLocals(depth int, ctx *emitterContext) {
+func (emt *EmitterData) printInitLocals(depth int, ctx *emitterContext) {
 	maxPatternNumber := ctx.maxPatternNumber
 	maxVarsNumber := ctx.maxVarsNumber
 	maxBracketsNumber := ctx.maxBracketsNumber
 
-	emitter.printLabel(depth, "struct func_result_t funcRes;")
-	emitter.printLabel(depth, "struct fragment_t* currFrag = 0;")
-	emitter.printLabel(depth, "uint64_t fragmentOffset = 0;")
-	emitter.printLabel(depth, "uint64_t rightBound = 0;")
-	emitter.printLabel(depth, "int stretchingVarNumber = 0;")
-	emitter.printLabel(depth, "int stretching = 0;")
-	emitter.printLabel(depth, "int status = GC_OK;")
-	emitter.printLabel(depth, "int prevStatus = GC_OK;")
-	emitter.printLabel(depth, "int i = 0;")
-	emitter.printLabel(depth, "int j = 0;")
-	emitter.printLabel(depth, "if (entryStatus == FIRST_CALL)")
-	emitter.printLabel(depth, "{")
-	emitter.printLabel(depth+1, fmt.Sprintf("checkAndCleanHeaps(0, ENV_SIZE(%d, %d, %d));", maxVarsNumber, maxPatternNumber, maxBracketsNumber))
-	emitter.printLabel(depth+1, fmt.Sprintf("initEnvData(CURR_FUNC_CALL->env, %d, %d, %d);", maxVarsNumber, maxPatternNumber, maxBracketsNumber))
-	emitter.printLabel(depth, "}")
-	emitter.printLabel(depth, "else if (entryStatus == ROLL_BACK)")
-	emitter.printLabel(depth+1, "stretching = 1;")
+	emt.printLabel(depth, "struct func_result_t funcRes;")
+	emt.printLabel(depth, "struct fragment_t* currFrag = 0;")
+	emt.printLabel(depth, "uint64_t fragmentOffset = 0;")
+	emt.printLabel(depth, "uint64_t rightBound = 0;")
+	emt.printLabel(depth, "int stretchingVarNumber = 0;")
+	emt.printLabel(depth, "int stretching = 0;")
+	emt.printLabel(depth, "int status = GC_OK;")
+	emt.printLabel(depth, "int prevStatus = GC_OK;")
+	emt.printLabel(depth, "int i = 0;")
+	emt.printLabel(depth, "int j = 0;")
+	emt.printLabel(depth, "if (entryStatus == FIRST_CALL)")
+	emt.printLabel(depth, "{")
+	emt.printLabel(depth+1, fmt.Sprintf("checkAndCleanHeaps(0, ENV_SIZE(%d, %d, %d));", maxVarsNumber, maxPatternNumber, maxBracketsNumber))
+	emt.printLabel(depth+1, fmt.Sprintf("initEnvData(CURR_FUNC_CALL->env, %d, %d, %d);", maxVarsNumber, maxPatternNumber, maxBracketsNumber))
+	emt.printLabel(depth, "}")
+	emt.printLabel(depth, "else if (entryStatus == ROLL_BACK)")
+	emt.printLabel(depth+1, "stretching = 1;")
 }
 
-func (emitter *EmitterData) mainFunc(depth int, entryFuncName string) {
+func (emt *EmitterData) mainFunc(depth int, entryFuncName string) {
 
-	emitter.printLabel(depth, "int main(int argc, char** argv)")
-	emitter.printLabel(depth, "{")
-	emitter.printLabel(depth+1, "initAllocator(getHeapSizeFromCmdArgs(argc, argv));")
-	emitter.printLabel(depth+1, "initLiteralData();")
-	emitter.printLabel(depth+1, fmt.Sprintf("uint64_t vtermOffset = initArgsData(UINT64_C(%d), argc, argv);", emitter.currTermNum))
-	emitter.printLabel(depth+1, "initHeaps(vtermOffset);")
-	emitter.printLabel(depth+1, fmt.Sprintf("mainLoop(\"Go\", %s);", entryFuncName))
-	emitter.printLabel(depth+1, "return 0;")
-	emitter.printLabel(depth, "}")
+	emt.printLabel(depth, "int main(int argc, char** argv)")
+	emt.printLabel(depth, "{")
+	emt.printLabel(depth+1, "initAllocator(getHeapSizeFromCmdArgs(argc, argv));")
+	emt.printLabel(depth+1, "initLiteralData();")
+	emt.printLabel(depth+1, fmt.Sprintf("uint64_t vtermOffset = initArgsData(UINT64_C(%d), argc, argv);", emt.currTermNum))
+	emt.printLabel(depth+1, "initHeaps(vtermOffset);")
+	emt.printLabel(depth+1, fmt.Sprintf("mainLoop(\"Go\", %s);", entryFuncName))
+	emt.printLabel(depth+1, "return 0;")
+	emt.printLabel(depth, "}")
 }

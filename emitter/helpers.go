@@ -14,9 +14,9 @@ func genTabs(depth int) string {
 	return strings.Repeat(tab, depth)
 }
 
-func (emitter *EmitterData) printLabel(depth int, label string) {
+func (emt *EmitterData) printLabel(depth int, label string) {
 	tabs := genTabs(depth)
-	fmt.Fprintf(emitter, "%s%s\n", tabs, label)
+	fmt.Fprintf(emt, "%s%s\n", tabs, label)
 }
 
 /// Unicode string --> char string"
