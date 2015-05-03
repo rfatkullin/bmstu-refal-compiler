@@ -9,27 +9,27 @@ import (
 	"bmstu-refal-compiler/syntax"
 )
 
-func (f *Data) printLiteralsAndHeapsInit(depth int, unit *syntax.Unit) {
+func (emitter *EmitterData) printLiteralsAndHeapsInit(depth int, unit *syntax.Unit) {
 
-	f.printLabel(depth, "void initLiteralData()\n{")
-	f.initLiterals(depth+1, unit.GlobMap)
-	f.printLabel(depth, "} // initLiteralData()\n")
+	emitter.printLabel(depth, "void initLiteralData()\n{")
+	emitter.initLiterals(depth+1, unit.GlobMap)
+	emitter.printLabel(depth, "} // initLiteralData()\n")
 }
 
-func (f *Data) initLiterals(depth int, funcs map[string]*syntax.Function) {
+func (emitter *EmitterData) initLiterals(depth int, funcs map[string]*syntax.Function) {
 
 	// Dummy-vterm. Обращение к vterm'у с нулевым смещением - признак ошибки.
-	f.printLabel(depth, "_memMngr.vterms[0] = (struct vterm_t){.tag = V_CHAR_TAG, .ch = 0}; // dummy-vterm.")
+	emitter.printLabel(depth, "_memMngr.vterms[0] = (struct vterm_t){.tag = V_CHAR_TAG, .ch = 0}; // dummy-vterm.")
 
-	f.CurrTermNum = 1
+	emitter.currTermNum = 1
 	for _, currFunc := range funcs {
-		f.initFuncLiterals(depth, currFunc)
+		emitter.initFuncLiterals(depth, currFunc)
 	}
 
-	fmt.Fprintf(f, "\n")
+	fmt.Fprintf(emitter, "\n")
 }
 
-func (f *Data) initActionLiterals(depth int, expr syntax.Expr) {
+func (emitter *EmitterData) initActionLiterals(depth int, expr syntax.Expr) {
 
 	terms := make([]*syntax.Term, len(expr.Terms))
 	copy(terms, expr.Terms)
@@ -42,19 +42,19 @@ func (f *Data) initActionLiterals(depth int, expr syntax.Expr) {
 		switch term.TermTag {
 
 		case syntax.STR:
-			f.initStrVTerm(depth, term)
+			emitter.initStrVTerm(depth, term)
 			break
 
 		case syntax.COMP:
-			f.initIdentVTerm(depth, term, term.Value.Name)
+			emitter.initIdentVTerm(depth, term, term.Value.Name)
 			break
 
 		case syntax.INT:
-			f.initIntNumVTerm(depth, term)
+			emitter.initIntNumVTerm(depth, term)
 			break
 
 		case syntax.FLOAT:
-			f.initFloatVTerm(depth, term)
+			emitter.initFloatVTerm(depth, term)
 			break
 
 		case syntax.EXPR, syntax.EVAL:
@@ -66,63 +66,63 @@ func (f *Data) initActionLiterals(depth int, expr syntax.Expr) {
 		case syntax.FUNC:
 			if !term.Function.HasName {
 				term.Function.HasName = true
-				term.FuncName = fmt.Sprintf("AnonymFunc_%d", f.CurrTermNum)
-				f.initIdentVTerm(depth, term, term.FuncName)
+				term.FuncName = fmt.Sprintf("AnonymFunc_%d", emitter.currTermNum)
+				emitter.initIdentVTerm(depth, term, term.FuncName)
 			}
 
-			f.initIdentVTerm(depth, term, term.FuncName)
-			f.initFuncLiterals(depth, term.Function)
+			emitter.initIdentVTerm(depth, term, term.FuncName)
+			emitter.initFuncLiterals(depth, term.Function)
 			break
 		}
 	}
 }
 
-func (f *Data) initFuncLiterals(depth int, currFunc *syntax.Function) {
+func (emitter *EmitterData) initFuncLiterals(depth int, currFunc *syntax.Function) {
 	for _, s := range currFunc.Sentences {
-		f.initActionLiterals(depth, s.Pattern)
+		emitter.initActionLiterals(depth, s.Pattern)
 		for _, a := range s.Actions {
-			f.initActionLiterals(depth, a.Expr)
+			emitter.initActionLiterals(depth, a.Expr)
 		}
 	}
 }
 
-func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
-	term.IndexInLiterals = f.CurrTermNum
+func (emitter *EmitterData) initStrVTerm(depth int, term *syntax.Term) {
+	term.IndexInLiterals = emitter.currTermNum
 
 	for i := 0; i < len(term.Value.Str); i++ {
-		f.printLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_CHAR_TAG, .ch = %d};", f.CurrTermNum, term.Value.Str[i]))
-		f.CurrTermNum++
+		emitter.printLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_CHAR_TAG, .ch = %d};", emitter.currTermNum, term.Value.Str[i]))
+		emitter.currTermNum++
 	}
 }
 
 // Инициализация vterm_t для литералов целого типа
 // Пока только обычные
-func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
+func (emitter *EmitterData) initIntNumVTerm(depth int, term *syntax.Term) {
 	bytesStr, sign, bytesCount := getStrOfBytes(term.Value.Int)
 
-	f.printLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_INT_NUM_TAG,"+
+	emitter.printLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_INT_NUM_TAG,"+
 		" .intNum = allocateIntNumberLiteral((uint8_t[]){%s}, %d, UINT64_C(%d))};",
-		f.CurrTermNum, bytesStr, sign, bytesCount))
+		emitter.currTermNum, bytesStr, sign, bytesCount))
 
-	term.IndexInLiterals = f.CurrTermNum
-	f.CurrTermNum++
+	term.IndexInLiterals = emitter.currTermNum
+	emitter.currTermNum++
 }
 
 // Инициализация vterm_t для литералов вещественного типа
-func (f *Data) initFloatVTerm(depth int, term *syntax.Term) {
+func (emitter *EmitterData) initFloatVTerm(depth int, term *syntax.Term) {
 
-	f.printLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_DOUBLE_NUM_TAG, .doubleNum = %f};", f.CurrTermNum, term.Value.Float))
-	term.IndexInLiterals = f.CurrTermNum
-	f.CurrTermNum++
+	emitter.printLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_DOUBLE_NUM_TAG, .doubleNum = %f};", emitter.currTermNum, term.Value.Float))
+	term.IndexInLiterals = emitter.currTermNum
+	emitter.currTermNum++
 }
 
 // Инициализация vterm_t для идентификатора
-func (f *Data) initIdentVTerm(depth int, term *syntax.Term, ident string) {
+func (emitter *EmitterData) initIdentVTerm(depth int, term *syntax.Term, ident string) {
 	runesStr := getStrOfRunes(ident)
 
-	f.printLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_IDENT_TAG, .str = allocateVStringLiteral((uint32_t[]){%s}, UINT64_C(%d))};",
-		f.CurrTermNum, runesStr, utf8.RuneCountInString(ident)))
+	emitter.printLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_IDENT_TAG, .str = allocateVStringLiteral((uint32_t[]){%s}, UINT64_C(%d))};",
+		emitter.currTermNum, runesStr, utf8.RuneCountInString(ident)))
 
-	term.IndexInLiterals = f.CurrTermNum
-	f.CurrTermNum++
+	term.IndexInLiterals = emitter.currTermNum
+	emitter.currTermNum++
 }

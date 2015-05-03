@@ -4,50 +4,50 @@ import (
 	"fmt"
 )
 
-func (f *Data) matchingFixedLocalSymbolVar(depth int, ctx *emitterContext, varNumber int) {
+func (emitter *EmitterData) matchingFixedLocalSymbolVar(depth int, ctx *emitterContext, varNumber int) {
 	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
 
 	lterm := fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)", varNumber)
-	f.matchingFixedSymbolVar(depth, prevStretchVarNumber, ctx, lterm)
+	emitter.matchingFixedSymbolVar(depth, prevStretchVarNumber, ctx, lterm)
 }
 
-func (f *Data) matchingFixedEnvSymbolVar(depth int, ctx *emitterContext, varNumber int) {
+func (emitter *EmitterData) matchingFixedEnvSymbolVar(depth int, ctx *emitterContext, varNumber int) {
 	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
 	lterm := fmt.Sprintf("(CURR_FUNC_CALL->env->params + %d)", varNumber)
-	f.matchingFixedSymbolVar(depth, prevStretchVarNumber, ctx, lterm)
+	emitter.matchingFixedSymbolVar(depth, prevStretchVarNumber, ctx, lterm)
 }
 
-func (f *Data) matchingFixedLocalExprVar(depth int, ctx *emitterContext, varNumber int) {
+func (emitter *EmitterData) matchingFixedLocalExprVar(depth int, ctx *emitterContext, varNumber int) {
 	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
 
 	lterm := fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)", varNumber)
-	f.matchingFixedExprVar(depth, prevStretchVarNumber, ctx, lterm)
+	emitter.matchingFixedExprVar(depth, prevStretchVarNumber, ctx, lterm)
 }
 
-func (f *Data) matchingFixedEnvExprVar(depth int, ctx *emitterContext, varNumber int) {
+func (emitter *EmitterData) matchingFixedEnvExprVar(depth int, ctx *emitterContext, varNumber int) {
 	prevStretchVarNumber := ctx.patternCtx.prevEntryPoint
 
 	lterm := fmt.Sprintf("(CURR_FUNC_CALL->env->params + %d)", varNumber)
-	f.matchingFixedExprVar(depth, prevStretchVarNumber, ctx, lterm)
+	emitter.matchingFixedExprVar(depth, prevStretchVarNumber, ctx, lterm)
 }
 
-func (f *Data) matchingFixedExprVar(depth, prevStretchVarNumber int, ctx *emitterContext, lterm string) {
+func (emitter *EmitterData) matchingFixedExprVar(depth, prevStretchVarNumber int, ctx *emitterContext, lterm string) {
 
-	f.printLabel(depth, fmt.Sprintf("if (fragmentOffset + %s->length > rightBound)", lterm))
-	f.printFailBlock(depth, prevStretchVarNumber, true)
+	emitter.printLabel(depth, fmt.Sprintf("if (fragmentOffset + %s->length > rightBound)", lterm))
+	emitter.printFailBlock(depth, prevStretchVarNumber, true)
 
-	f.printLabel(depth, fmt.Sprintf("if (!eqFragment(fragmentOffset, %s->offset, %s->length))", lterm, lterm))
-	f.printFailBlock(depth, prevStretchVarNumber, true)
+	emitter.printLabel(depth, fmt.Sprintf("if (!eqFragment(fragmentOffset, %s->offset, %s->length))", lterm, lterm))
+	emitter.printFailBlock(depth, prevStretchVarNumber, true)
 
-	f.printLabel(depth, fmt.Sprintf("fragmentOffset += %s->length;", lterm))
+	emitter.printLabel(depth, fmt.Sprintf("fragmentOffset += %s->length;", lterm))
 }
 
-func (f *Data) matchingFixedSymbolVar(depth, prevStretchVarNumber int, ctx *emitterContext, lterm string) {
+func (emitter *EmitterData) matchingFixedSymbolVar(depth, prevStretchVarNumber int, ctx *emitterContext, lterm string) {
 
-	f.printLabel(depth, "if (fragmentOffset >= rightBound ")
-	f.printLabel(depth, fmt.Sprintf("|| (_memMngr.vterms[fragmentOffset].tag == V_BRACKETS_TAG) "+
+	emitter.printLabel(depth, "if (fragmentOffset >= rightBound ")
+	emitter.printLabel(depth, fmt.Sprintf("|| (_memMngr.vterms[fragmentOffset].tag == V_BRACKETS_TAG) "+
 		"|| (!eqSymbol(fragmentOffset, %s->offset)))", lterm))
-	f.printFailBlock(depth, prevStretchVarNumber, true)
+	emitter.printFailBlock(depth, prevStretchVarNumber, true)
 
-	f.printLabel(depth, "fragmentOffset++;")
+	emitter.printLabel(depth, "fragmentOffset++;")
 }

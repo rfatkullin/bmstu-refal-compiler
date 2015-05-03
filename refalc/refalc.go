@@ -194,7 +194,7 @@ func main() {
 	}
 
 	done := make(chan bool, 16)
-	fs := make(chan emitter.Data, 16)
+	fs := make(chan emitter.EmitterData, 16)
 	fileCount := 0
 	go emitter.Handle(done, fs)
 
@@ -242,7 +242,7 @@ func main() {
 		}
 
 		if d, err := os.Create(changeExt(x, "c")); err == nil {
-			fs <- emitter.Data{x, <-ast, d, 0}
+			fs <- emitter.ConstructEmitterData(x, <-ast, d)
 			fileCount++
 		} else {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
