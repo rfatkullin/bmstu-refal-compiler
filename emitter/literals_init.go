@@ -2,7 +2,6 @@ package emitter
 
 import (
 	"fmt"
-	"strings"
 	"unicode/utf8"
 )
 
@@ -10,17 +9,24 @@ import (
 	"bmstu-refal-compiler/syntax"
 )
 
-func genTabs(depth int) string {
-	return strings.Repeat(tab, depth)
+func (f *Data) printLiteralsAndHeapsInit(depth int, unit *syntax.Unit) {
+
+	f.printLabel(depth, "void initLiteralData()\n{")
+	f.initLiterals(depth+1, unit.GlobMap)
+	f.printLabel(depth, "} // initLiteralData()\n")
 }
 
-func (f *Data) PrintLabel(depth int, label string) {
-	tabs := genTabs(depth)
-	fmt.Fprintf(f, "%s%s\n", tabs, label)
-}
+func (f *Data) initLiterals(depth int, funcs map[string]*syntax.Function) {
 
-func (f *Data) printFuncHeader(depth int, name string) {
-	f.PrintLabel(depth, fmt.Sprintf("struct func_result_t %s(int entryStatus) \n{", name))
+	// Dummy-vterm. Обращение к vterm'у с нулевым смещением - признак ошибки.
+	f.printLabel(depth, "_memMngr.vterms[0] = (struct vterm_t){.tag = V_CHAR_TAG, .ch = 0}; // dummy-vterm.")
+
+	f.CurrTermNum = 1
+	for _, currFunc := range funcs {
+		f.initFuncLiterals(depth, currFunc)
+	}
+
+	fmt.Fprintf(f, "\n")
 }
 
 func (f *Data) initActionLiterals(depth int, expr syntax.Expr) {
@@ -84,7 +90,7 @@ func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 	term.IndexInLiterals = f.CurrTermNum
 
 	for i := 0; i < len(term.Value.Str); i++ {
-		f.PrintLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_CHAR_TAG, .ch = %d};", f.CurrTermNum, term.Value.Str[i]))
+		f.printLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_CHAR_TAG, .ch = %d};", f.CurrTermNum, term.Value.Str[i]))
 		f.CurrTermNum++
 	}
 }
@@ -92,9 +98,9 @@ func (f *Data) initStrVTerm(depth int, term *syntax.Term) {
 // Инициализация vterm_t для литералов целого типа
 // Пока только обычные
 func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
-	bytesStr, sign, bytesCount := GetStrOfBytes(term.Value.Int)
+	bytesStr, sign, bytesCount := getStrOfBytes(term.Value.Int)
 
-	f.PrintLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_INT_NUM_TAG,"+
+	f.printLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_INT_NUM_TAG,"+
 		" .intNum = allocateIntNumberLiteral((uint8_t[]){%s}, %d, UINT64_C(%d))};",
 		f.CurrTermNum, bytesStr, sign, bytesCount))
 
@@ -105,64 +111,18 @@ func (f *Data) initIntNumVTerm(depth int, term *syntax.Term) {
 // Инициализация vterm_t для литералов вещественного типа
 func (f *Data) initFloatVTerm(depth int, term *syntax.Term) {
 
-	f.PrintLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_DOUBLE_NUM_TAG, .doubleNum = %f};", f.CurrTermNum, term.Value.Float))
+	f.printLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_DOUBLE_NUM_TAG, .doubleNum = %f};", f.CurrTermNum, term.Value.Float))
 	term.IndexInLiterals = f.CurrTermNum
 	f.CurrTermNum++
 }
 
 // Инициализация vterm_t для идентификатора
 func (f *Data) initIdentVTerm(depth int, term *syntax.Term, ident string) {
-	runesStr := GetStrOfRunes(ident)
+	runesStr := getStrOfRunes(ident)
 
-	f.PrintLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_IDENT_TAG, .str = allocateVStringLiteral((uint32_t[]){%s}, UINT64_C(%d))};",
+	f.printLabel(depth, fmt.Sprintf("_memMngr.vterms[%d] = (struct vterm_t){.tag = V_IDENT_TAG, .str = allocateVStringLiteral((uint32_t[]){%s}, UINT64_C(%d))};",
 		f.CurrTermNum, runesStr, utf8.RuneCountInString(ident)))
 
 	term.IndexInLiterals = f.CurrTermNum
 	f.CurrTermNum++
-}
-
-func (f *Data) printLiteralsAndHeapsInit(depth int, unit *syntax.Unit) {
-
-	f.PrintLabel(depth, "void initLiteralData()\n{")
-
-	f.initLiterals(depth+1, unit.GlobMap)
-
-	f.PrintLabel(depth, "} // initLiteralData()\n")
-}
-
-func (f *Data) initLiterals(depth int, funcs map[string]*syntax.Function) {
-
-	// Dummy-vterm. Обращение к vterm'у с нулевым смещением - признак ошибки.
-	f.PrintLabel(depth, "_memMngr.vterms[0] = (struct vterm_t){.tag = V_CHAR_TAG, .ch = 0}; // dummy-vterm.")
-
-	f.CurrTermNum = 1
-	for _, currFunc := range funcs {
-		f.initFuncLiterals(depth, currFunc)
-	}
-
-	fmt.Fprintf(f, "\n")
-}
-
-func (f *Data) PrintHeaders() {
-
-	f.PrintLabel(0, "#include <stdlib.h>")
-	f.PrintLabel(0, "#include <stdio.h>\n")
-
-	f.PrintLabel(0, "#include <vmachine.h>")
-	f.PrintLabel(0, "#include <memory_manager.h>")
-	f.PrintLabel(0, "#include <defines/gc_macros.h>")
-	f.PrintLabel(0, "#include <builtins/builtins.h>")
-	f.PrintLabel(0, "#include <allocators/data_alloc.h>")
-	f.PrintLabel(0, "#include <allocators/vterm_alloc.h>")
-	f.PrintLabel(0, "#include <defines/data_struct_sizes.h>")
-
-	f.PrintLabel(0, "")
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-
-	return b
 }

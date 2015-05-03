@@ -11,16 +11,16 @@ import (
 
 func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.Term) {
 
-	f.PrintLabel(depth, fmt.Sprintf("//Sentence: %d, Pattern: %d", ctx.sentenceInfo.index, ctx.sentenceInfo.patternIndex))
-	f.PrintLabel(depth, fmt.Sprintf("case %d:", ctx.entryPointNumerator))
-	f.PrintLabel(depth, fmt.Sprintf("{"))
+	f.printLabel(depth, fmt.Sprintf("//Sentence: %d, Pattern: %d", ctx.sentenceInfo.index, ctx.sentenceInfo.patternIndex))
+	f.printLabel(depth, fmt.Sprintf("case %d:", ctx.entryPointNumerator))
+	f.printLabel(depth, fmt.Sprintf("{"))
 
 	f.checkAndAssemblyChain(depth+1, ctx)
 
 	f.checkFragmentLength(depth+1, -1, false, terms)
 
 	if len(terms) > 0 {
-		f.PrintLabel(depth+1, "else")
+		f.printLabel(depth+1, "else")
 		f.processPattern(depth+2, ctx, terms)
 	}
 
@@ -32,19 +32,19 @@ func (f *Data) matchingPattern(depth int, ctx *emitterContext, terms []*syntax.T
 }
 
 func (f *Data) processEmptyPattern(depth int, ctx *emitterContext) {
-	f.PrintLabel(depth+1, "if (currFrag->length > 0)")
+	f.printLabel(depth+1, "if (currFrag->length > 0)")
 	f.printFailBlock(depth+1, -1, false)
-	f.PrintLabel(depth+1, "break;")
+	f.printLabel(depth+1, "break;")
 }
 
 func (f *Data) processPattern(depth int, ctx *emitterContext, terms []*syntax.Term) {
 
-	f.PrintLabel(depth, "while (stretchingVarNumber >= 0)")
-	f.PrintLabel(depth, "{")
+	f.printLabel(depth, "while (stretchingVarNumber >= 0)")
+	f.printLabel(depth, "{")
 
-	f.PrintLabel(depth+1, "//From what stretchable variable start?")
-	f.PrintLabel(depth+1, "switch (stretchingVarNumber)")
-	f.PrintLabel(depth+1, "{")
+	f.printLabel(depth+1, "//From what stretchable variable start?")
+	f.printLabel(depth+1, "switch (stretchingVarNumber)")
+	f.printLabel(depth+1, "{")
 
 	ctx.patternCtx.entryPoint = 0
 	ctx.patternCtx.prevEntryPoint = -1
@@ -53,17 +53,17 @@ func (f *Data) processPattern(depth int, ctx *emitterContext, terms []*syntax.Te
 
 	f.matchingTerms(depth+2, false, ctx, terms)
 
-	f.PrintLabel(depth+1, "} //pattern switch\n")
+	f.printLabel(depth+1, "} //pattern switch\n")
 
-	f.PrintLabel(depth+1, "if (!stretching)")
-	f.PrintLabel(depth+1, "{")
-	f.PrintLabel(depth+2, "if (fragmentOffset - currFrag->offset < currFrag->length)")
+	f.printLabel(depth+1, "if (!stretching)")
+	f.printLabel(depth+1, "{")
+	f.printLabel(depth+2, "if (fragmentOffset - currFrag->offset < currFrag->length)")
 	f.printFailBlock(depth+2, ctx.patternCtx.prevEntryPoint, false)
-	f.PrintLabel(depth+2, "else")
-	f.PrintLabel(depth+3, "break; // Success!")
-	f.PrintLabel(depth+1, "}")
+	f.printLabel(depth+2, "else")
+	f.printLabel(depth+3, "break; // Success!")
+	f.printLabel(depth+1, "}")
 
-	f.PrintLabel(depth, "} // Pattern while\n")
+	f.printLabel(depth, "} // Pattern while\n")
 }
 
 func (f *Data) printFirstCase(depth int, ctx *emitterContext, term *syntax.Term) {
@@ -75,7 +75,7 @@ func (f *Data) printFirstCase(depth int, ctx *emitterContext, term *syntax.Term)
 	}
 
 	ctx.patternCtx.entryPoint = 1
-	f.PrintLabel(depth+1, "case 0:")
+	f.printLabel(depth+1, "case 0:")
 }
 
 func (f *Data) matchingTerms(depth int, inBrackets bool, ctx *emitterContext, terms []*syntax.Term) {
@@ -148,32 +148,32 @@ func (f *Data) matchingExpr(depth int, ctx *emitterContext, terms []*syntax.Term
 	bracketsIndex := ctx.bracketsNumerator
 	ctx.bracketsCurrentIndex = bracketsIndex
 
-	f.PrintLabel(depth, "//Check ().")
+	f.printLabel(depth, "//Check ().")
 	f.printOffsetCheck(depth, ctx.patternCtx.prevEntryPoint, " || _memMngr.vterms[fragmentOffset].tag != V_BRACKETS_TAG")
 
-	f.PrintLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->env->bracketsOffset[%d] = fragmentOffset;", bracketsIndex))
-	f.PrintLabel(depth, "rightBound = RIGHT_BOUND(fragmentOffset);")
-	f.PrintLabel(depth, "fragmentOffset = VTERM_BRACKETS(fragmentOffset)->offset;")
+	f.printLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->env->bracketsOffset[%d] = fragmentOffset;", bracketsIndex))
+	f.printLabel(depth, "rightBound = RIGHT_BOUND(fragmentOffset);")
+	f.printLabel(depth, "fragmentOffset = VTERM_BRACKETS(fragmentOffset)->offset;")
 
 	f.checkFragmentLength(depth, ctx.patternCtx.prevEntryPoint, true, terms)
 
-	f.PrintLabel(depth, "//Start check in () terms.")
+	f.printLabel(depth, "//Start check in () terms.")
 	f.matchingTerms(depth, true, ctx, terms)
 
 	f.checkConsumeAllFragment(depth, ctx.patternCtx.prevEntryPoint)
 
-	f.PrintLabel(depth, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->bracketsOffset[%d]);", tmpBracketsCurrIndex))
-	f.PrintLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FUNC_CALL->env->bracketsOffset[%d] + 1;", bracketsIndex))
+	f.printLabel(depth, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->bracketsOffset[%d]);", tmpBracketsCurrIndex))
+	f.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FUNC_CALL->env->bracketsOffset[%d] + 1;", bracketsIndex))
 
-	f.PrintLabel(depth, "//End check in () terms.")
+	f.printLabel(depth, "//End check in () terms.")
 
 	ctx.bracketsCurrentIndex = tmpBracketsCurrIndex
 }
 
 func (f *Data) processPatternFail(depth int, ctx *emitterContext) {
 
-	f.PrintLabel(depth, "if (stretchingVarNumber < 0)")
-	f.PrintLabel(depth, "{")
+	f.printLabel(depth, "if (stretchingVarNumber < 0)")
+	f.printLabel(depth, "{")
 
 	prevEntryPoint := ctx.getPrevEntryPoint()
 	//First pattern in current sentence
@@ -183,16 +183,16 @@ func (f *Data) processPatternFail(depth int, ctx *emitterContext) {
 		f.processFailOfCommonPattern(depth+1, prevEntryPoint)
 	}
 
-	f.PrintLabel(depth+1, "break;")
-	f.PrintLabel(depth, "}")
+	f.printLabel(depth+1, "break;")
+	f.printLabel(depth, "}")
 }
 
 func (f *Data) checkFragmentLength(depth, prevStertchingVarNumber int, withBreakStatement bool, terms []*syntax.Term) {
 
 	if len(terms) == 0 {
-		f.PrintLabel(depth, "if (rightBound != fragmentOffset)")
+		f.printLabel(depth, "if (rightBound != fragmentOffset)")
 	} else {
-		f.PrintLabel(depth, fmt.Sprintf("if (rightBound - fragmentOffset < %d)", f.getMinLengthForTerms(terms)))
+		f.printLabel(depth, fmt.Sprintf("if (rightBound - fragmentOffset < %d)", f.getMinLengthForTerms(terms)))
 	}
 
 	f.printFailBlock(depth, prevStertchingVarNumber, withBreakStatement)
@@ -200,52 +200,52 @@ func (f *Data) checkFragmentLength(depth, prevStertchingVarNumber int, withBreak
 
 func (f *Data) processFailOfFirstPattern(depth int, ctx *emitterContext) {
 	if ctx.sentenceInfo.isLast {
-		f.PrintLabel(depth, "//First pattern of last sentence -> nothing to stretch -> fail!")
-		f.PrintLabel(depth, "funcRes = (struct func_result_t){.status = FAIL_RESULT, .fieldChain = 0, .callChain = 0};")
-		f.PrintLabel(depth, "CURR_FUNC_CALL->entryPoint = -1;")
+		f.printLabel(depth, "//First pattern of last sentence -> nothing to stretch -> fail!")
+		f.printLabel(depth, "funcRes = (struct func_result_t){.status = FAIL_RESULT, .fieldChain = 0, .callChain = 0};")
+		f.printLabel(depth, "CURR_FUNC_CALL->entryPoint = -1;")
 
 	} else {
-		f.PrintLabel(depth, "//First pattern of current sentence -> jump to first pattern of next sentence!")
-		f.PrintLabel(depth, "stretching = 0;")
-		f.PrintLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", ctx.nextSentenceEntryPoint))
-		f.PrintLabel(depth, "clearCurrFuncEnvData();")
+		f.printLabel(depth, "//First pattern of current sentence -> jump to first pattern of next sentence!")
+		f.printLabel(depth, "stretching = 0;")
+		f.printLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", ctx.nextSentenceEntryPoint))
+		f.printLabel(depth, "clearCurrFuncEnvData();")
 	}
 }
 
 func (f *Data) processFailOfCommonPattern(depth, prevEntryPoint int) {
-	f.PrintLabel(depth, "//Jump to previouse pattern of same sentence!")
-	f.PrintLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", prevEntryPoint))
+	f.printLabel(depth, "//Jump to previouse pattern of same sentence!")
+	f.printLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", prevEntryPoint))
 }
 
 func (f *Data) checkAndAssemblyChain(depth int, ctx *emitterContext) {
 	patternIndex := ctx.sentenceInfo.patternIndex
 
-	f.PrintLabel(depth, "if (!stretching)")
-	f.PrintLabel(depth, "{")
+	f.printLabel(depth, "if (!stretching)")
+	f.printLabel(depth, "{")
 
 	if ctx.sentenceInfo.actionIndex == 0 {
 		if ctx.sentenceInfo.index == 0 {
-			f.PrintLabel(depth+1, "ASSEMBLY_FIELD(0, CURR_FUNC_CALL->fieldOfView);")
+			f.printLabel(depth+1, "ASSEMBLY_FIELD(0, CURR_FUNC_CALL->fieldOfView);")
 		} else {
-			f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = CURR_FUNC_CALL->env->assembled[0];",
+			f.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = CURR_FUNC_CALL->env->assembled[0];",
 				patternIndex))
 		}
 	} else {
 		if ctx.needToAssembly() {
-			f.PrintLabel(depth+1, fmt.Sprintf("ASSEMBLY_FIELD(%d, CURR_FUNC_CALL->env->workFieldOfView);", patternIndex))
+			f.printLabel(depth+1, fmt.Sprintf("ASSEMBLY_FIELD(%d, CURR_FUNC_CALL->env->workFieldOfView);", patternIndex))
 		} else {
-			f.PrintLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = CURR_FUNC_CALL->env->assembled[%d];",
+			f.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = CURR_FUNC_CALL->env->assembled[%d];",
 				patternIndex, patternIndex-1))
 		}
 	}
 
-	f.PrintLabel(depth, "} // !stretching")
+	f.printLabel(depth, "} // !stretching")
 
-	f.PrintLabel(depth, fmt.Sprintf("currFrag = VTERM_BRACKETS(CURR_FUNC_CALL->env->assembled[%d]);", patternIndex))
-	f.PrintLabel(depth, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->assembled[%d]);", patternIndex))
-	f.PrintLabel(depth+1, "fragmentOffset = currFrag->offset;")
-	f.PrintLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->env->bracketsOffset[0] = CURR_FUNC_CALL->env->assembled[%d];", patternIndex))
-	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = CURR_FUNC_CALL->env->stretchVarsNumber[%d];", ctx.sentenceInfo.patternIndex))
+	f.printLabel(depth, fmt.Sprintf("currFrag = VTERM_BRACKETS(CURR_FUNC_CALL->env->assembled[%d]);", patternIndex))
+	f.printLabel(depth, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->assembled[%d]);", patternIndex))
+	f.printLabel(depth+1, "fragmentOffset = currFrag->offset;")
+	f.printLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->env->bracketsOffset[0] = CURR_FUNC_CALL->env->assembled[%d];", patternIndex))
+	f.printLabel(depth+1, fmt.Sprintf("stretchingVarNumber = CURR_FUNC_CALL->env->stretchVarsNumber[%d];", ctx.sentenceInfo.patternIndex))
 }
 
 func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Value) {
@@ -260,7 +260,7 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 	}
 
 	varNumber := varInfo.Number
-	f.PrintLabel(depth-1, fmt.Sprintf("//Matching %s variable", value.Name))
+	f.printLabel(depth-1, fmt.Sprintf("//Matching %s variable", value.Name))
 
 	switch value.VarType {
 	case tokens.VT_T:
@@ -299,7 +299,7 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 				f.matchingFixedEnvExprVar(depth, ctx, varNumber)
 			}
 		} else {
-			f.PrintLabel(depth-1, fmt.Sprintf("case %d:", ctx.patternCtx.entryPoint))
+			f.printLabel(depth-1, fmt.Sprintf("case %d:", ctx.patternCtx.entryPoint))
 
 			if value.VarType == tokens.VT_E {
 				f.matchingFreeExprVar(depth, ctx, varNumber)
@@ -317,22 +317,22 @@ func (f *Data) matchingVariable(depth int, ctx *emitterContext, value *tokens.Va
 
 func (f *Data) printFailBlock(depth, prevStretchVarNumber int, withBreakStatement bool) {
 
-	f.PrintLabel(depth, "{")
-	f.PrintLabel(depth+1, "stretching = 1;")
-	f.PrintLabel(depth+1, fmt.Sprintf("stretchingVarNumber = %d;", prevStretchVarNumber))
+	f.printLabel(depth, "{")
+	f.printLabel(depth+1, "stretching = 1;")
+	f.printLabel(depth+1, fmt.Sprintf("stretchingVarNumber = %d;", prevStretchVarNumber))
 	if withBreakStatement {
-		f.PrintLabel(depth+1, "break;")
+		f.printLabel(depth+1, "break;")
 	}
-	f.PrintLabel(depth, "}")
+	f.printLabel(depth, "}")
 }
 
 func (f *Data) printOffsetCheck(depth, prevStretchVarNumber int, optionalCond string) {
 
-	f.PrintLabel(depth, fmt.Sprintf("if (fragmentOffset >= rightBound%s)", optionalCond))
+	f.printLabel(depth, fmt.Sprintf("if (fragmentOffset >= rightBound%s)", optionalCond))
 	f.printFailBlock(depth, prevStretchVarNumber, true)
 }
 
 func (f *Data) checkConsumeAllFragment(depth, prevStretchVarNumber int) {
-	f.PrintLabel(depth, "if (fragmentOffset != rightBound)")
+	f.printLabel(depth, "if (fragmentOffset != rightBound)")
 	f.printFailBlock(depth, prevStretchVarNumber, true)
 }

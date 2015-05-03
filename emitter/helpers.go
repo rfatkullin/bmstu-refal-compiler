@@ -6,23 +6,21 @@ import (
 	"strings"
 )
 
-import (
-	"bmstu-refal-compiler/syntax"
+const (
+	tab = "\t"
 )
 
-func ReverseTerms(slice []*syntax.Term) (rSlice []*syntax.Term) {
-	size := len(slice)
-	rSlice = make([]*syntax.Term, 0)
+func genTabs(depth int) string {
+	return strings.Repeat(tab, depth)
+}
 
-	for index, _ := range slice {
-		rSlice = append(rSlice, slice[size-index-1])
-	}
-
-	return
+func (f *Data) printLabel(depth int, label string) {
+	tabs := genTabs(depth)
+	fmt.Fprintf(f, "%s%s\n", tabs, label)
 }
 
 /// Unicode string --> char string"
-func GetStrOfRunes(str string) string {
+func getStrOfRunes(str string) string {
 
 	runes := make([]string, 0)
 
@@ -34,7 +32,7 @@ func GetStrOfRunes(str string) string {
 }
 
 /// Bytes --> string
-func GetStrOfBytes(num *big.Int) (str string, sign int, count int) {
+func getStrOfBytes(num *big.Int) (str string, sign int, count int) {
 	strs := make([]string, 0)
 	bytes := num.Bytes()
 
@@ -57,9 +55,17 @@ func GetStrOfBytes(num *big.Int) (str string, sign int, count int) {
 	return
 }
 
-func BoolToInt(b bool) int {
+func boolToInt(b bool) int {
 	if b {
 		return 1
 	}
 	return 0
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+
+	return b
 }

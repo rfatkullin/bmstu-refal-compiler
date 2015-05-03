@@ -17,10 +17,10 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, term *sy
 	if funcIndex != -1 {
 		currFunc := f.Ast.FuncByNumber[funcIndex]
 		env = currFunc.Env
-		rollback = BoolToInt(currFunc.Rollback)
+		rollback = boolToInt(currFunc.Rollback)
 	}
 
-	f.PrintLabel(depth, "//Start construction func term.")
+	f.printLabel(depth, "//Start construction func term.")
 	f.printCheckGCCondition(depth, "currTerm", "chAllocateFragmentLTerm(1, &status)")
 	f.printCheckGCCondition(depth, "currTerm->fragment->offset", "chAllocateClosureVTerm(&status)")
 
@@ -31,23 +31,23 @@ func (f *Data) constructFunctionalVTerm(depth int, ctx *emitterContext, term *sy
 
 	f.printCheckGCCondition(depth, varStr, funcCallStr)
 
-	f.PrintLabel(depth, "currTerm->fragment->length = 1;")
+	f.printLabel(depth, "currTerm->fragment->length = 1;")
 
 	for needVarName, needVarInfo := range env {
 		if parentLocalVarNumber, ok := ctx.sentenceInfo.scope.VarMap[needVarName]; ok {
-			f.PrintLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->offset = (CURR_FUNC_CALL->env->locals + %d)->offset;",
+			f.printLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->offset = (CURR_FUNC_CALL->env->locals + %d)->offset;",
 				target, needVarInfo.Number, parentLocalVarNumber.Number))
-			f.PrintLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->length = (CURR_FUNC_CALL->env->locals + %d)->length;",
+			f.printLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->length = (CURR_FUNC_CALL->env->locals + %d)->length;",
 				target, needVarInfo.Number, parentLocalVarNumber.Number))
 		} else {
 			//Get from env of parent func
 			parentEnvVarInfo, _ := ctx.funcInfo.Env[needVarName]
-			f.PrintLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->offset = (CURR_FUNC_CALL->env->params + %d)->offset;",
+			f.printLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->offset = (CURR_FUNC_CALL->env->params + %d)->offset;",
 				target, needVarInfo.Number, parentEnvVarInfo.Number))
-			f.PrintLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->length = (CURR_FUNC_CALL->env->params + %d)->length;",
+			f.printLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->length = (CURR_FUNC_CALL->env->params + %d)->length;",
 				target, needVarInfo.Number, parentEnvVarInfo.Number))
 		}
 	}
 
-	f.PrintLabel(depth, "//Finish construction func term.")
+	f.printLabel(depth, "//Finish construction func term.")
 }
