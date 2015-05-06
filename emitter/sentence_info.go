@@ -25,6 +25,7 @@ func (sentenceInfo *sentenceInfo) init(sentencesCount, sentenceIndex int, s *syn
 	sentenceInfo.callActionsCount = getCallActionsCount(s)
 	sentenceInfo.isLast = sentenceIndex == sentencesCount-1
 	sentenceInfo.isLastPattern = sentenceInfo.patternsCount == 1
+	sentenceInfo.actionIndex = 0
 	sentenceInfo.patternIndex = 0
 	sentenceInfo.actionsCount = len(s.Actions)
 }

@@ -107,7 +107,6 @@ func (emt *EmitterData) processFuncSentences(depth int, currFunc *syntax.Functio
 			emt.ctx.sentenceInfo.patternsCount + 2*emt.ctx.sentenceInfo.callActionsCount
 		emt.ctx.bracketsNumerator = 0
 		emt.ctx.bracketsCurrentIndex = 0
-		emt.ctx.sentenceInfo.actionIndex = 0
 		emt.ctx.clearEntryPoints()
 
 		emt.matchingPattern(depth+1, sentence.Pattern.Terms)
