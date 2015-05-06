@@ -14,11 +14,11 @@ type EmitterData struct {
 	Ast  *syntax.Unit
 	io.WriteCloser
 	currTermNum int
-	context     *emitterContext
+	ctx         *context
 }
 
 func ConstructEmitterData(name string, ast *syntax.Unit, io io.WriteCloser) EmitterData {
-	return EmitterData{name, ast, io, 0, nil}
+	return EmitterData{name, ast, io, 0, &context{}}
 }
 
 func Handle(done chan<- bool, fs <-chan EmitterData) {
@@ -84,14 +84,13 @@ func (emt *EmitterData) processFuncs(depth int, funcs map[string]*syntax.Functio
 
 func (emt *EmitterData) processFuncSentences(depth int, currFunc *syntax.Function) {
 	sentencesCount := len(currFunc.Sentences)
-	ctx := &emitterContext{}
 
-	ctx.entryPointNumerator = 0
-	ctx.maxPatternNumber, ctx.maxVarsNumber = getMaxPatternsAndVarsCount(currFunc)
-	ctx.maxBracketsNumber = getMaxBracketsCountInFunc(currFunc)
-	ctx.funcInfo = currFunc
+	emt.ctx.entryPointNumerator = 0
+	emt.ctx.maxPatternNumber, emt.ctx.maxVarsNumber = getMaxPatternsAndVarsCount(currFunc)
+	emt.ctx.maxBracketsNumber = getMaxBracketsCountInFunc(currFunc)
+	emt.ctx.funcInfo = currFunc
 
-	emt.printInitLocals(depth, ctx)
+	emt.printInitLocals(depth)
 
 	emt.printLabel(depth, "while(CURR_FUNC_CALL->entryPoint >= 0)")
 	emt.printLabel(depth, "{")
@@ -100,54 +99,54 @@ func (emt *EmitterData) processFuncSentences(depth int, currFunc *syntax.Functio
 
 	for sentenceIndex, sentence := range currFunc.Sentences {
 
-		ctx.isLeftMatching = true
-		ctx.fixedVars = make(map[string]int)
-		ctx.sentenceInfo.init(sentencesCount, sentenceIndex, sentence)
+		emt.ctx.isLeftMatching = true
+		emt.ctx.fixedVars = make(map[string]int)
+		emt.ctx.sentenceInfo.init(sentencesCount, sentenceIndex, sentence)
 
-		ctx.nextSentenceEntryPoint = ctx.entryPointNumerator +
-			ctx.sentenceInfo.patternsCount + 2*ctx.sentenceInfo.callActionsCount
-		ctx.bracketsNumerator = 0
-		ctx.bracketsCurrentIndex = 0
-		ctx.sentenceInfo.actionIndex = 0
-		ctx.clearEntryPoints()
+		emt.ctx.nextSentenceEntryPoint = emt.ctx.entryPointNumerator +
+			emt.ctx.sentenceInfo.patternsCount + 2*emt.ctx.sentenceInfo.callActionsCount
+		emt.ctx.bracketsNumerator = 0
+		emt.ctx.bracketsCurrentIndex = 0
+		emt.ctx.sentenceInfo.actionIndex = 0
+		emt.ctx.clearEntryPoints()
 
-		emt.matchingPattern(depth+1, ctx, sentence.Pattern.Terms)
+		emt.matchingPattern(depth+1, sentence.Pattern.Terms)
 
 		for index, a := range sentence.Actions {
 
-			ctx.sentenceInfo.actionIndex = index + 1
+			emt.ctx.sentenceInfo.actionIndex = index + 1
 
 			switch a.ActionOp {
 
 			case syntax.COMMA: // ','
-				emt.constructAssembly(depth+2, ctx, a.Expr)
+				emt.constructAssembly(depth+2, a.Expr)
 				break
 
 			case syntax.REPLACE: // '='
-				ctx.clearEntryPoints()
-				emt.constructAssembly(depth+2, ctx, a.Expr)
+				emt.ctx.clearEntryPoints()
+				emt.constructAssembly(depth+2, a.Expr)
 				break
 
 			case syntax.COLON: // ':'
 				emt.printLabel(depth+1, "} // Pattern or Call Action case end\n")
-				emt.matchingPattern(depth+1, ctx, a.Expr.Terms)
+				emt.matchingPattern(depth+1, a.Expr.Terms)
 				break
 
 			case syntax.DCOLON: // '::'
-				ctx.clearEntryPoints()
+				emt.ctx.clearEntryPoints()
 				emt.printLabel(depth+1, "} // Pattern or Call Action case end\n")
-				emt.matchingPattern(depth+1, ctx, a.Expr.Terms)
+				emt.matchingPattern(depth+1, a.Expr.Terms)
 				break
 
 			case syntax.TARROW: // '->'
 				emt.printLabel(depth+1, "} // Pattern or Call Action case end\n")
-				emt.constructFuncCallAction(depth+2, ctx, a.Expr.Terms)
+				emt.constructFuncCallAction(depth+2, a.Expr.Terms)
 				break
 
 			case syntax.ARROW: // '=>'
-				ctx.clearEntryPoints()
+				emt.ctx.clearEntryPoints()
 				emt.printLabel(depth+1, "} // Pattern or Call Action case end\n")
-				emt.constructFuncCallAction(depth+2, ctx, a.Expr.Terms)
+				emt.constructFuncCallAction(depth+2, a.Expr.Terms)
 				break
 			}
 		}
@@ -163,10 +162,10 @@ func (emt *EmitterData) processFuncSentences(depth int, currFunc *syntax.Functio
 	emt.printLabel(depth, "return funcRes;")
 }
 
-func (emt *EmitterData) printInitLocals(depth int, ctx *emitterContext) {
-	maxPatternNumber := ctx.maxPatternNumber
-	maxVarsNumber := ctx.maxVarsNumber
-	maxBracketsNumber := ctx.maxBracketsNumber
+func (emt *EmitterData) printInitLocals(depth int) {
+	maxPatternNumber := emt.ctx.maxPatternNumber
+	maxVarsNumber := emt.ctx.maxVarsNumber
+	maxBracketsNumber := emt.ctx.maxBracketsNumber
 
 	emt.printLabel(depth, "struct func_result_t funcRes;")
 	emt.printLabel(depth, "struct fragment_t* currFrag = 0;")

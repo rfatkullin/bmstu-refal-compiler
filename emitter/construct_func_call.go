@@ -8,7 +8,7 @@ import (
 	"bmstu-refal-compiler/syntax"
 )
 
-func (emt *EmitterData) constructFunctionalVTerm(depth int, ctx *emitterContext, term *syntax.Term, emittedName string, funcIndex int) {
+func (emt *EmitterData) constructFunctionalVTerm(depth int, term *syntax.Term, emittedName string, funcIndex int) {
 
 	env := make(map[string]syntax.ScopeVar, 0)
 	rollback := 0
@@ -34,14 +34,14 @@ func (emt *EmitterData) constructFunctionalVTerm(depth int, ctx *emitterContext,
 	emt.printLabel(depth, "currTerm->fragment->length = 1;")
 
 	for needVarName, needVarInfo := range env {
-		if parentLocalVarNumber, ok := ctx.sentenceInfo.scope.VarMap[needVarName]; ok {
+		if parentLocalVarNumber, ok := emt.ctx.sentenceInfo.scope.VarMap[needVarName]; ok {
 			emt.printLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->offset = (CURR_FUNC_CALL->env->locals + %d)->offset;",
 				target, needVarInfo.Number, parentLocalVarNumber.Number))
 			emt.printLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->length = (CURR_FUNC_CALL->env->locals + %d)->length;",
 				target, needVarInfo.Number, parentLocalVarNumber.Number))
 		} else {
 			//Get from env of parent func
-			parentEnvVarInfo, _ := ctx.funcInfo.Env[needVarName]
+			parentEnvVarInfo, _ := emt.ctx.funcInfo.Env[needVarName]
 			emt.printLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->offset = (CURR_FUNC_CALL->env->params + %d)->offset;",
 				target, needVarInfo.Number, parentEnvVarInfo.Number))
 			emt.printLabel(depth, fmt.Sprintf("(%s.closure->params + %d)->length = (CURR_FUNC_CALL->env->params + %d)->length;",

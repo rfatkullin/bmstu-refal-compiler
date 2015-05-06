@@ -9,7 +9,7 @@ type patternContext struct {
 	prevEntryPoint int
 }
 
-type emitterContext struct {
+type context struct {
 	maxPatternNumber       int
 	maxVarsNumber          int
 	maxBracketsNumber      int
@@ -31,15 +31,15 @@ type entryPoint struct {
 	actionIndex int
 }
 
-func (ctx *emitterContext) addPrevEntryPoint(newEntryPoint, newActionIndex int) {
+func (ctx *context) addPrevEntryPoint(newEntryPoint, newActionIndex int) {
 	ctx.entryPoints = append(ctx.entryPoints, &entryPoint{entryPoint: newEntryPoint, actionIndex: newActionIndex})
 }
 
-func (ctx *emitterContext) clearEntryPoints() {
+func (ctx *context) clearEntryPoints() {
 	ctx.entryPoints = make([]*entryPoint, 0)
 }
 
-func (ctx *emitterContext) getPrevEntryPoint() int {
+func (ctx *context) getPrevEntryPoint() int {
 	actionIndex := ctx.sentenceInfo.actionIndex
 
 	if actionIndex == 0 {
@@ -67,7 +67,7 @@ func (ctx *emitterContext) getPrevEntryPoint() int {
 	return -1
 }
 
-func (ctx *emitterContext) needToAssembly() bool {
+func (ctx *context) needToAssembly() bool {
 	actionIndex := ctx.sentenceInfo.actionIndex
 
 	// Sentence Pattern

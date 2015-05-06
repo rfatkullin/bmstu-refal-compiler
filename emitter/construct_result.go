@@ -23,14 +23,14 @@ func calcChainsCount(terms []*syntax.Term) int {
 	return chainsCount + 1
 }
 
-func (emt *EmitterData) isLiteral(term *syntax.Term, ctx *emitterContext) bool {
+func (emt *EmitterData) isLiteral(term *syntax.Term) bool {
 
 	switch term.TermTag {
 	case syntax.STR, syntax.INT, syntax.FLOAT:
 		return true
 
 	case syntax.COMP:
-		if _, _, ok := emt.isFuncName(ctx, term.Value.Name); !ok {
+		if _, _, ok := emt.isFuncName(term.Value.Name); !ok {
 			return true
 		} else {
 			return false
@@ -45,11 +45,11 @@ func (emt *EmitterData) genFuncName(index int) string {
 	return fmt.Sprintf("func_%d", index)
 }
 
-func (emt *EmitterData) isFuncName(ctx *emitterContext, name string) (generatedName string, index int, ok bool) {
+func (emt *EmitterData) isFuncName(name string) (generatedName string, index int, ok bool) {
 	level := -1
 	index = 0
 
-	if index, level = ctx.sentenceInfo.sentence.FindFunc(name); level != -1 {
+	if index, level = emt.ctx.sentenceInfo.sentence.FindFunc(name); level != -1 {
 		return emt.genFuncName(index), index, true
 	}
 
@@ -64,7 +64,7 @@ func (emt *EmitterData) isFuncName(ctx *emitterContext, name string) (generatedN
 	return "", -1, false
 }
 
-func (emt *EmitterData) constructLiteralsFragment(depth int, ctx *emitterContext, terms []*syntax.Term) []*syntax.Term {
+func (emt *EmitterData) constructLiteralsFragment(depth int, terms []*syntax.Term) []*syntax.Term {
 	var term *syntax.Term
 	fragmentLength := 0
 	fragmentOffset := terms[0].IndexInLiterals
@@ -72,7 +72,7 @@ func (emt *EmitterData) constructLiteralsFragment(depth int, ctx *emitterContext
 
 	for _, term = range terms {
 
-		if !emt.isLiteral(term, ctx) {
+		if !emt.isLiteral(term) {
 			break
 		}
 
@@ -99,14 +99,14 @@ func (emt *EmitterData) ConcatToParentChain(depth int, firstTerm bool, chainNumb
 	emt.printLabel(depth, fmt.Sprintf("ADD_TO_CHAIN(helper[%d].chain, currTerm);", chainNumber))
 }
 
-func (emt *EmitterData) constructFuncCallTerm(depth int, ctx *emitterContext, chainNumber *int, firstFuncCall *bool, terms []*syntax.Term) []*syntax.Term {
+func (emt *EmitterData) constructFuncCallTerm(depth int, chainNumber *int, firstFuncCall *bool, terms []*syntax.Term) []*syntax.Term {
 
 	emt.printLabel(depth, "//Start construction func call.")
 
-	terms = emt.constructExprInParenthesis(depth, ctx, chainNumber, firstFuncCall, terms)
+	terms = emt.constructExprInParenthesis(depth, chainNumber, firstFuncCall, terms)
 
 	emt.printCheckGCCondition(depth, "funcTerm", "chAllocateFuncCallLTerm(&status)")
-	emt.printLabel(depth, fmt.Sprintf("funcTerm->funcCall->failEntryPoint = %d;", ctx.getPrevEntryPoint()))
+	emt.printLabel(depth, fmt.Sprintf("funcTerm->funcCall->failEntryPoint = %d;", emt.ctx.getPrevEntryPoint()))
 	emt.printLabel(depth, "funcTerm->funcCall->fieldOfView = currTerm->chain;")
 
 	emt.printLabel(depth, "//Finished construction func call")
@@ -130,7 +130,7 @@ func (emt *EmitterData) concatToCallChain(depth int, firstFuncCall *bool) {
 	emt.printLabel(depth, "currTerm = funcTerm;")
 }
 
-func (emt *EmitterData) constructExprInParenthesis(depth int, ctx *emitterContext, chainNumber *int, firstFuncCall *bool, terms []*syntax.Term) []*syntax.Term {
+func (emt *EmitterData) constructExprInParenthesis(depth int, chainNumber *int, firstFuncCall *bool, terms []*syntax.Term) []*syntax.Term {
 
 	firstTermInParenthesis := true
 	currChainNumber := *chainNumber
@@ -141,40 +141,40 @@ func (emt *EmitterData) constructExprInParenthesis(depth int, ctx *emitterContex
 
 		term := terms[0]
 
-		if emt.isLiteral(term, ctx) {
-			terms = emt.constructLiteralsFragment(depth, ctx, terms)
+		if emt.isLiteral(term) {
+			terms = emt.constructLiteralsFragment(depth, terms)
 		} else {
 			terms = terms[1:]
 
 			// Вызов функции
 			if term.TermTag == syntax.EVAL {
-				ctx.isThereFuncCall = true
+				emt.ctx.isThereFuncCall = true
 				*chainNumber++
-				emt.constructFuncCallTerm(depth, ctx, chainNumber, firstFuncCall, term.Exprs[0].Terms)
+				emt.constructFuncCallTerm(depth, chainNumber, firstFuncCall, term.Exprs[0].Terms)
 				emt.concatToCallChain(depth, firstFuncCall)
 			}
 
 			// Выражение в скобках
 			if term.TermTag == syntax.EXPR {
 				*chainNumber++
-				emt.constructExprInParenthesis(depth, ctx, chainNumber, firstFuncCall, term.Exprs[0].Terms)
+				emt.constructExprInParenthesis(depth, chainNumber, firstFuncCall, term.Exprs[0].Terms)
 			}
 
 			// Значение переменной
 			if term.TermTag == syntax.VAR {
-				fixedEntryPoint := ctx.fixedVars[term.Value.Name]
-				emt.constructVar(depth, fixedEntryPoint, term.Value.Name, ctx)
+				fixedEntryPoint := emt.ctx.fixedVars[term.Value.Name]
+				emt.constructVar(depth, fixedEntryPoint, term.Value.Name)
 			}
 
 			//Имя функции. Создаем функциональный vterm.
 			if term.TermTag == syntax.COMP {
-				genFuncName, index, _ := emt.isFuncName(ctx, term.Value.Name)
-				emt.constructFunctionalVTerm(depth, ctx, term, genFuncName, index)
+				genFuncName, index, _ := emt.isFuncName(term.Value.Name)
+				emt.constructFunctionalVTerm(depth, term, genFuncName, index)
 			}
 
 			//Создание вложенной функции. Создание функционального vterm'a
 			if term.TermTag == syntax.FUNC {
-				emt.constructFunctionalVTerm(depth, ctx, term, emt.genFuncName(term.Index), term.Index)
+				emt.constructFunctionalVTerm(depth, term, emt.genFuncName(term.Index), term.Index)
 			}
 		}
 
@@ -188,22 +188,22 @@ func (emt *EmitterData) constructExprInParenthesis(depth int, ctx *emitterContex
 	return terms
 }
 
-func (emt *EmitterData) constructVar(depth, fixedEntryPoint int, varName string, ctx *emitterContext) {
+func (emt *EmitterData) constructVar(depth, fixedEntryPoint int, varName string) {
 
 	emt.printCheckGCCondition(depth, "currTerm", "chAllocateFragmentLTerm(1, &status)")
 
-	if scopeVar, ok := ctx.sentenceInfo.scope.VarMap[varName]; ok {
+	if scopeVar, ok := emt.ctx.sentenceInfo.scope.VarMap[varName]; ok {
 		emt.printLabel(depth, fmt.Sprintf("currTerm->fragment->offset = (CURR_FUNC_CALL->env->locals + %d)->offset;", scopeVar.Number))
 		emt.printLabel(depth, fmt.Sprintf("currTerm->fragment->length = (CURR_FUNC_CALL->env->locals + %d)->length;", scopeVar.Number))
 	} else {
 		// Get env var
-		needVarInfo, _ := ctx.funcInfo.Env[varName]
+		needVarInfo, _ := emt.ctx.funcInfo.Env[varName]
 		emt.printLabel(depth, fmt.Sprintf("currTerm->fragment->offset = (CURR_FUNC_CALL->env->params + %d)->offset;", needVarInfo.Number))
 		emt.printLabel(depth, fmt.Sprintf("currTerm->fragment->length = (CURR_FUNC_CALL->env->params + %d)->length;", needVarInfo.Number))
 	}
 }
 
-func (emt *EmitterData) constructAssembly(depth int, ctx *emitterContext, resultExpr syntax.Expr) {
+func (emt *EmitterData) constructAssembly(depth int, resultExpr syntax.Expr) {
 
 	emt.printLabel(depth, "//Start construction assembly action.")
 
@@ -211,7 +211,7 @@ func (emt *EmitterData) constructAssembly(depth int, ctx *emitterContext, result
 		emt.printLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = 0, .callChain = 0};")
 	} else {
 
-		ctx.isThereFuncCall = false
+		emt.ctx.isThereFuncCall = false
 		firstFuncCall := true
 		chainNumber := 0
 
@@ -220,10 +220,10 @@ func (emt *EmitterData) constructAssembly(depth int, ctx *emitterContext, result
 		chainsCount := calcChainsCount(resultExpr.Terms)
 		emt.printInitializeConstructVars(depth+1, chainsCount)
 
-		emt.constructExprInParenthesis(depth+1, ctx, &chainNumber, &firstFuncCall, resultExpr.Terms)
+		emt.constructExprInParenthesis(depth+1, &chainNumber, &firstFuncCall, resultExpr.Terms)
 
-		if ctx.isThereFuncCall && ctx.sentenceInfo.needToEval() {
-			emt.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", ctx.entryPointNumerator))
+		if emt.ctx.isThereFuncCall && emt.ctx.sentenceInfo.needToEval() {
+			emt.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", emt.ctx.entryPointNumerator))
 			emt.printLabel(depth+1, "return (struct func_result_t){.status = CALL_RESULT, .fieldChain = currTerm->chain, .callChain = funcCallChain};")
 		} else {
 			emt.printLabel(depth+1, "CURR_FUNC_CALL->env->workFieldOfView = currTerm->chain;")
@@ -234,10 +234,10 @@ func (emt *EmitterData) constructAssembly(depth int, ctx *emitterContext, result
 	}
 }
 
-func (emt *EmitterData) constructFuncCallAction(depth int, ctx *emitterContext, terms []*syntax.Term) {
+func (emt *EmitterData) constructFuncCallAction(depth int, terms []*syntax.Term) {
 
-	emt.printLabel(depth-1, fmt.Sprintf("//Sentence: %d, Call Action", ctx.sentenceInfo.index))
-	emt.printLabel(depth-1, fmt.Sprintf("case %d:", ctx.entryPointNumerator))
+	emt.printLabel(depth-1, fmt.Sprintf("//Sentence: %d, Call Action", emt.ctx.sentenceInfo.index))
+	emt.printLabel(depth-1, fmt.Sprintf("case %d:", emt.ctx.entryPointNumerator))
 	emt.printLabel(depth-1, fmt.Sprintf("{"))
 
 	emt.printLabel(depth, "//Start construction func call action.")
@@ -249,7 +249,7 @@ func (emt *EmitterData) constructFuncCallAction(depth int, ctx *emitterContext, 
 
 	emt.printInitializeConstructVars(depth+1, 2)
 
-	emt.constructFuncCallTerm(depth+1, ctx, &chainNumber, &firstFuncCall, terms)
+	emt.constructFuncCallTerm(depth+1, &chainNumber, &firstFuncCall, terms)
 	emt.concatToCallChain(depth+1, &firstFuncCall)
 	emt.ConcatToParentChain(depth+1, true, 0)
 
@@ -264,21 +264,21 @@ func (emt *EmitterData) constructFuncCallAction(depth int, ctx *emitterContext, 
 	emt.printLabel(depth+2, "CURR_FUNC_CALL->fieldOfView = 0;")
 	emt.printLabel(depth+1, "}")
 
-	emt.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", ctx.entryPointNumerator+1))
+	emt.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", emt.ctx.entryPointNumerator+1))
 	emt.printLabel(depth+1, "return (struct func_result_t){.status = CALL_RESULT, .fieldChain = helper[0].chain, .callChain = funcCallChain};")
 
 	emt.setGCCloseBorder(depth)
 
 	emt.printLabel(depth-1, "} // Pattern or Call Action case end\n")
 
-	ctx.entryPointNumerator++
+	emt.ctx.entryPointNumerator++
 
-	emt.printLabel(depth-1, fmt.Sprintf("case %d:", ctx.entryPointNumerator))
+	emt.printLabel(depth-1, fmt.Sprintf("case %d:", emt.ctx.entryPointNumerator))
 	emt.printLabel(depth-1, "{")
 
 	emt.printLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = CURR_FUNC_CALL->env->workFieldOfView, .callChain = 0};")
 
-	ctx.entryPointNumerator++
+	emt.ctx.entryPointNumerator++
 }
 
 func (emt *EmitterData) printInitializeConstructVars(depth, chainsCount int) {
