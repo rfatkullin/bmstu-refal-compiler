@@ -85,10 +85,7 @@ func (emt *EmitterData) processFuncs(depth int, funcs map[string]*syntax.Functio
 func (emt *EmitterData) processFuncSentences(depth int, currFunc *syntax.Function) {
 	sentencesCount := len(currFunc.Sentences)
 
-	emt.ctx.entryPointNumerator = 0
-	emt.ctx.maxPatternNumber, emt.ctx.maxVarsNumber = getMaxPatternsAndVarsCount(currFunc)
-	emt.ctx.maxBracketsNumber = getMaxBracketsCountInFunc(currFunc)
-	emt.ctx.funcInfo = currFunc
+	emt.ctx.initForNewFunc(currFunc)
 
 	emt.printInitLocals(depth)
 
@@ -99,15 +96,7 @@ func (emt *EmitterData) processFuncSentences(depth int, currFunc *syntax.Functio
 
 	for sentenceIndex, sentence := range currFunc.Sentences {
 
-		emt.ctx.isLeftMatching = true
-		emt.ctx.fixedVars = make(map[string]int)
-		emt.ctx.sentenceInfo.init(sentencesCount, sentenceIndex, sentence)
-
-		emt.ctx.nextSentenceEntryPoint = emt.ctx.entryPointNumerator +
-			emt.ctx.sentenceInfo.patternsCount + 2*emt.ctx.sentenceInfo.callActionsCount
-		emt.ctx.bracketsNumerator = 0
-		emt.ctx.bracketsCurrentIndex = 0
-		emt.ctx.clearEntryPoints()
+		emt.ctx.initForNewSentence(sentencesCount, sentenceIndex, sentence)
 
 		emt.matchingPattern(depth+1, sentence.Pattern.Terms)
 

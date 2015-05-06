@@ -31,6 +31,24 @@ type entryPoint struct {
 	actionIndex int
 }
 
+func (ctx *context) initForNewFunc(currFunc *syntax.Function) {
+	ctx.entryPointNumerator = 0
+	ctx.maxPatternNumber, ctx.maxVarsNumber = getMaxPatternsAndVarsCount(currFunc)
+	ctx.maxBracketsNumber = getMaxBracketsCountInFunc(currFunc)
+	ctx.funcInfo = currFunc
+}
+
+func (ctx *context) initForNewSentence(sentencesCount, sentenceIndex int, sentence *syntax.Sentence) {
+	ctx.isLeftMatching = true
+	ctx.fixedVars = make(map[string]int)
+	ctx.sentenceInfo.init(sentencesCount, sentenceIndex, sentence)
+	ctx.nextSentenceEntryPoint = ctx.entryPointNumerator +
+		ctx.sentenceInfo.patternsCount + 2*ctx.sentenceInfo.callActionsCount
+	ctx.bracketsNumerator = 0
+	ctx.bracketsCurrentIndex = 0
+	ctx.clearEntryPoints()
+}
+
 func (ctx *context) addPrevEntryPoint(newEntryPoint, newActionIndex int) {
 	ctx.entryPoints = append(ctx.entryPoints, &entryPoint{entryPoint: newEntryPoint, actionIndex: newActionIndex})
 }
