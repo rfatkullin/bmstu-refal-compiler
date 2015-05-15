@@ -53,7 +53,7 @@ func (emt *EmitterData) isFuncName(name string) (generatedName string, index int
 		return emt.genFuncName(index), index, true
 	}
 
-	if _, ok := emt.Ast.Builtins[name]; ok {
+	if _, ok := syntax.Builtins[emt.dialect][name]; ok {
 		return name, -1, true
 	}
 
@@ -93,7 +93,7 @@ func (emt *EmitterData) constructLiteralsFragment(depth int, terms []*syntax.Ter
 	return terms[literalsNumber:]
 }
 
-func (emt *EmitterData) ConcatToParentChain(depth int, firstTerm bool, chainNumber int) {
+func (emt *EmitterData) concatToParentChain(depth int, firstTerm bool, chainNumber int) {
 
 	emt.printLabel(depth, "//Adding term to field chain -- Just concat.")
 	emt.printLabel(depth, fmt.Sprintf("ADD_TO_CHAIN(helper[%d].chain, currTerm);", chainNumber))
@@ -178,7 +178,7 @@ func (emt *EmitterData) constructExprInParenthesis(depth int, chainNumber *int, 
 			}
 		}
 
-		emt.ConcatToParentChain(depth, firstTermInParenthesis, currChainNumber)
+		emt.concatToParentChain(depth, firstTermInParenthesis, currChainNumber)
 		firstTermInParenthesis = false
 	}
 
@@ -251,7 +251,7 @@ func (emt *EmitterData) constructFuncCallAction(depth int, terms []*syntax.Term)
 
 	emt.constructFuncCallTerm(depth+1, &chainNumber, &firstFuncCall, terms)
 	emt.concatToCallChain(depth+1, &firstFuncCall)
-	emt.ConcatToParentChain(depth+1, true, 0)
+	emt.concatToParentChain(depth+1, true, 0)
 
 	emt.printLabel(depth+1, "if (CURR_FUNC_CALL->env->workFieldOfView)")
 	emt.printLabel(depth+1, "{")
@@ -260,8 +260,9 @@ func (emt *EmitterData) constructFuncCallAction(depth int, terms []*syntax.Term)
 	emt.printLabel(depth+1, "}")
 	emt.printLabel(depth+1, "else")
 	emt.printLabel(depth+1, "{")
-	emt.printLabel(depth+2, "CONCAT_CHAINS(funcTerm->funcCall->fieldOfView, CURR_FUNC_CALL->fieldOfView);")
-	emt.printLabel(depth+2, "CURR_FUNC_CALL->fieldOfView = 0;")
+	emt.printLabel(depth+2, "struct lterm_t* copyFieldOfView;")
+	emt.printCheckGCCondition(depth+2, "copyFieldOfView", "chCopySimpleExpr(CURR_FUNC_CALL->fieldOfView, &status)")
+	emt.printLabel(depth+2, "CONCAT_CHAINS(funcTerm->funcCall->fieldOfView, copyFieldOfView);")
 	emt.printLabel(depth+1, "}")
 
 	emt.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", emt.ctx.entryPointNumerator+1))

@@ -242,7 +242,7 @@ func main() {
 		}
 
 		if d, err := os.Create(changeExt(x, "c")); err == nil {
-			fs <- emitter.ConstructEmitterData(x, <-ast, d)
+			fs <- emitter.ConstructEmitterData(x, <-ast, d, cmdline.Dialect)
 			fileCount++
 		} else {
 			fmt.Fprintf(os.Stderr, "%v\n", err)

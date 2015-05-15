@@ -15,10 +15,11 @@ type EmitterData struct {
 	io.WriteCloser
 	currTermNum int
 	ctx         *context
+	dialect     int
 }
 
-func ConstructEmitterData(name string, ast *syntax.Unit, io io.WriteCloser) EmitterData {
-	return EmitterData{name, ast, io, 0, &context{}}
+func ConstructEmitterData(name string, ast *syntax.Unit, io io.WriteCloser, dialect int) EmitterData {
+	return EmitterData{name, ast, io, 0, &context{}, dialect}
 }
 
 func Handle(done chan<- bool, fs <-chan EmitterData) {
