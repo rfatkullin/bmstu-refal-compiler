@@ -210,6 +210,11 @@ func (emt *EmitterData) constructAssembly(depth int, resultExpr syntax.Expr) {
 		emt.printLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = 0, .callChain = 0};")
 	} else {
 
+		if emt.checkForFailSymbol(resultExpr.Terms) {
+			emt.printLabel(depth+1, "return (struct func_result_t){.status = FAIL_RESULT, .fieldChain = 0, .callChain = 0};")
+			return
+		}
+
 		emt.ctx.isThereFuncCall = false
 		firstFuncCall := true
 		chainNumber := 0
@@ -231,6 +236,17 @@ func (emt *EmitterData) constructAssembly(depth int, resultExpr syntax.Expr) {
 
 		emt.setGCCloseBorder(depth)
 	}
+}
+
+func (emt *EmitterData) checkForFailSymbol(terms []*syntax.Term) bool {
+
+	for _, term := range terms {
+		if term.TermTag == syntax.EVAL && len(term.Exprs[0].Terms) == 0 {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (emt *EmitterData) constructFuncCallAction(depth int, terms []*syntax.Term) {
