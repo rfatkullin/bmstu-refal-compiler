@@ -3,6 +3,7 @@ package emitter
 import (
 	"fmt"
 	"io"
+	"os"
 )
 
 import (
@@ -10,48 +11,89 @@ import (
 )
 
 type EmitterData struct {
-	Name string
-	Ast  *syntax.Unit
 	io.WriteCloser
-	currTermNum int
-	ctx         *context
-	dialect     int
+	currTermNum  int
+	ctx          *context
+	dialect      int
+	FuncByNumber map[int]*syntax.Function
+	AllGlobals   map[string]*syntax.Function
 }
 
-func ConstructEmitterData(name string, ast *syntax.Unit, io io.WriteCloser, dialect int) EmitterData {
-	return EmitterData{name, ast, io, 0, &context{}, dialect}
-}
+func Handle(done chan<- bool, unitsChan <-chan *syntax.Unit, targetSourceName string, dialect int) {
+	var units []*syntax.Unit = make([]*syntax.Unit, 0)
 
-func Handle(done chan<- bool, fs <-chan EmitterData) {
-	for emt := range fs {
-		processFile(emt)
-		emt.Close()
+	for unit := range unitsChan {
+		units = append(units, unit)
+	}
+
+	emt := constructEmitter(targetSourceName, dialect, units)
+	emt.startEmit(units)
+
+	emt.Close()
+
+	for i := 0; i < len(units); i++ {
 		done <- true
 	}
 }
 
-func processFile(emt EmitterData) {
-	unit := emt.Ast
-	depth := 0
+func constructEmitter(targetSourceName string, dialect int, units []*syntax.Unit) EmitterData {
 
-	emt.printHeadersAndDefs(depth, unit.FuncsTotalCount)
-	emt.printLiteralsAndHeapsInit(depth, unit)
+	var err error = nil
 
-	emt.processFuncs(depth, unit.GlobMap)
-	emt.processFuncs(depth, unit.NestedFuncs)
+	emt := EmitterData{nil, 1, &context{}, dialect,
+		make(map[int]*syntax.Function),
+		make(map[string]*syntax.Function)}
 
-	var goFunc *syntax.Function = nil
-	var ok bool = false
-	if goFunc, ok = unit.GlobMap["Go"]; !ok {
-		if goFunc, ok = unit.GlobMap["GO"]; !ok {
+	if emt.WriteCloser, err = os.Create(targetSourceName); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+	}
+
+	for _, unit := range units {
+
+		for _, gFunc := range unit.GlobMap {
+			emt.FuncByNumber[gFunc.Index] = gFunc
+			emt.AllGlobals[gFunc.FuncName] = gFunc
+		}
+
+		for _, nFunc := range unit.NestedFuncs {
+			emt.FuncByNumber[nFunc.Index] = nFunc
+		}
+	}
+
+	return emt
+}
+
+func (emt *EmitterData) startEmit(units []*syntax.Unit) {
+	var (
+		depth     int              = 0
+		entryFunc *syntax.Function = nil
+		ok        bool             = false
+	)
+
+	if entryFunc, ok = emt.AllGlobals["GO"]; !ok {
+		if entryFunc, ok = emt.AllGlobals["Go"]; !ok {
 			panic("Can't find entry point func! There is must be GO or Go func.")
 		}
 	}
 
-	emt.mainFunc(depth, emt.genFuncName(goFunc.Index))
+	emt.printHeadersAndDefs(depth, units)
+	emt.printLiteralsAndHeapsInit(depth, units)
+
+	for _, unit := range units {
+		emt.ctx.ast = unit
+		emt.processFile(depth)
+	}
+
+	emt.processEntryPoint(depth, entryFunc)
 }
 
-func (emt *EmitterData) printHeadersAndDefs(depth, funcsTotalCount int) {
+func (emt *EmitterData) processFile(depth int) {
+
+	emt.processFuncs(depth, emt.ctx.ast.GlobMap)
+	emt.processFuncs(depth, emt.ctx.ast.NestedFuncs)
+}
+
+func (emt *EmitterData) printHeadersAndDefs(depth int, units []*syntax.Unit) {
 
 	emt.printLabel(depth, "#include <stdlib.h>")
 	emt.printLabel(depth, "#include <stdio.h>\n")
@@ -66,8 +108,15 @@ func (emt *EmitterData) printHeadersAndDefs(depth, funcsTotalCount int) {
 
 	emt.printLabel(depth, "")
 
-	for i := 0; i < funcsTotalCount; i++ {
-		emt.printLabel(depth, fmt.Sprintf("struct func_result_t func_%d(int entryStatus);", i))
+	for _, unit := range units {
+
+		for _, gFunc := range unit.GlobMap {
+			emt.printLabel(depth, fmt.Sprintf("struct func_result_t func_%d(int entryStatus);", gFunc.Index))
+		}
+
+		for _, nFunc := range unit.NestedFuncs {
+			emt.printLabel(depth, fmt.Sprintf("struct func_result_t func_%d(int entryStatus);", nFunc.Index))
+		}
 	}
 
 	emt.printLabel(depth, "")
@@ -175,7 +224,7 @@ func (emt *EmitterData) printInitLocals(depth int) {
 	emt.printLabel(depth+1, "stretching = 1;")
 }
 
-func (emt *EmitterData) mainFunc(depth int, entryFuncName string) {
+func (emt *EmitterData) processEntryPoint(depth int, entryFunc *syntax.Function) {
 
 	emt.printLabel(depth, "int main(int argc, char** argv)")
 	emt.printLabel(depth, "{")
@@ -183,7 +232,7 @@ func (emt *EmitterData) mainFunc(depth int, entryFuncName string) {
 	emt.printLabel(depth+1, "initLiteralData();")
 	emt.printLabel(depth+1, fmt.Sprintf("uint64_t vtermOffset = initArgsData(UINT64_C(%d), argc, argv);", emt.currTermNum))
 	emt.printLabel(depth+1, "initHeaps(vtermOffset);")
-	emt.printLabel(depth+1, fmt.Sprintf("mainLoop(\"Go\", %s);", entryFuncName))
+	emt.printLabel(depth+1, fmt.Sprintf("mainLoop(\"Go\", %s);", emt.genFuncName(entryFunc.Index)))
 	emt.printLabel(depth+1, "return 0;")
 	emt.printLabel(depth, "}")
 }

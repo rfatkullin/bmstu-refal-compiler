@@ -8,14 +8,12 @@ import (
 	"bmstu-refal-compiler/syntax"
 )
 
-func (emt *EmitterData) constructFunctionalVTerm(depth int, term *syntax.Term, emittedName string, funcIndex int) {
+func (emt *EmitterData) constructFunctionalVTerm(depth int, term *syntax.Term, emittedName string, currFunc *syntax.Function) {
 
 	env := make(map[string]syntax.ScopeVar, 0)
 	rollback := 0
 
-	// == -1 --> Builtins(no rollbacks, no env), != -1 --> Globs or Nested
-	if funcIndex != -1 {
-		currFunc := emt.Ast.FuncByNumber[funcIndex]
+	if currFunc != nil {
 		env = currFunc.Env
 		rollback = boolToInt(currFunc.Rollback)
 	}

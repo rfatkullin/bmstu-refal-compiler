@@ -9,24 +9,20 @@ import (
 	"bmstu-refal-compiler/syntax"
 )
 
-func (emt *EmitterData) printLiteralsAndHeapsInit(depth int, unit *syntax.Unit) {
+func (emt *EmitterData) printLiteralsAndHeapsInit(depth int, units []*syntax.Unit) {
 
 	emt.printLabel(depth, "void initLiteralData()\n{")
-	emt.initLiterals(depth+1, unit.GlobMap)
-	emt.printLabel(depth, "} // initLiteralData()\n")
-}
-
-func (emt *EmitterData) initLiterals(depth int, funcs map[string]*syntax.Function) {
 
 	// Dummy-vterm. Обращение к vterm'у с нулевым смещением - признак ошибки.
-	emt.printLabel(depth, "_memMngr.vterms[0] = (struct vterm_t){.tag = V_CHAR_TAG, .ch = 0}; // dummy-vterm.")
+	emt.printLabel(depth+1, "_memMngr.vterms[0] = (struct vterm_t){.tag = V_CHAR_TAG, .ch = 0}; // dummy-vterm.")
 
-	emt.currTermNum = 1
-	for _, currFunc := range funcs {
-		emt.initFuncLiterals(depth, currFunc)
+	for _, unit := range units {
+		for _, currFunc := range unit.GlobMap {
+			emt.initFuncLiterals(depth+1, currFunc)
+		}
 	}
 
-	fmt.Fprintf(emt, "\n")
+	emt.printLabel(depth, "} // initLiteralData()\n")
 }
 
 func (emt *EmitterData) initActionLiterals(depth int, expr syntax.Expr) {

@@ -24,6 +24,7 @@ type context struct {
 	bracketsNumerator      int
 	entryPoints            []*entryPoint
 	entryPointNumerator    int
+	ast                    *syntax.Unit
 }
 
 type entryPoint struct {

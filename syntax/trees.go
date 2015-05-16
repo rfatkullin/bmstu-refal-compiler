@@ -150,12 +150,10 @@ type Scope struct {
 }
 
 type Unit struct {
-	Builtins        map[string]bool
-	ExtMap          map[string]*FuncHeader
-	GlobMap         map[string]*Function
-	NestedFuncs     map[string]*Function
-	FuncByNumber    map[int]*Function
-	FuncsTotalCount int
+	Builtins    map[string]bool
+	ExtMap      map[string]*FuncHeader
+	GlobMap     map[string]*Function
+	NestedFuncs map[string]*Function
 }
 
 func (f *Function) Len() int { return len(f.Sentences) }

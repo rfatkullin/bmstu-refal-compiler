@@ -20,6 +20,8 @@ import (
 	"bmstu-refal-compiler/tokens"
 )
 
+var targetSourceName string = "source.c"
+
 func changeExt(file, newExt string) string {
 	ext := path.Ext(file)
 	file = file[0 : len(file)-len(ext)]
@@ -194,9 +196,9 @@ func main() {
 	}
 
 	done := make(chan bool, 16)
-	fs := make(chan emitter.EmitterData, 16)
+	fs := make(chan *syntax.Unit, 16)
 	fileCount := 0
-	go emitter.Handle(done, fs)
+	go emitter.Handle(done, fs, targetSourceName, cmdline.Dialect)
 
 	t := time.Now()
 	for _, x := range cmdline.Sources {
@@ -241,12 +243,8 @@ func main() {
 			}
 		}
 
-		if d, err := os.Create(changeExt(x, "c")); err == nil {
-			fs <- emitter.ConstructEmitterData(x, <-ast, d, cmdline.Dialect)
-			fileCount++
-		} else {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-		}
+		fs <- <-ast
+		fileCount++
 
 		close(ms)
 		summary := <-summ

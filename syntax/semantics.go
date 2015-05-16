@@ -9,6 +9,8 @@ import (
 	"bmstu-refal-compiler/messages"
 )
 
+var funcsEnumerator int = 0
+
 func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 	exts <-chan *FuncHeader, globals <-chan *Function, dialect int) {
 	err := func(pos coords.Pos, s string) {
@@ -58,12 +60,10 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 	}
 
 	unit := Unit{
-		Builtins:        make(map[string]bool, 16),
-		ExtMap:          make(map[string]*FuncHeader, 16),
-		GlobMap:         make(map[string]*Function, 64),
-		NestedFuncs:     make(map[string]*Function, 8),
-		FuncByNumber:    make(map[int]*Function, 72),
-		FuncsTotalCount: 0,
+		Builtins:    make(map[string]bool, 16),
+		ExtMap:      make(map[string]*FuncHeader, 16),
+		GlobMap:     make(map[string]*Function, 64),
+		NestedFuncs: make(map[string]*Function, 8),
 	}
 	ready := make(chan bool)
 
@@ -143,18 +143,18 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 			case FUNC: // Nested function.
 				if t.HasName {
 					if _, level := scope.FindFunc(t.FuncName); level == -1 {
-						scope.AddFunc(t.FuncName, unit.FuncsTotalCount)
-						t.Function.Index = unit.FuncsTotalCount
+						scope.AddFunc(t.FuncName, funcsEnumerator)
+						t.Function.Index = funcsEnumerator
 						unit.NestedFuncs[t.FuncName] = t.Function
-						unit.FuncsTotalCount++
+						funcsEnumerator++
 					} else {
 						errDuplicate(t.Pos, "nested function")
 					}
 				} else {
-					t.Function.Index = unit.FuncsTotalCount
-					t.FuncName = fmt.Sprintf("AnonymousFunc_%d", unit.FuncsTotalCount)
+					t.Function.Index = funcsEnumerator
+					t.FuncName = fmt.Sprintf("AnonymousFunc_%d", funcsEnumerator)
 					unit.NestedFuncs[t.FuncName] = t.Function
-					unit.FuncsTotalCount++
+					funcsEnumerator++
 				}
 			}
 		}
@@ -274,10 +274,10 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 						t.Params.Parent = &f.Params
 						checkBlock(t.Function, scope)
 
-						t.Function.Index = unit.FuncsTotalCount
-						t.FuncName = fmt.Sprintf("AnonymousFunc_%d", unit.FuncsTotalCount)
+						t.Function.Index = funcsEnumerator
+						t.FuncName = fmt.Sprintf("AnonymousFunc_%d", funcsEnumerator)
 						unit.NestedFuncs[t.FuncName] = t.Function
-						unit.FuncsTotalCount++
+						funcsEnumerator++
 
 						return
 					} else {
@@ -308,9 +308,8 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 				errDuplicateGlobal(g.Pos)
 			} else {
 				unit.GlobMap[g.FuncName] = g
-				unit.GlobMap[g.FuncName].Index = unit.FuncsTotalCount
-				unit.FuncByNumber[unit.GlobMap[g.FuncName].Index] = g
-				unit.FuncsTotalCount++
+				unit.GlobMap[g.FuncName].Index = funcsEnumerator
+				funcsEnumerator++
 			}
 		}
 
@@ -338,7 +337,6 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 	}
 
 	for _, currFunc := range unit.NestedFuncs {
-		unit.FuncByNumber[currFunc.Index] = currFunc
 		currFunc.setEnv()
 	}
 

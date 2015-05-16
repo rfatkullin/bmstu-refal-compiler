@@ -30,6 +30,7 @@ func (emt *EmitterData) isLiteral(term *syntax.Term) bool {
 		return true
 
 	case syntax.COMP:
+
 		if _, _, ok := emt.isFuncName(term.Value.Name); !ok {
 			return true
 		} else {
@@ -45,23 +46,21 @@ func (emt *EmitterData) genFuncName(index int) string {
 	return fmt.Sprintf("func_%d", index)
 }
 
-func (emt *EmitterData) isFuncName(name string) (generatedName string, index int, ok bool) {
-	level := -1
-	index = 0
+func (emt *EmitterData) isFuncName(name string) (string, *syntax.Function, bool) {
 
-	if index, level = emt.ctx.sentenceInfo.sentence.FindFunc(name); level != -1 {
-		return emt.genFuncName(index), index, true
+	if index, level := emt.ctx.sentenceInfo.sentence.FindFunc(name); level != -1 {
+		return emt.genFuncName(index), emt.FuncByNumber[index], true
 	}
 
 	if _, ok := syntax.Builtins[emt.dialect][name]; ok {
-		return name, -1, true
+		return name, nil, true
 	}
 
-	if currFunc, ok := emt.Ast.GlobMap[name]; ok {
-		return emt.genFuncName(currFunc.Index), currFunc.Index, true
+	if eFunc, ok := emt.AllGlobals[name]; ok {
+		return emt.genFuncName(eFunc.Index), eFunc, true
 	}
 
-	return "", -1, false
+	return "", nil, false
 }
 
 func (emt *EmitterData) constructLiteralsFragment(depth int, terms []*syntax.Term) []*syntax.Term {
@@ -174,7 +173,7 @@ func (emt *EmitterData) constructExprInParenthesis(depth int, chainNumber *int, 
 
 			//Создание вложенной функции. Создание функционального vterm'a
 			if term.TermTag == syntax.FUNC {
-				emt.constructFunctionalVTerm(depth, term, emt.genFuncName(term.Index), term.Index)
+				emt.constructFunctionalVTerm(depth, term, emt.genFuncName(term.Index), term.Function)
 			}
 		}
 
