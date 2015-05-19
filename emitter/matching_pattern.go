@@ -11,10 +11,6 @@ import (
 
 func (emt *EmitterData) matchingPattern(depth int, terms []*syntax.Term) {
 
-	emt.printLabel(depth, fmt.Sprintf("//Sentence: %d, Pattern: %d", emt.ctx.sentenceInfo.index, emt.ctx.sentenceInfo.patternIndex))
-	emt.printLabel(depth, fmt.Sprintf("case %d:", emt.ctx.entryPointNumerator))
-	emt.printLabel(depth, fmt.Sprintf("{"))
-
 	emt.checkAndAssemblyChain(depth + 1)
 
 	emt.checkFragmentLength(depth+1, -1, false, terms)
@@ -27,7 +23,6 @@ func (emt *EmitterData) matchingPattern(depth int, terms []*syntax.Term) {
 	emt.processPatternFail(depth + 1)
 
 	emt.ctx.addPrevEntryPoint(emt.ctx.entryPointNumerator, emt.ctx.sentenceInfo.actionIndex)
-	emt.ctx.entryPointNumerator++
 	emt.ctx.sentenceInfo.patternIndex++
 }
 

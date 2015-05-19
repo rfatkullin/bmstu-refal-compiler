@@ -135,7 +135,6 @@ func (emt *EmitterData) processFuncs(depth int, funcs []*syntax.Function) {
 		emt.processFuncSentences(depth+1, currFunc)
 		emt.printLabel(depth, fmt.Sprintf("} // %s\n", currFunc.FuncName))
 	}
-
 }
 
 func (emt *EmitterData) processFuncSentences(depth int, currFunc *syntax.Function) {
@@ -154,11 +153,14 @@ func (emt *EmitterData) processFuncSentences(depth int, currFunc *syntax.Functio
 
 		emt.ctx.initForNewSentence(sentencesCount, sentenceIndex, sentence)
 
-		emt.matchingPattern(depth+1, sentence.Pattern.Terms)
+		emt.printActionBegin(depth+2, syntax.COLON)
+		emt.matchingPattern(depth+2, sentence.Pattern.Terms)
+		emt.printActionEnd(depth + 2)
 
 		for index, a := range sentence.Actions {
 
 			emt.ctx.sentenceInfo.actionIndex = index + 1
+			emt.printActionBegin(depth+2, a.ActionOp)
 
 			switch a.ActionOp {
 
@@ -172,38 +174,50 @@ func (emt *EmitterData) processFuncSentences(depth int, currFunc *syntax.Functio
 				break
 
 			case syntax.COLON: // ':'
-				emt.printLabel(depth+1, "} // Pattern or Call Action case end\n")
-				emt.matchingPattern(depth+1, a.Expr.Terms)
+				emt.matchingPattern(depth+2, a.Expr.Terms)
 				break
 
 			case syntax.DCOLON: // '::'
 				emt.ctx.clearEntryPoints()
-				emt.printLabel(depth+1, "} // Pattern or Call Action case end\n")
-				emt.matchingPattern(depth+1, a.Expr.Terms)
+				emt.matchingPattern(depth+2, a.Expr.Terms)
 				break
 
 			case syntax.TARROW: // '->'
-				emt.printLabel(depth+1, "} // Pattern or Call Action case end\n")
 				emt.constructFuncCallAction(depth+2, a.Expr.Terms)
 				break
 
 			case syntax.ARROW: // '=>'
 				emt.ctx.clearEntryPoints()
-				emt.printLabel(depth+1, "} // Pattern or Call Action case end\n")
 				emt.constructFuncCallAction(depth+2, a.Expr.Terms)
 				break
 			}
+
+			emt.printActionEnd(depth + 2)
 		}
 
 		emt.printLabel(depth+2, "CURR_FUNC_CALL->entryPoint = -1;")
 		emt.printLabel(depth+2, "break; //Successful end of sentence")
-		emt.printLabel(depth+1, "} // Pattern case end")
 	}
 
 	emt.printLabel(depth+1, "} // Entry point switch end")
 	emt.printLabel(depth, "} // Main while end")
 
 	emt.printLabel(depth, "return funcRes;")
+}
+
+func (emt *EmitterData) printActionBegin(depth int, action syntax.ActionOp) {
+	emt.printLabel(depth, fmt.Sprintf("//Sentence: %d, Action index: %d, Type: %s",
+		emt.ctx.sentenceInfo.index,
+		emt.ctx.sentenceInfo.actionIndex,
+		action.String()))
+
+	emt.printLabel(depth, fmt.Sprintf("case %d:", emt.ctx.entryPointNumerator))
+	emt.printLabel(depth, fmt.Sprintf("{"))
+}
+
+func (emt *EmitterData) printActionEnd(depth int) {
+	emt.printLabel(depth, "}\n")
+	emt.ctx.entryPointNumerator++
 }
 
 func (emt *EmitterData) printInitLocals(depth int) {

@@ -43,11 +43,14 @@ func (ctx *context) initForNewSentence(sentencesCount, sentenceIndex int, senten
 	ctx.isLeftMatching = true
 	ctx.fixedVars = make(map[string]int)
 	ctx.sentenceInfo.init(sentencesCount, sentenceIndex, sentence)
-	ctx.nextSentenceEntryPoint = ctx.entryPointNumerator +
-		ctx.sentenceInfo.patternsCount + 2*ctx.sentenceInfo.callActionsCount
 	ctx.bracketsNumerator = 0
 	ctx.bracketsCurrentIndex = 0
 	ctx.clearEntryPoints()
+
+	ctx.nextSentenceEntryPoint = ctx.entryPointNumerator +
+		ctx.sentenceInfo.patternsCount +
+		ctx.sentenceInfo.assembliesCount +
+		2*ctx.sentenceInfo.callActionsCount
 }
 
 func (ctx *context) addPrevEntryPoint(newEntryPoint, newActionIndex int) {

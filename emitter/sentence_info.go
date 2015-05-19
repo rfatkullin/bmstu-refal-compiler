@@ -10,8 +10,8 @@ type sentenceInfo struct {
 	actionIndex      int
 	patternsCount    int
 	callActionsCount int
+	assembliesCount  int
 	actionsCount     int
-	isLastPattern    bool
 	isLast           bool
 	scope            *syntax.Scope
 	sentence         *syntax.Sentence
@@ -23,37 +23,16 @@ func (sentenceInfo *sentenceInfo) init(sentencesCount, sentenceIndex int, s *syn
 	sentenceInfo.scope = &s.Scope
 	sentenceInfo.patternsCount = getPatternsCount(s)
 	sentenceInfo.callActionsCount = getCallActionsCount(s)
+	sentenceInfo.actionsCount = len(s.Actions)
+	sentenceInfo.assembliesCount = sentenceInfo.actionsCount - (sentenceInfo.patternsCount + sentenceInfo.callActionsCount - 1)
 	sentenceInfo.isLast = sentenceIndex == sentencesCount-1
-	sentenceInfo.isLastPattern = sentenceInfo.patternsCount == 1
 	sentenceInfo.actionIndex = 0
 	sentenceInfo.patternIndex = 0
-	sentenceInfo.actionsCount = len(s.Actions)
 }
 
 func (sentenceInfo *sentenceInfo) isLastAction() bool {
 
 	return sentenceInfo.actionIndex >= sentenceInfo.actionsCount
-}
-
-func (sentenceInfo *sentenceInfo) needToEval() bool {
-
-	if sentenceInfo.isLastAction() {
-		return false
-	}
-
-	actions := sentenceInfo.sentence.Actions
-	index := sentenceInfo.actionIndex
-
-	// index == actual index + 1
-	switch actions[index].ActionOp {
-	case syntax.COLON, // ':'
-		syntax.DCOLON, // '::'
-		syntax.TARROW, // '->'
-		syntax.ARROW:  // '=>'
-		return true
-	}
-
-	return false
 }
 
 func getPatternsCount(s *syntax.Sentence) int {
