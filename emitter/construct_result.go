@@ -56,8 +56,14 @@ func (emt *EmitterData) isFuncName(name string) (string, *syntax.Function, bool)
 		return name, nil, true
 	}
 
-	if eFunc, ok := emt.AllGlobals[name]; ok {
-		return emt.genFuncName(eFunc.Index), eFunc, true
+	if gFunc, ok := emt.ctx.ast.GlobMap[name]; ok {
+		return emt.genFuncName(gFunc.Index), gFunc, true
+	}
+
+	if _, ok := emt.ctx.ast.ExtMap[name]; ok {
+		if eFunc, ok := emt.AllGlobals[name]; ok {
+			return emt.genFuncName(eFunc.Index), eFunc, true
+		}
 	}
 
 	return "", nil, false

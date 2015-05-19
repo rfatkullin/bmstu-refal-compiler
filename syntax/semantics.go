@@ -63,7 +63,7 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 		Builtins:    make(map[string]bool, 16),
 		ExtMap:      make(map[string]*FuncHeader, 16),
 		GlobMap:     make(map[string]*Function, 64),
-		NestedFuncs: make(map[string]*Function, 8),
+		NestedFuncs: make([]*Function, 0),
 	}
 	ready := make(chan bool)
 
@@ -144,18 +144,12 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 				if t.HasName {
 					if _, level := scope.FindFunc(t.FuncName); level == -1 {
 						scope.AddFunc(t.FuncName, funcsEnumerator)
-						t.Function.Index = funcsEnumerator
-						unit.NestedFuncs[t.FuncName] = t.Function
-						funcsEnumerator++
 					} else {
 						errDuplicate(t.Pos, "nested function")
 					}
-				} else {
-					t.Function.Index = funcsEnumerator
-					t.FuncName = fmt.Sprintf("AnonymousFunc_%d", funcsEnumerator)
-					unit.NestedFuncs[t.FuncName] = t.Function
-					funcsEnumerator++
 				}
+
+				unit.AddNestedFunc(t.Function)
 			}
 		}
 	}
@@ -274,10 +268,7 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 						t.Params.Parent = &f.Params
 						checkBlock(t.Function, scope)
 
-						t.Function.Index = funcsEnumerator
-						t.FuncName = fmt.Sprintf("AnonymousFunc_%d", funcsEnumerator)
-						unit.NestedFuncs[t.FuncName] = t.Function
-						funcsEnumerator++
+						unit.AddNestedFunc(t.Function)
 
 						return
 					} else {
@@ -307,9 +298,7 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 			if _, ok := unit.GlobMap[g.FuncName]; ok {
 				errDuplicateGlobal(g.Pos)
 			} else {
-				unit.GlobMap[g.FuncName] = g
-				unit.GlobMap[g.FuncName].Index = funcsEnumerator
-				funcsEnumerator++
+				unit.AddGlobalFunc(g)
 			}
 		}
 

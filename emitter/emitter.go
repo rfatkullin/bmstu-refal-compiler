@@ -89,7 +89,12 @@ func (emt *EmitterData) startEmit(units []*syntax.Unit) {
 
 func (emt *EmitterData) processFile(depth int) {
 
-	emt.processFuncs(depth, emt.ctx.ast.GlobMap)
+	globalFuncs := make([]*syntax.Function, 0, len(emt.ctx.ast.GlobMap))
+	for _, gFunc := range emt.ctx.ast.GlobMap {
+		globalFuncs = append(globalFuncs, gFunc)
+	}
+
+	emt.processFuncs(depth, globalFuncs)
 	emt.processFuncs(depth, emt.ctx.ast.NestedFuncs)
 }
 
@@ -108,21 +113,22 @@ func (emt *EmitterData) printHeadersAndDefs(depth int, units []*syntax.Unit) {
 
 	emt.printLabel(depth, "")
 
+	funcSignPattern := "struct func_result_t func_%d(int entryStatus);"
 	for _, unit := range units {
 
 		for _, gFunc := range unit.GlobMap {
-			emt.printLabel(depth, fmt.Sprintf("struct func_result_t func_%d(int entryStatus);", gFunc.Index))
+			emt.printLabel(depth, fmt.Sprintf(funcSignPattern, gFunc.Index))
 		}
 
 		for _, nFunc := range unit.NestedFuncs {
-			emt.printLabel(depth, fmt.Sprintf("struct func_result_t func_%d(int entryStatus);", nFunc.Index))
+			emt.printLabel(depth, fmt.Sprintf(funcSignPattern, nFunc.Index))
 		}
 	}
 
 	emt.printLabel(depth, "")
 }
 
-func (emt *EmitterData) processFuncs(depth int, funcs map[string]*syntax.Function) {
+func (emt *EmitterData) processFuncs(depth int, funcs []*syntax.Function) {
 	for _, currFunc := range funcs {
 		emt.printLabel(depth, fmt.Sprintf("// %s", currFunc.FuncName))
 		emt.printLabel(depth, fmt.Sprintf("struct func_result_t %s(int entryStatus) \n{", emt.genFuncName(currFunc.Index)))

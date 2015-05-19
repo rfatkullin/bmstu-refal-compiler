@@ -153,7 +153,19 @@ type Unit struct {
 	Builtins    map[string]bool
 	ExtMap      map[string]*FuncHeader
 	GlobMap     map[string]*Function
-	NestedFuncs map[string]*Function
+	NestedFuncs []*Function
+}
+
+func (u *Unit) AddNestedFunc(nFunc *Function) {
+	nFunc.Index = funcsEnumerator
+	u.NestedFuncs = append(u.NestedFuncs, nFunc)
+	funcsEnumerator++
+}
+
+func (u *Unit) AddGlobalFunc(gFunc *Function) {
+	gFunc.Index = funcsEnumerator
+	u.GlobMap[gFunc.FuncName] = gFunc
+	funcsEnumerator++
 }
 
 func (f *Function) Len() int { return len(f.Sentences) }
