@@ -248,6 +248,7 @@ func (emt *EmitterData) processEntryPoint(depth int, entryFunc *syntax.Function)
 
 	emt.printLabel(depth, "int main(int argc, char** argv)")
 	emt.printLabel(depth, "{")
+	emt.printLabel(depth+1, "initBuiltins();")
 	emt.printLabel(depth+1, "initAllocator(getHeapSizeFromCmdArgs(argc, argv));")
 	emt.printLabel(depth+1, "initLiteralData();")
 	emt.printLabel(depth+1, fmt.Sprintf("uint64_t vtermOffset = initArgsData(UINT64_C(%d), argc, argv);", emt.currTermNum))

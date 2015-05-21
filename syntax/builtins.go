@@ -90,5 +90,6 @@ var Builtins = map[int]map[string]bool{
 		"Symb":    true,
 		"Lenw":    true,
 		"Compare": true,
+		"Step":    true,
 	},
 }
