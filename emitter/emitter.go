@@ -26,6 +26,10 @@ func Handle(done chan<- bool, unitsChan <-chan *syntax.Unit, targetSourceName st
 		units = append(units, unit)
 	}
 
+	if len(units) == 0 {
+		return
+	}
+
 	emt := constructEmitter(targetSourceName, dialect, units)
 	emt.startEmit(units)
 
