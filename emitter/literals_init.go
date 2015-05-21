@@ -61,8 +61,7 @@ func (emt *EmitterData) initActionLiterals(depth int, expr syntax.Expr) {
 
 		case syntax.FUNC:
 			if !term.Function.HasName {
-				term.FuncName = fmt.Sprintf("AnonymFunc_%d", emt.currTermNum)
-				emt.initIdentVTerm(depth, term, term.FuncName)
+				term.FuncName = fmt.Sprintf("AnonymFunc_%d", term.Function.Index)
 			}
 
 			emt.initIdentVTerm(depth, term, term.FuncName)
