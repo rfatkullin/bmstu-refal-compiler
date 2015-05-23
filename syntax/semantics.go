@@ -52,11 +52,11 @@ func analyse(ast chan<- *Unit, ms chan<- messages.Data,
 			errFuncnameInStringForm(e.Pos)
 		}
 
-		_, ok := builtins[e.FuncName]
-		if ok {
+		inNative, ok := builtins[e.FuncName]
+		if ok && inNative {
 			err(e.Pos, "function having the same name is built-in")
 		}
-		return !ok
+		return !(ok && inNative)
 	}
 
 	unit := Unit{

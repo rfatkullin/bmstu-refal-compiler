@@ -42,14 +42,21 @@ func (emt *EmitterData) isLiteral(term *syntax.Term) bool {
 	return false
 }
 
-func (emt *EmitterData) genFuncName(index int) string {
+func (emt *EmitterData) genFuncName(name string, index int) string {
+
+	if inNative, ok := syntax.Builtins[emt.dialect][name]; ok {
+		if !inNative {
+			return name
+		}
+	}
+
 	return fmt.Sprintf("func_%d", index)
 }
 
 func (emt *EmitterData) isFuncName(name string) (string, *syntax.Function, bool) {
 
 	if index, level := emt.ctx.sentenceInfo.sentence.FindFunc(name); level != -1 {
-		return emt.genFuncName(index), emt.FuncByNumber[index], true
+		return emt.genFuncName(name, index), emt.FuncByNumber[index], true
 	}
 
 	if _, ok := syntax.Builtins[emt.dialect][name]; ok {
@@ -57,12 +64,12 @@ func (emt *EmitterData) isFuncName(name string) (string, *syntax.Function, bool)
 	}
 
 	if gFunc, ok := emt.ctx.ast.GlobMap[name]; ok {
-		return emt.genFuncName(gFunc.Index), gFunc, true
+		return emt.genFuncName(name, gFunc.Index), gFunc, true
 	}
 
 	if _, ok := emt.ctx.ast.ExtMap[name]; ok {
 		if eFunc, ok := emt.AllGlobals[name]; ok {
-			return emt.genFuncName(eFunc.Index), eFunc, true
+			return emt.genFuncName(name, eFunc.Index), eFunc, true
 		}
 	}
 
@@ -179,7 +186,7 @@ func (emt *EmitterData) constructExprInParenthesis(depth int, chainNumber *int, 
 
 			//Создание вложенной функции. Создание функционального vterm'a
 			if term.TermTag == syntax.FUNC {
-				emt.constructFunctionalVTerm(depth, term, emt.genFuncName(term.Index), term.Function)
+				emt.constructFunctionalVTerm(depth, term, emt.genFuncName(term.FuncName, term.Index), term.Function)
 			}
 		}
 

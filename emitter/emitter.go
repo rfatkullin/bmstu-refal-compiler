@@ -129,13 +129,20 @@ func (emt *EmitterData) printHeadersAndDefs(depth int, units []*syntax.Unit) {
 		}
 	}
 
+	for name, inNative := range syntax.Builtins[emt.dialect] {
+		if !inNative {
+			emt.printLabel(depth, fmt.Sprintf("struct func_result_t %s(int entryStatus);", name))
+		}
+	}
+
 	emt.printLabel(depth, "")
 }
 
 func (emt *EmitterData) processFuncs(depth int, funcs []*syntax.Function) {
 	for _, currFunc := range funcs {
 		emt.printLabel(depth, fmt.Sprintf("// %s", currFunc.FuncName))
-		emt.printLabel(depth, fmt.Sprintf("struct func_result_t %s(int entryStatus) \n{", emt.genFuncName(currFunc.Index)))
+		emt.printLabel(depth, fmt.Sprintf("struct func_result_t %s(int entryStatus) \n{",
+			emt.genFuncName(currFunc.FuncName, currFunc.Index)))
 		emt.processFuncSentences(depth+1, currFunc)
 		emt.printLabel(depth, fmt.Sprintf("} // %s\n", currFunc.FuncName))
 	}
@@ -259,7 +266,7 @@ func (emt *EmitterData) processEntryPoint(depth int, entryFunc *syntax.Function)
 		emt.printLabel(depth+1, "initLiteralData();")
 		emt.printLabel(depth+1, fmt.Sprintf("uint64_t vtermOffset = initArgsData(UINT64_C(%d), argc, argv);", emt.currTermNum))
 		emt.printLabel(depth+1, "initHeaps(vtermOffset);")
-		emt.printLabel(depth+1, fmt.Sprintf("mainLoop(\"Go\", %s);", emt.genFuncName(entryFunc.Index)))
+		emt.printLabel(depth+1, fmt.Sprintf("mainLoop(\"Go\", %s);", emt.genFuncName(entryFunc.FuncName, entryFunc.Index)))
 	}
 	emt.printLabel(depth+1, "return 0;")
 	emt.printLabel(depth, "}")
