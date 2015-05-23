@@ -74,9 +74,9 @@ func (emt *EmitterData) startEmit(units []*syntax.Unit) {
 		ok        bool             = false
 	)
 
-	if entryFunc, ok = emt.AllGlobals["GO"]; !ok {
-		if entryFunc, ok = emt.AllGlobals["Go"]; !ok {
-			panic("Can't find entry point func! There is must be GO or Go func.")
+	if entryFunc == nil {
+		if entryFunc, ok = emt.AllGlobals["GO"]; !ok {
+			entryFunc, _ = emt.AllGlobals["Go"]
 		}
 	}
 
@@ -252,12 +252,15 @@ func (emt *EmitterData) processEntryPoint(depth int, entryFunc *syntax.Function)
 
 	emt.printLabel(depth, "int main(int argc, char** argv)")
 	emt.printLabel(depth, "{")
-	emt.printLabel(depth+1, "initBuiltins();")
-	emt.printLabel(depth+1, "initAllocator(getHeapSizeFromCmdArgs(argc, argv));")
-	emt.printLabel(depth+1, "initLiteralData();")
-	emt.printLabel(depth+1, fmt.Sprintf("uint64_t vtermOffset = initArgsData(UINT64_C(%d), argc, argv);", emt.currTermNum))
-	emt.printLabel(depth+1, "initHeaps(vtermOffset);")
-	emt.printLabel(depth+1, fmt.Sprintf("mainLoop(\"Go\", %s);", emt.genFuncName(entryFunc.Index)))
+
+	if entryFunc != nil {
+		emt.printLabel(depth+1, "initBuiltins();")
+		emt.printLabel(depth+1, "initAllocator(getHeapSizeFromCmdArgs(argc, argv));")
+		emt.printLabel(depth+1, "initLiteralData();")
+		emt.printLabel(depth+1, fmt.Sprintf("uint64_t vtermOffset = initArgsData(UINT64_C(%d), argc, argv);", emt.currTermNum))
+		emt.printLabel(depth+1, "initHeaps(vtermOffset);")
+		emt.printLabel(depth+1, fmt.Sprintf("mainLoop(\"Go\", %s);", emt.genFuncName(entryFunc.Index)))
+	}
 	emt.printLabel(depth+1, "return 0;")
 	emt.printLabel(depth, "}")
 }
