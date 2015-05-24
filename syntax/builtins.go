@@ -94,5 +94,6 @@ var Builtins = map[int]map[string]bool{
 		"Divmod":  false,
 		"Type":    true,
 		"Chr":     true,
+		"Ord":     true,
 	},
 }
