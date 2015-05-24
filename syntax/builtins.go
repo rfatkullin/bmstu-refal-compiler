@@ -93,5 +93,6 @@ var Builtins = map[int]map[string]bool{
 		"Step":    true,
 		"Divmod":  false,
 		"Type":    true,
+		"Chr":     true,
 	},
 }
