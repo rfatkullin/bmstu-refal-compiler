@@ -96,5 +96,6 @@ var Builtins = map[int]map[string]bool{
 		"Chr":     true,
 		"Ord":     true,
 		"First":   true,
+		"Last":    true,
 	},
 }
