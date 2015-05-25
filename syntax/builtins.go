@@ -95,5 +95,6 @@ var Builtins = map[int]map[string]bool{
 		"Type":    true,
 		"Chr":     true,
 		"Ord":     true,
+		"First":   true,
 	},
 }
