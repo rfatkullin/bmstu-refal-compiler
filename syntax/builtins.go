@@ -97,5 +97,6 @@ var Builtins = map[int]map[string]bool{
 		"Ord":     true,
 		"First":   true,
 		"Last":    true,
+		"Explode": true,
 	},
 }
