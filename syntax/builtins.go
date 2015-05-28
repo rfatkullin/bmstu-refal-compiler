@@ -101,5 +101,8 @@ var Builtins = map[int]map[string]bool{
 		"Implode":     true,
 		"Implode_Ext": true,
 		"Explode_Ext": true,
+		"Br":          true,
+		"Dg":          true,
+		"Cp":          true,
 	},
 }
