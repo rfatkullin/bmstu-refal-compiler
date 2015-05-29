@@ -106,5 +106,6 @@ var Builtins = map[int]map[string]bool{
 		"Cp":          true,
 		"Time":        true,
 		"GetEnv":      true,
+		"System":      true,
 	},
 }
