@@ -251,6 +251,7 @@ func (emt *EmitterData) printInitLocals(depth int) {
 	emt.printLabel(depth+1, fmt.Sprintf("checkAndCleanHeaps(0, ENV_SIZE(%d, %d, %d));", maxVarsNumber, maxPatternNumber, maxBracketsNumber))
 	emt.printLabel(depth+1, fmt.Sprintf("initEnvData(CURR_FUNC_CALL->env, %d, %d, %d);", maxVarsNumber, maxPatternNumber, maxBracketsNumber))
 	emt.printLabel(depth, "}")
+
 	emt.printLabel(depth, "else if (entryStatus == ROLL_BACK)")
 	emt.printLabel(depth+1, "stretching = 1;")
 }
