@@ -104,5 +104,6 @@ var Builtins = map[int]map[string]bool{
 		"Br":          true,
 		"Dg":          true,
 		"Cp":          true,
+		"Time":        true,
 	},
 }
