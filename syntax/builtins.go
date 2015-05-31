@@ -107,5 +107,6 @@ var Builtins = map[int]map[string]bool{
 		"Time":        true,
 		"GetEnv":      true,
 		"System":      true,
+		"DeSysfun":    true,
 	},
 }
