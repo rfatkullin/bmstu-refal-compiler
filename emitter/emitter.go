@@ -262,6 +262,7 @@ func (emt *EmitterData) processEntryPoint(depth int, entryFunc *syntax.Function)
 	emt.printLabel(depth, "{")
 
 	if entryFunc != nil {
+		emt.printLabel(depth+1, "resizeStack();")
 		emt.printLabel(depth+1, "initBuiltins();")
 		emt.printLabel(depth+1, "initAllocator(getHeapSizeFromCmdArgs(argc, argv));")
 		emt.printLabel(depth+1, "initLiteralData();")
