@@ -47,10 +47,18 @@ func (ctx *context) initForNewSentence(sentencesCount, sentenceIndex int, senten
 	ctx.bracketsCurrentIndex = 0
 	ctx.clearEntryPoints()
 
+	acts := ctx.sentenceInfo.sentence.Actions
+
+	endCallAct := 0
+	if acts[len(acts)-1].ActionOp == syntax.ARROW {
+		endCallAct = 1
+	}
+
 	ctx.nextSentenceEntryPoint = ctx.entryPointNumerator +
 		ctx.sentenceInfo.patternsCount +
 		ctx.sentenceInfo.assembliesCount +
-		2*ctx.sentenceInfo.callActionsCount
+		2*(ctx.sentenceInfo.callActionsCount-endCallAct) +
+		endCallAct
 }
 
 func (ctx *context) addPrevEntryPoint(newEntryPoint, newActionIndex int) {

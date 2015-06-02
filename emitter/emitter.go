@@ -194,16 +194,16 @@ func (emt *EmitterData) processFuncSentences(depth int, currFunc *syntax.Functio
 				break
 
 			case syntax.TARROW: // '->'
-				emt.constructFuncCallAction(depth+2, a.Expr.Terms)
+				emt.constructFuncCallAction(depth+2, a.ActionOp, a.Expr.Terms)
 				break
 
 			case syntax.ARROW: // '=>'
 				emt.ctx.clearEntryPoints()
-				emt.constructFuncCallAction(depth+2, a.Expr.Terms)
+				emt.constructFuncCallAction(depth+2, a.ActionOp, a.Expr.Terms)
 				break
 			}
 
-			emt.printActionEnd(depth + 2)
+			emt.printActionEnd(depth + 1)
 		}
 
 		emt.printLabel(depth+2, "CURR_FUNC_CALL->entryPoint = -1;")

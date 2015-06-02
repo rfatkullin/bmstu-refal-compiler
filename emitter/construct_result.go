@@ -260,7 +260,7 @@ func (emt *EmitterData) checkForFailSymbol(terms []*syntax.Term) bool {
 	return false
 }
 
-func (emt *EmitterData) constructFuncCallAction(depth int, terms []*syntax.Term) {
+func (emt *EmitterData) constructFuncCallAction(depth int, actionOp syntax.ActionOp, terms []*syntax.Term) {
 
 	firstFuncCall := true
 	chainNumber := 1
@@ -285,19 +285,25 @@ func (emt *EmitterData) constructFuncCallAction(depth int, terms []*syntax.Term)
 	emt.printLabel(depth+2, "CONCAT_CHAINS(funcTerm->funcCall->fieldOfView, copyFieldOfView);")
 	emt.printLabel(depth+1, "}")
 
-	emt.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", emt.ctx.entryPointNumerator+1))
-	emt.printLabel(depth+1, "return (struct func_result_t){.status = CALL_RESULT, .fieldChain = helper[0].chain, .callChain = funcCallChain};")
+	if emt.ctx.sentenceInfo.isLastAction() && actionOp == syntax.ARROW {
+		emt.printLabel(depth+1, "return (struct func_result_t){.status = OK_RESULT, .fieldChain = helper[0].chain, .callChain = funcCallChain};")
+	} else {
+		emt.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", emt.ctx.entryPointNumerator+1))
+		emt.printLabel(depth+1, "return (struct func_result_t){.status = CALL_RESULT, .fieldChain = helper[0].chain, .callChain = funcCallChain};")
+	}
 
 	emt.setGCCloseBorder(depth)
 
-	emt.printLabel(depth-1, "} // Pattern or Call Action case end\n")
+	if !(emt.ctx.sentenceInfo.isLastAction() && actionOp == syntax.ARROW) {
+		emt.printLabel(depth-1, "} // Pattern or Call Action case end\n")
 
-	emt.ctx.entryPointNumerator++
+		emt.ctx.entryPointNumerator++
 
-	emt.printLabel(depth-1, fmt.Sprintf("case %d:", emt.ctx.entryPointNumerator))
-	emt.printLabel(depth-1, "{")
+		emt.printLabel(depth-1, fmt.Sprintf("case %d:", emt.ctx.entryPointNumerator))
+		emt.printLabel(depth-1, "{")
 
-	emt.printLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = CURR_FUNC_CALL->env->workFieldOfView, .callChain = 0};")
+		emt.printLabel(depth, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = CURR_FUNC_CALL->env->workFieldOfView, .callChain = 0};")
+	}
 }
 
 func (emt *EmitterData) printInitializeConstructVars(depth, chainsCount int) {
