@@ -114,6 +114,7 @@ func (emt *EmitterData) printHeadersAndDefs(depth int, units []*syntax.Unit) {
 	emt.printLabel(depth, "#include <allocators/data_alloc.h>")
 	emt.printLabel(depth, "#include <allocators/vterm_alloc.h>")
 	emt.printLabel(depth, "#include <defines/data_struct_sizes.h>")
+	emt.printLabel(depth, "#include <defines/checkers.h>")
 
 	emt.printLabel(depth, "")
 

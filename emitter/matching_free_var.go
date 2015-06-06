@@ -48,6 +48,21 @@ func (emt *EmitterData) matchingFreeExprVar(depth int, varNumber int) {
 	emt.varStretching(depth, varNumber)
 }
 
+func (emt *EmitterData) freeExprVarGetRest(depth int, varNumber int) {
+	emt.printLabel(depth+1, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->offset = CURR_FRAG_LEFT(UINT64_C(%d));", emt.ctx.brIndex))
+	emt.printLabel(depth+1, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->length = CURR_FRAG_LENGTH(UINT64_C(%d));", emt.ctx.brIndex))
+}
+
+func (emt *EmitterData) freeVExprVarGetRest(depth int, varNumber int) {
+	prevStretchVarNumber := emt.ctx.patternCtx.prevEntryPoint
+
+	emt.printLabel(depth, fmt.Sprintf("if (1 > CURR_FRAG_LENGTH(%d))", emt.ctx.brIndex))
+	emt.printRollBackBlock(depth, prevStretchVarNumber, true)
+
+	emt.printLabel(depth+1, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->offset = CURR_FRAG_LEFT(UINT64_C(%d));", emt.ctx.brIndex))
+	emt.printLabel(depth+1, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->length = CURR_FRAG_LENGTH(UINT64_C(%d));", emt.ctx.brIndex))
+}
+
 func (emt *EmitterData) varStretching(depth, varNumber int) {
 	prevStretchVarNumber := emt.ctx.patternCtx.prevEntryPoint
 	patternNumber := emt.ctx.sentenceInfo.patternIndex
@@ -57,7 +72,7 @@ func (emt *EmitterData) varStretching(depth, varNumber int) {
 	emt.printLabel(depth+1, "stretching = 0;")
 	emt.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->stretchVarsNumber[%d] = %d;", patternNumber, emt.ctx.patternCtx.entryPoint))
 
-	emt.printLabel(depth+1, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->bracketsOffset[%d]);", emt.ctx.bracketsCurrentIndex))
+	emt.printLabel(depth+1, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->bracketsOffset[%d]);", emt.ctx.brIndex))
 
 	emt.printLabel(depth+1, "//Restore last offset at this point")
 	emt.printLabel(depth+1, fmt.Sprintf("fragmentOffset = (CURR_FUNC_CALL->env->locals + %d)->offset + "+
@@ -67,7 +82,7 @@ func (emt *EmitterData) varStretching(depth, varNumber int) {
 		emt.printOffsetCheck(depth+1, prevStretchVarNumber, "")
 	} else {
 		emt.printLabel(depth+1, fmt.Sprintf("if ((CURR_FUNC_CALL->env->locals + %d)->length <= 0)", varNumber))
-		emt.printFailBlock(depth+1, prevStretchVarNumber, true)
+		emt.printRollBackBlock(depth+1, prevStretchVarNumber, true)
 	}
 
 	emt.printLabel(depth+1, "else")

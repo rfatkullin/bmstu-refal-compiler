@@ -20,7 +20,7 @@ type context struct {
 	patternCtx             patternContext
 	isLeftMatching         bool
 	funcInfo               *syntax.Function
-	bracketsCurrentIndex   int
+	brIndex   int
 	bracketsNumerator      int
 	entryPoints            []*entryPoint
 	entryPointNumerator    int
@@ -44,7 +44,7 @@ func (ctx *context) initForNewSentence(sentencesCount, sentenceIndex int, senten
 	ctx.fixedVars = make(map[string]int)
 	ctx.sentenceInfo.init(sentencesCount, sentenceIndex, sentence)
 	ctx.bracketsNumerator = 0
-	ctx.bracketsCurrentIndex = 0
+	ctx.brIndex = 0
 	ctx.clearEntryPoints()
 
 	acts := ctx.sentenceInfo.sentence.Actions
