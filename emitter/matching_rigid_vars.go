@@ -52,15 +52,15 @@ func (emt *EmitterData) matchingRigidVars(depth int, value *tokens.Value, dir in
 }
 
 func (emt *EmitterData) matchingRigidFreeSymbolVar(depth int, varName string, dir int) {
-	emt.printLabel(depth-1, "//Matching rigid free symbol var")
+	emt.printLabel(depth, "//Matching rigid free symbol var")
 
 	emt.printLabel(depth, fmt.Sprintf("if (1 > CURR_FRAG_LENGTH(%d))", emt.ctx.brIndex))
-	emt.printFailBlock(depth)
+	emt.printPatternFailBlock(depth)
 
 	emt.setFragmentOffset(depth, dir)
 
 	emt.printLabel(depth, fmt.Sprintf("if (_memMngr.vterms[fragmentOffset].tag == V_BRACKETS_TAG)"))
-	emt.printFailBlock(depth)
+	emt.printPatternFailBlock(depth)
 
 	emt.printLabel(depth, "else")
 	emt.printLabel(depth, "{")
@@ -72,26 +72,26 @@ func (emt *EmitterData) matchingRigidFreeSymbolVar(depth int, varName string, di
 }
 
 func (emt *EmitterData) matchingRigidFixedSymbolVar(depth int, varName string, dir int) {
-	emt.printLabel(depth-1, "//Matching rigid fixed symbol var")
+	emt.printLabel(depth, "//Matching rigid fixed symbol var")
 
 	emt.printLabel(depth, fmt.Sprintf("if (1 > CURR_FRAG_LENGTH(%d))", emt.ctx.brIndex))
-	emt.printFailBlock(depth)
+	emt.printPatternFailBlock(depth)
 
 	emt.setFragmentOffset(depth, dir)
 
 	emt.printLabel(depth, fmt.Sprintf("if (!CHECK_SYMB_VAR(fragmentOffset, %s->offset))", varName))
-	emt.printFailBlock(depth)
+	emt.printPatternFailBlock(depth)
 
 	emt.updateBracketOffset(depth, dir)
 }
 
 func (emt *EmitterData) matchingRigidFreeTermVar(depth int, varName string, dir int) {
-	emt.printLabel(depth-1, "//Matching rigid free term var")
+	emt.printLabel(depth, "//Matching rigid free term var")
 
 	emt.setFragmentOffset(depth, dir)
 
 	emt.printLabel(depth, fmt.Sprintf("if (1 > CURR_FRAG_LENGTH(%d))", emt.ctx.brIndex))
-	emt.printFailBlock(depth)
+	emt.printPatternFailBlock(depth)
 
 	emt.printLabel(depth, "else")
 	emt.printLabel(depth, "{")
@@ -103,15 +103,15 @@ func (emt *EmitterData) matchingRigidFreeTermVar(depth int, varName string, dir 
 }
 
 func (emt *EmitterData) matchingRigidFixedTermVar(depth int, varName string, dir int) {
-	emt.printLabel(depth-1, "//Matching rigid fixed term var")
+	emt.printLabel(depth, "//Matching rigid fixed term var")
 
 	emt.printLabel(depth, fmt.Sprintf("if (1 > CURR_FRAG_LENGTH(%d))", emt.ctx.brIndex))
-	emt.printFailBlock(depth)
+	emt.printPatternFailBlock(depth)
 
 	emt.setFragmentOffset(depth, dir)
 
 	emt.printLabel(depth, fmt.Sprintf("if (!CHECK_TERM_VAR(fragmentOffset, %s->offset))", varName))
-	emt.printFailBlock(depth)
+	emt.printPatternFailBlock(depth)
 
 	emt.updateBracketOffset(depth, dir)
 }

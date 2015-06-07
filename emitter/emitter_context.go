@@ -20,7 +20,7 @@ type context struct {
 	patternCtx             patternContext
 	isLeftMatching         bool
 	funcInfo               *syntax.Function
-	brIndex   int
+	brIndex                int
 	bracketsNumerator      int
 	entryPoints            []*entryPoint
 	entryPointNumerator    int

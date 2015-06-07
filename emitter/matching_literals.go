@@ -6,7 +6,7 @@ import (
 
 func (emt *EmitterData) matchingIntLiteral(depth int, index int) {
 
-	emt.printLabel(depth-1, "//Matching int literal")
+	emt.printLabel(depth, "//Matching int literal")
 
 	emt.printOffsetCheck(depth, emt.ctx.patternCtx.prevEntryPoint, "")
 
@@ -19,7 +19,7 @@ func (emt *EmitterData) matchingIntLiteral(depth int, index int) {
 
 func (emt *EmitterData) mathcingDoubleLiteral(depth int, index int) {
 
-	emt.printLabel(depth-1, "//Matching double literal")
+	emt.printLabel(depth, "//Matching double literal")
 
 	emt.printOffsetCheck(depth, emt.ctx.patternCtx.prevEntryPoint, "")
 
@@ -32,7 +32,7 @@ func (emt *EmitterData) mathcingDoubleLiteral(depth int, index int) {
 
 func (emt *EmitterData) matchingCompLiteral(depth int, index int) {
 
-	emt.printLabel(depth-1, "//Matching indetificator literal")
+	emt.printLabel(depth, "//Matching indetificator literal")
 
 	emt.printOffsetCheck(depth, emt.ctx.patternCtx.prevEntryPoint, "")
 

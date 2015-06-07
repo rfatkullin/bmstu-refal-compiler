@@ -13,11 +13,19 @@ func (emt *EmitterData) matchingPattern(depth int, terms []*syntax.Term) {
 
 	emt.checkAndAssemblyChain(depth + 1)
 
+	terms = emt.checkRigidTerms(depth+1, terms)
+	emt.ctx.bracketsNumerator = 0
+
+	emt.printLabel(depth+1, "rightBound = CURR_FRAG_RIGHT(0);")
+	emt.printLabel(depth+1, "fragmentOffset = CURR_FRAG_LEFT(0);")
+
 	emt.checkFragmentLength(depth+1, -1, false, terms)
 
 	if len(terms) > 0 {
 		emt.printLabel(depth+1, "else")
+		emt.printLabel(depth+1, "{")
 		emt.processPattern(depth+2, terms)
+		emt.printLabel(depth+1, "}")
 	}
 
 	emt.processPatternFail(depth + 1)
@@ -44,7 +52,8 @@ func (emt *EmitterData) processPattern(depth int, terms []*syntax.Term) {
 	emt.ctx.patternCtx.entryPoint = 0
 	emt.ctx.patternCtx.prevEntryPoint = -1
 
-	emt.printFirstCase(depth, terms[0])
+	emt.ctx.patternCtx.entryPoint = 1
+	emt.printLabel(depth+1, "case 0:")
 
 	emt.matchingTerms(depth+2, false, terms)
 
@@ -52,25 +61,13 @@ func (emt *EmitterData) processPattern(depth int, terms []*syntax.Term) {
 
 	emt.printLabel(depth+1, "if (!stretching)")
 	emt.printLabel(depth+1, "{")
-	emt.printLabel(depth+2, "if (fragmentOffset - currFrag->offset < currFrag->length)")
+	emt.printLabel(depth+2, "if (fragmentOffset != rightBound)")
 	emt.printRollBackBlock(depth+2, emt.ctx.patternCtx.prevEntryPoint, false)
 	emt.printLabel(depth+2, "else")
 	emt.printLabel(depth+3, "break; // Success!")
 	emt.printLabel(depth+1, "}")
 
 	emt.printLabel(depth, "} // Pattern while\n")
-}
-
-func (emt *EmitterData) printFirstCase(depth int, term *syntax.Term) {
-
-	if term.TermTag == syntax.VAR && (term.VarType == tokens.VT_E || term.VarType == tokens.VT_V) {
-		if _, ok := emt.ctx.fixedVars[term.Name]; !ok {
-			return
-		}
-	}
-
-	emt.ctx.patternCtx.entryPoint = 1
-	emt.printLabel(depth+1, "case 0:")
 }
 
 func reverse(s []*syntax.Term) []*syntax.Term {
@@ -118,6 +115,10 @@ func (emt *EmitterData) checkDirRigidTerms(depth int, terms []*syntax.Term, dir 
 			emt.matchingRigidVars(depth, &term.Value, dir)
 			break
 		case syntax.EXPR:
+			if term.Checked {
+				return terms[i:]
+			}
+			term.Checked = true
 			emt.matchingRigidBr(depth, dir)
 
 			emt.ctx.bracketsNumerator++
@@ -159,11 +160,8 @@ func (emt *EmitterData) isAllRigidTerms(terms []*syntax.Term) bool {
 func (emt *EmitterData) matchingTerms(depth int, inBrackets bool, terms []*syntax.Term) {
 	parentMatchingOrder := emt.ctx.isLeftMatching
 
-	terms = emt.checkRigidTerms(depth, terms)
-
-	fmt.Printf("Length: %d\n", len(terms))
-
 	emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_LEFT(%d);", emt.ctx.brIndex))
+	emt.printLabel(depth, fmt.Sprintf("rightBound = CURR_FRAG_RIGHT(%d);", emt.ctx.brIndex))
 
 	termsCount := len(terms)
 	if termsCount == 0 {
@@ -176,7 +174,7 @@ func (emt *EmitterData) matchingTerms(depth int, inBrackets bool, terms []*synta
 
 		switch term.TermTag {
 		case syntax.VAR:
-			emt.matchingVariable(depth, &term.Value, emt.isAllRigidTerms(terms[index:]))
+			emt.matchingVariable(depth, &term.Value, emt.isAllRigidTerms(terms[index+1:]))
 			break
 		case syntax.STR:
 			emt.matchingStrLiteral(depth, len(term.Value.Str), term.IndexInLiterals)
@@ -188,7 +186,7 @@ func (emt *EmitterData) matchingTerms(depth int, inBrackets bool, terms []*synta
 			emt.matchingIntLiteral(depth, term.IndexInLiterals)
 			break
 		case syntax.EXPR:
-			emt.matchingExpr(depth, term.Rigid, term.Exprs[0].Terms)
+			emt.matchingExpr(depth, term.Checked, term.Exprs[0].Terms)
 			break
 		case syntax.FLOAT:
 			emt.mathcingDoubleLiteral(depth, term.IndexInLiterals)
@@ -263,6 +261,10 @@ func (emt *EmitterData) matchingExpr(depth int, rigid bool, terms []*syntax.Term
 func (emt *EmitterData) processPatternFail(depth int) {
 
 	emt.printLabel(depth, "if (stretchingVarNumber < 0)")
+	emt.printPatternFailBlock(depth)
+}
+
+func (emt *EmitterData) printPatternFailBlock(depth int) {
 	emt.printLabel(depth, "{")
 
 	prevEntryPoint := emt.ctx.getPrevEntryPoint()
@@ -282,7 +284,7 @@ func (emt *EmitterData) checkFragmentLength(depth, prevStertchingVarNumber int, 
 	if len(terms) == 0 {
 		emt.printLabel(depth, "if (rightBound != fragmentOffset)")
 	} else {
-		emt.printLabel(depth, fmt.Sprintf("if (rightBound - fragmentOffset < %d)", emt.getMinLengthForTerms(terms)))
+		emt.printLabel(depth, fmt.Sprintf("if (fragmentOffset + %d > rightBound)", emt.getMinLengthForTerms(terms)))
 	}
 
 	emt.printRollBackBlock(depth, prevStertchingVarNumber, withBreakStatement)
@@ -304,6 +306,7 @@ func (emt *EmitterData) processFailOfFirstPattern(depth int) {
 
 func (emt *EmitterData) processFailOfCommonPattern(depth, prevEntryPoint int) {
 	emt.printLabel(depth, "//Jump to previouse pattern of same sentence!")
+	emt.printLabel(depth, "stretching = 1;")
 	emt.printLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", prevEntryPoint))
 }
 
@@ -328,14 +331,22 @@ func (emt *EmitterData) checkAndAssemblyChain(depth int) {
 				patternIndex, patternIndex-1))
 		}
 	}
+	emt.printLabel(depth+1, "stretchingVarNumber = 0;")
+	emt.printLabel(depth, "}")
+	emt.printLabel(depth, "else // !stretching")
+	emt.printLabel(depth, "{")
+	emt.printLabel(depth+1, fmt.Sprintf("stretchingVarNumber = CURR_FUNC_CALL->env->stretchVarsNumber[%d];", emt.ctx.sentenceInfo.patternIndex))
+	emt.processPatternFail(depth + 1)
+	emt.printLabel(depth, "}")
 
-	emt.printLabel(depth, "} // !stretching")
+	emt.printLabel(depth, "memset(ENV->bracketsOffset, 0, ENV->bracketsCount * sizeof(uint64_t));")
+	emt.printLabel(depth, "memset(ENV->brLeftOffset, 0, ENV->bracketsCount * sizeof(uint64_t));")
+	emt.printLabel(depth, "memset(ENV->brRightOffset, 0,ENV-> bracketsCount * sizeof(uint64_t));")
 
 	emt.printLabel(depth, fmt.Sprintf("currFrag = VTERM_BRACKETS(CURR_FUNC_CALL->env->assembled[%d]);", patternIndex))
 	emt.printLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->env->bracketsOffset[0] = CURR_FUNC_CALL->env->assembled[%d];", patternIndex))
 	emt.printLabel(depth, "rightBound = CURR_FRAG_RIGHT(0);")
 	emt.printLabel(depth, "fragmentOffset = CURR_FRAG_LEFT(0);")
-	emt.printLabel(depth, fmt.Sprintf("stretchingVarNumber = CURR_FUNC_CALL->env->stretchVarsNumber[%d];", emt.ctx.sentenceInfo.patternIndex))
 }
 
 func (emt *EmitterData) matchingVariable(depth int, value *tokens.Value, allRigid bool) {
@@ -389,9 +400,9 @@ func (emt *EmitterData) matchingVariable(depth int, value *tokens.Value, allRigi
 				emt.matchingFixedEnvExprVar(depth, varNumber)
 			}
 		} else {
-			emt.printLabel(depth-1, fmt.Sprintf("case %d:", emt.ctx.patternCtx.entryPoint))
 
 			if !allRigid {
+				emt.printLabel(depth-1, fmt.Sprintf("case %d:", emt.ctx.patternCtx.entryPoint))
 				if value.VarType == tokens.VT_E {
 					emt.matchingFreeExprVar(depth, varNumber)
 				} else {

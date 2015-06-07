@@ -130,6 +130,7 @@ type Term struct {
 	coords.Fragment
 	IndexInLiterals int
 	Rigid           bool
+	Checked         bool
 	TermTag
 	tokens.Value
 	Exprs []*Expr

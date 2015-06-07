@@ -106,6 +106,7 @@ func (emt *EmitterData) printHeadersAndDefs(depth int, units []*syntax.Unit) {
 
 	emt.printLabel(depth, "#include <stdlib.h>")
 	emt.printLabel(depth, "#include <stdio.h>\n")
+	emt.printLabel(depth, "#include <string.h>\n")
 
 	emt.printLabel(depth, "#include <vmachine.h>")
 	emt.printLabel(depth, "#include <memory_manager.h>")

@@ -30,6 +30,8 @@ func (emt *EmitterData) matchingFreeSymbolVar(depth int, varNumber int) {
 }
 
 func (emt *EmitterData) matchingFreeExprVar(depth int, varNumber int) {
+	patternNumber := emt.ctx.sentenceInfo.patternIndex
+	emt.printLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->env->stretchVarsNumber[%d] = %d;", patternNumber, emt.ctx.patternCtx.entryPoint))
 
 	emt.printLabel(depth, "if (!stretching) // Just init values")
 	emt.printLabel(depth, "{")
@@ -49,8 +51,10 @@ func (emt *EmitterData) matchingFreeExprVar(depth int, varNumber int) {
 }
 
 func (emt *EmitterData) freeExprVarGetRest(depth int, varNumber int) {
-	emt.printLabel(depth+1, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->offset = CURR_FRAG_LEFT(UINT64_C(%d));", emt.ctx.brIndex))
-	emt.printLabel(depth+1, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->length = CURR_FRAG_LENGTH(UINT64_C(%d));", emt.ctx.brIndex))
+	emt.printLabel(depth, "//Matching rigid variable")
+	emt.printLabel(depth, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->offset = fragmentOffset;", varNumber))
+	emt.printLabel(depth, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->length = rightBound - fragmentOffset;", varNumber))
+	emt.printLabel(depth, "fragmentOffset = rightBound;")
 }
 
 func (emt *EmitterData) freeVExprVarGetRest(depth int, varNumber int) {
@@ -65,12 +69,10 @@ func (emt *EmitterData) freeVExprVarGetRest(depth int, varNumber int) {
 
 func (emt *EmitterData) varStretching(depth, varNumber int) {
 	prevStretchVarNumber := emt.ctx.patternCtx.prevEntryPoint
-	patternNumber := emt.ctx.sentenceInfo.patternIndex
 
 	emt.printLabel(depth, "{")
 
 	emt.printLabel(depth+1, "stretching = 0;")
-	emt.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->stretchVarsNumber[%d] = %d;", patternNumber, emt.ctx.patternCtx.entryPoint))
 
 	emt.printLabel(depth+1, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->bracketsOffset[%d]);", emt.ctx.brIndex))
 
