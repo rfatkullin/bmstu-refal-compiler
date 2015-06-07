@@ -59,7 +59,7 @@ func (emt *EmitterData) matchingRigidFreeSymbolVar(depth int, varName string, di
 
 	emt.setFragmentOffset(depth, dir)
 
-	emt.printLabel(depth, fmt.Sprintf("if (_memMngr.vterms[fragmentOffset].tag == V_BRACKETS_TAG"))
+	emt.printLabel(depth, fmt.Sprintf("if (_memMngr.vterms[fragmentOffset].tag == V_BRACKETS_TAG)"))
 	emt.printFailBlock(depth)
 
 	emt.printLabel(depth, "else")
@@ -87,6 +87,8 @@ func (emt *EmitterData) matchingRigidFixedSymbolVar(depth int, varName string, d
 
 func (emt *EmitterData) matchingRigidFreeTermVar(depth int, varName string, dir int) {
 	emt.printLabel(depth-1, "//Matching rigid free term var")
+
+	emt.setFragmentOffset(depth, dir)
 
 	emt.printLabel(depth, fmt.Sprintf("if (1 > CURR_FRAG_LENGTH(%d))", emt.ctx.brIndex))
 	emt.printFailBlock(depth)
@@ -128,7 +130,7 @@ func (emt *EmitterData) setFragmentOffset(depth, dir int) {
 	if dir == LEFT_DIR {
 		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_LEFT(%d);", emt.ctx.brIndex))
 	} else {
-		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_RIGHT(%d) - 1", emt.ctx.brIndex))
+		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_RIGHT(%d) - 1;", emt.ctx.brIndex))
 	}
 }
 

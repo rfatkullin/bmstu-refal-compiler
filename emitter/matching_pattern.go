@@ -119,7 +119,23 @@ func (emt *EmitterData) checkDirRigidTerms(depth int, terms []*syntax.Term, dir 
 			break
 		case syntax.EXPR:
 			emt.matchingRigidBr(depth, dir)
+
+			emt.ctx.bracketsNumerator++
+			tmpBracketsCurrIndex := emt.ctx.brIndex
+			emt.ctx.brIndex = emt.ctx.bracketsNumerator
+
+			emt.printLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->env->bracketsOffset[%d] = fragmentOffset;", emt.ctx.brIndex))
+
 			term.Exprs[0].Terms = emt.checkRigidTerms(depth, term.Exprs[0].Terms)
+
+			emt.ctx.brIndex = tmpBracketsCurrIndex
+
+			if len(term.Exprs[0].Terms) == 0 {
+				emt.updateBracketOffset(depth, dir)
+			} else {
+				return terms[i:]
+			}
+
 			break
 		}
 
@@ -172,7 +188,7 @@ func (emt *EmitterData) matchingTerms(depth int, inBrackets bool, terms []*synta
 			emt.matchingIntLiteral(depth, term.IndexInLiterals)
 			break
 		case syntax.EXPR:
-			emt.matchingExpr(depth, term.Exprs[0].Terms)
+			emt.matchingExpr(depth, term.Rigid, term.Exprs[0].Terms)
 			break
 		case syntax.FLOAT:
 			emt.mathcingDoubleLiteral(depth, term.IndexInLiterals)
@@ -208,7 +224,7 @@ func (emt *EmitterData) getMinLengthForTerms(terms []*syntax.Term) int {
 	return length
 }
 
-func (emt *EmitterData) matchingExpr(depth int, terms []*syntax.Term) {
+func (emt *EmitterData) matchingExpr(depth int, rigid bool, terms []*syntax.Term) {
 
 	emt.ctx.bracketsNumerator++
 
@@ -220,8 +236,14 @@ func (emt *EmitterData) matchingExpr(depth int, terms []*syntax.Term) {
 	emt.printOffsetCheck(depth, emt.ctx.patternCtx.prevEntryPoint, " || _memMngr.vterms[fragmentOffset].tag != V_BRACKETS_TAG")
 
 	emt.printLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->env->bracketsOffset[%d] = fragmentOffset;", bracketsIndex))
-	emt.printLabel(depth, "rightBound = RIGHT_BOUND(fragmentOffset);")
-	emt.printLabel(depth, "fragmentOffset = VTERM_BRACKETS(fragmentOffset)->offset;")
+
+	if !rigid {
+		emt.printLabel(depth, fmt.Sprintf("ENV->brLeftOffset[%d] = 0;", bracketsIndex))
+		emt.printLabel(depth, fmt.Sprintf("ENV->brRightOffset[%d] = 0;", bracketsIndex))
+	}
+
+	emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_LEFT(%d);", bracketsIndex))
+	emt.printLabel(depth, fmt.Sprintf("rightBound = CURR_FRAG_RIGHT(%d);", bracketsIndex))
 
 	emt.checkFragmentLength(depth, emt.ctx.patternCtx.prevEntryPoint, true, terms)
 
@@ -230,8 +252,8 @@ func (emt *EmitterData) matchingExpr(depth int, terms []*syntax.Term) {
 
 	emt.checkConsumeAllFragment(depth, emt.ctx.patternCtx.prevEntryPoint)
 
-	emt.printLabel(depth, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->bracketsOffset[%d]);", tmpBracketsCurrIndex))
 	emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FUNC_CALL->env->bracketsOffset[%d] + 1;", bracketsIndex))
+	emt.printLabel(depth, fmt.Sprintf("rightBound = CURR_FRAG_RIGHT(%d);", tmpBracketsCurrIndex))
 
 	emt.printLabel(depth, "//End check in () terms.")
 
@@ -310,10 +332,10 @@ func (emt *EmitterData) checkAndAssemblyChain(depth int) {
 	emt.printLabel(depth, "} // !stretching")
 
 	emt.printLabel(depth, fmt.Sprintf("currFrag = VTERM_BRACKETS(CURR_FUNC_CALL->env->assembled[%d]);", patternIndex))
-	emt.printLabel(depth, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->assembled[%d]);", patternIndex))
-	emt.printLabel(depth+1, "fragmentOffset = currFrag->offset;")
 	emt.printLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->env->bracketsOffset[0] = CURR_FUNC_CALL->env->assembled[%d];", patternIndex))
-	emt.printLabel(depth+1, fmt.Sprintf("stretchingVarNumber = CURR_FUNC_CALL->env->stretchVarsNumber[%d];", emt.ctx.sentenceInfo.patternIndex))
+	emt.printLabel(depth, "rightBound = CURR_FRAG_RIGHT(0);")
+	emt.printLabel(depth, "fragmentOffset = CURR_FRAG_LEFT(0);")
+	emt.printLabel(depth, fmt.Sprintf("stretchingVarNumber = CURR_FUNC_CALL->env->stretchVarsNumber[%d];", emt.ctx.sentenceInfo.patternIndex))
 }
 
 func (emt *EmitterData) matchingVariable(depth int, value *tokens.Value, allRigid bool) {

@@ -129,6 +129,7 @@ type Term struct {
 	Comment string
 	coords.Fragment
 	IndexInLiterals int
+	Rigid           bool
 	TermTag
 	tokens.Value
 	Exprs []*Expr

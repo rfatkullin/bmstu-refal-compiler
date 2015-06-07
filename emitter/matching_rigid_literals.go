@@ -13,7 +13,7 @@ func (emt *EmitterData) matchingRigidBr(depth int, dir int) {
 	if dir == LEFT_DIR {
 		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_LEFT(%d);", emt.ctx.brIndex))
 	} else {
-		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_RIGHT(%d) - 1", emt.ctx.brIndex))
+		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_RIGHT(%d) - 1;", emt.ctx.brIndex))
 	}
 
 	emt.printLabel(depth, "if (!CHECK_BR(fragmentOffset))")
@@ -36,10 +36,10 @@ func (emt *EmitterData) matchingRigidIntLiteral(depth int, termInd, dir int) {
 	if dir == LEFT_DIR {
 		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_LEFT(%d);", emt.ctx.brIndex))
 	} else {
-		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_RIGHT(%d) - 1", emt.ctx.brIndex))
+		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_RIGHT(%d) - 1;", emt.ctx.brIndex))
 	}
 
-	emt.printLabel(depth, fmt.Sprintf("if (!CHECK_INT_LIT(fragmentOffset, UINT64_C(%d))", termInd))
+	emt.printLabel(depth, fmt.Sprintf("if (!CHECK_INT_LIT(fragmentOffset, UINT64_C(%d)))", termInd))
 	emt.printFailBlock(depth)
 
 	if dir == LEFT_DIR {
@@ -59,7 +59,7 @@ func (emt *EmitterData) matchingRigidDoubleLiteral(depth int, termInd, dir int) 
 	if dir == LEFT_DIR {
 		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_LEFT(%d);", emt.ctx.brIndex))
 	} else {
-		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_RIGHT(%d) - 1", emt.ctx.brIndex))
+		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_RIGHT(%d) - 1;", emt.ctx.brIndex))
 	}
 
 	emt.printLabel(depth, fmt.Sprintf("if (!CHECK_DOUBLE_LIT(fragmentOffset, UINT64_C(%d)))", termInd))
@@ -82,10 +82,10 @@ func (emt *EmitterData) matchingRigidCompLiteral(depth int, termInd, dir int) {
 	if dir == LEFT_DIR {
 		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_LEFT(%d);", emt.ctx.brIndex))
 	} else {
-		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_RIGHT(%d) - 1", emt.ctx.brIndex))
+		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_RIGHT(%d) - 1;", emt.ctx.brIndex))
 	}
 
-	emt.printLabel(depth, fmt.Sprintf("if (!CHECK_COMP_LIT(fragmentOffset, UINT64_C(%d))", termInd))
+	emt.printLabel(depth, fmt.Sprintf("if (!CHECK_COMP_LIT(fragmentOffset, UINT64_C(%d)))", termInd))
 	emt.printFailBlock(depth)
 
 	if dir == LEFT_DIR {
@@ -105,7 +105,7 @@ func (emt *EmitterData) matchingRigidStrLiteral(depth int, strLen, termInd, dir 
 	if dir == LEFT_DIR {
 		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_LEFT(%d);", emt.ctx.brIndex))
 	} else {
-		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_RIGHT(%d) - UINT64_C(%d)", emt.ctx.brIndex, strLen))
+		emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_RIGHT(%d) - UINT64_C(%d);", emt.ctx.brIndex, strLen))
 	}
 
 	emt.printLabel(depth, fmt.Sprintf("for (i = 0; i < UINT64_C(%d); i++)", strLen))
