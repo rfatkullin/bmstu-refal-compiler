@@ -1,6 +1,9 @@
 package emitter
 
 import (
+	_ "fmt"
+)
+import (
 	"bmstu-refal-compiler/syntax"
 )
 
@@ -73,13 +76,13 @@ func getMaxPatternsAndVarsCount(currFunc *syntax.Function) (maxPatternsCount, ma
 }
 
 func getBrackesCountInExpr(terms []*syntax.Term, numerator *int) int {
-	count := 0
+	count := 1
 
 	for _, term := range terms {
 		if term.TermTag == syntax.EXPR {
 			term.Exprs[0].BrIndex = *numerator
 			(*numerator)++
-			count += getBrackesCountInExpr(term.Exprs[0].Terms, numerator) + 1
+			count += getBrackesCountInExpr(term.Exprs[0].Terms, numerator)
 		}
 	}
 
@@ -87,7 +90,7 @@ func getBrackesCountInExpr(terms []*syntax.Term, numerator *int) int {
 }
 
 func getBracketsCountInSentence(s *syntax.Sentence) int {
-	count := 1
+	count := 0
 	numerator := 1
 
 	s.Pattern.BrIndex = 0
@@ -111,5 +114,5 @@ func getMaxBracketsCountInFunc(currFunc *syntax.Function) int {
 		maxBracketsCount = max(maxBracketsCount, getBracketsCountInSentence(s))
 	}
 
-	return maxBracketsCount + 1 // +1 Assuming all expr in brackets
+	return maxBracketsCount
 }
