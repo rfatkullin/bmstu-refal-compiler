@@ -72,12 +72,14 @@ func getMaxPatternsAndVarsCount(currFunc *syntax.Function) (maxPatternsCount, ma
 	return maxPatternsCount, maxVarCount
 }
 
-func getBrackesCountInExpr(terms []*syntax.Term) int {
+func getBrackesCountInExpr(terms []*syntax.Term, numerator *int) int {
 	count := 0
 
 	for _, term := range terms {
 		if term.TermTag == syntax.EXPR {
-			count += getBrackesCountInExpr(term.Exprs[0].Terms) + 1
+			term.Exprs[0].BrIndex = *numerator
+			(*numerator)++
+			count += getBrackesCountInExpr(term.Exprs[0].Terms, numerator) + 1
 		}
 	}
 
@@ -86,12 +88,13 @@ func getBrackesCountInExpr(terms []*syntax.Term) int {
 
 func getBracketsCountInSentence(s *syntax.Sentence) int {
 	count := 0
+	numerator := 1
 
-	count += getBrackesCountInExpr(s.Pattern.Terms)
+	count += getBrackesCountInExpr(s.Pattern.Terms, &numerator)
 
 	for _, a := range s.Actions {
 		if a.ActionOp == syntax.COLON || a.ActionOp == syntax.DCOLON {
-			count += getBrackesCountInExpr(a.Expr.Terms)
+			count += getBrackesCountInExpr(a.Expr.Terms, &numerator)
 		}
 	}
 

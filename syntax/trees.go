@@ -122,7 +122,8 @@ type Action struct {
 
 type Expr struct {
 	coords.Fragment
-	Terms []*Term
+	Terms   []*Term
+	BrIndex int
 }
 
 type Term struct {

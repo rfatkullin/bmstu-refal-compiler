@@ -21,7 +21,6 @@ type context struct {
 	isLeftMatching         bool
 	funcInfo               *syntax.Function
 	brIndex                int
-	bracketsNumerator      int
 	entryPoints            []*entryPoint
 	entryPointNumerator    int
 	ast                    *syntax.Unit
@@ -43,7 +42,6 @@ func (ctx *context) initForNewSentence(sentencesCount, sentenceIndex int, senten
 	ctx.isLeftMatching = true
 	ctx.fixedVars = make(map[string]int)
 	ctx.sentenceInfo.init(sentencesCount, sentenceIndex, sentence)
-	ctx.bracketsNumerator = 0
 	ctx.brIndex = 0
 	ctx.clearEntryPoints()
 
