@@ -50,11 +50,11 @@ func (emt *EmitterData) matchingFreeExprVar(depth int, varNumber int) {
 	emt.varStretching(depth, varNumber)
 }
 
-func (emt *EmitterData) freeExprVarGetRest(depth int, varNumber int) {
+func (emt *EmitterData) freeExprVarGetRest(depth, varNumber, restLen int) {
 	emt.printLabel(depth, "//Matching rigid variable")
 	emt.printLabel(depth, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->offset = fragmentOffset;", varNumber))
-	emt.printLabel(depth, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->length = rightBound - fragmentOffset;", varNumber))
-	emt.printLabel(depth, "fragmentOffset = rightBound;")
+	emt.printLabel(depth, fmt.Sprintf("(CURR_FUNC_CALL->env->locals + %d)->length = rightBound - UINT64_C(%d) - fragmentOffset;", varNumber, restLen))
+	emt.printLabel(depth, fmt.Sprintf("fragmentOffset = rightBound - UINT64_C(%d);", restLen))
 }
 
 func (emt *EmitterData) freeVExprVarGetRest(depth int, varNumber int) {

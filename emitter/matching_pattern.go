@@ -11,12 +11,7 @@ import (
 
 func (emt *EmitterData) matchingPattern(depth int, terms []*syntax.Term) {
 
-	emt.checkAndAssemblyChain(depth + 1)
-
-	terms = emt.checkRigidTerms(depth+1, terms)
-
-	emt.printLabel(depth+1, "rightBound = CURR_FRAG_RIGHT(0);")
-	emt.printLabel(depth+1, "fragmentOffset = CURR_FRAG_LEFT(0);")
+	terms = emt.checkAndAssemblyChain(depth+1, terms)
 
 	emt.checkFragmentLength(depth+1, -1, false, terms)
 
@@ -34,7 +29,8 @@ func (emt *EmitterData) matchingPattern(depth int, terms []*syntax.Term) {
 }
 
 func (emt *EmitterData) processEmptyPattern(depth int) {
-	emt.printLabel(depth+1, "if (currFrag->length > 0)")
+	//emt.printLabel(depth+1, "if (currFrag->length > 0)")
+	emt.printLabel(depth+1, fmt.Sprintf("if (CURR_FRAG_LENGTH(%d) > 0)", emt.ctx.brIndex))
 	emt.printRollBackBlock(depth+1, -1, false)
 	emt.printLabel(depth+1, "break;")
 }
@@ -81,6 +77,11 @@ func reverse(s []*syntax.Term) []*syntax.Term {
 
 func (emt *EmitterData) checkRigidTerms(depth int, terms []*syntax.Term) []*syntax.Term {
 
+	if len(terms) == 0 {
+		emt.printLabel(depth+1, fmt.Sprintf("if (CURR_FRAG_LENGTH(%d) > 0)", emt.ctx.brIndex))
+		emt.printPatternFailBlock(depth)
+	}
+
 	terms = emt.checkDirRigidTerms(depth, terms, LEFT_DIR)
 	terms = reverse(terms)
 	terms = emt.checkDirRigidTerms(depth, terms, RIGHT_DIR)
@@ -112,6 +113,7 @@ func (emt *EmitterData) checkDirRigidTerms(depth int, terms []*syntax.Term, dir 
 				return terms[i:]
 			}
 			emt.matchingRigidVars(depth, &term.Value, dir)
+			emt.ctx.fixedVars[term.Value.Name] = emt.ctx.sentenceInfo.patternIndex
 			break
 		case syntax.EXPR:
 			if term.Checked {
@@ -172,7 +174,7 @@ func (emt *EmitterData) matchingTerms(depth int, inBrackets bool, terms []*synta
 
 		switch term.TermTag {
 		case syntax.VAR:
-			emt.matchingVariable(depth, &term.Value, emt.isAllRigidTerms(terms[index+1:]))
+			emt.matchingVariable(depth, &term.Value, emt.isAllRigidTerms(terms[index+1:]), len(terms[index+1:]))
 			break
 		case syntax.STR:
 			emt.matchingStrLiteral(depth, len(term.Value.Str), term.IndexInLiterals)
@@ -302,7 +304,7 @@ func (emt *EmitterData) processFailOfCommonPattern(depth, prevEntryPoint int) {
 	emt.printLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", prevEntryPoint))
 }
 
-func (emt *EmitterData) checkAndAssemblyChain(depth int) {
+func (emt *EmitterData) checkAndAssemblyChain(depth int, terms []*syntax.Term) []*syntax.Term {
 	patternIndex := emt.ctx.sentenceInfo.patternIndex
 
 	emt.printLabel(depth, "if (!stretching)")
@@ -323,7 +325,14 @@ func (emt *EmitterData) checkAndAssemblyChain(depth int) {
 				patternIndex, patternIndex-1))
 		}
 	}
+
 	emt.printLabel(depth+1, "stretchingVarNumber = 0;")
+	emt.printLabel(depth+1, "memset(ENV->bracketsOffset, 0, ENV->bracketsCount * sizeof(uint64_t));")
+	emt.printLabel(depth+1, "memset(ENV->brLeftOffset, 0, ENV->bracketsCount * sizeof(uint64_t));")
+	emt.printLabel(depth+1, "memset(ENV->brRightOffset, 0,ENV-> bracketsCount * sizeof(uint64_t));")
+	emt.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->bracketsOffset[0] = CURR_FUNC_CALL->env->assembled[%d];", patternIndex))
+	terms = emt.checkRigidTerms(depth+1, terms)
+
 	emt.printLabel(depth, "}")
 	emt.printLabel(depth, "else // !stretching")
 	emt.printLabel(depth, "{")
@@ -331,17 +340,14 @@ func (emt *EmitterData) checkAndAssemblyChain(depth int) {
 	emt.processPatternFail(depth + 1)
 	emt.printLabel(depth, "}")
 
-	emt.printLabel(depth, "memset(ENV->bracketsOffset, 0, ENV->bracketsCount * sizeof(uint64_t));")
-	emt.printLabel(depth, "memset(ENV->brLeftOffset, 0, ENV->bracketsCount * sizeof(uint64_t));")
-	emt.printLabel(depth, "memset(ENV->brRightOffset, 0,ENV-> bracketsCount * sizeof(uint64_t));")
-
-	emt.printLabel(depth, fmt.Sprintf("currFrag = VTERM_BRACKETS(CURR_FUNC_CALL->env->assembled[%d]);", patternIndex))
-	emt.printLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->env->bracketsOffset[0] = CURR_FUNC_CALL->env->assembled[%d];", patternIndex))
+	//emt.printLabel(depth, fmt.Sprintf("currFrag = VTERM_BRACKETS(CURR_FUNC_CALL->env->assembled[%d]);", patternIndex))
 	emt.printLabel(depth, "rightBound = CURR_FRAG_RIGHT(0);")
 	emt.printLabel(depth, "fragmentOffset = CURR_FRAG_LEFT(0);")
+
+	return terms
 }
 
-func (emt *EmitterData) matchingVariable(depth int, value *tokens.Value, allRigid bool) {
+func (emt *EmitterData) matchingVariable(depth int, value *tokens.Value, allRigid bool, restLen int) {
 
 	varInfo, isLocalVar := emt.ctx.sentenceInfo.scope.VarMap[value.Name]
 	isFixedVar := true
@@ -406,7 +412,7 @@ func (emt *EmitterData) matchingVariable(depth int, value *tokens.Value, allRigi
 			} else {
 
 				if value.VarType == tokens.VT_E {
-					emt.freeExprVarGetRest(depth, varNumber)
+					emt.freeExprVarGetRest(depth, varNumber, restLen)
 				} else {
 					emt.freeVExprVarGetRest(depth, varNumber)
 				}

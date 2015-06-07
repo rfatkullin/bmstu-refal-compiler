@@ -239,7 +239,7 @@ func (emt *EmitterData) printInitLocals(depth int) {
 	maxBracketsNumber := emt.ctx.maxBracketsNumber
 
 	emt.printLabel(depth, "struct func_result_t funcRes;")
-	emt.printLabel(depth, "struct fragment_t* currFrag = 0;")
+	//emt.printLabel(depth, "struct fragment_t* currFrag = 0;")
 	emt.printLabel(depth, "uint64_t fragmentOffset = 0;")
 	emt.printLabel(depth, "uint64_t rightBound = 0;")
 	emt.printLabel(depth, "int stretchingVarNumber = 0;")

@@ -174,8 +174,7 @@ func (emt *EmitterData) constructExprInParenthesis(depth int, chainNumber *int, 
 
 			// Значение переменной
 			if term.TermTag == syntax.VAR {
-				fixedEntryPoint := emt.ctx.fixedVars[term.Value.Name]
-				emt.constructVar(depth, fixedEntryPoint, term.Value.Name)
+				emt.constructVar(depth, term.Value.Name)
 			}
 
 			//Имя функции. Создаем функциональный vterm.
@@ -200,7 +199,7 @@ func (emt *EmitterData) constructExprInParenthesis(depth int, chainNumber *int, 
 	return terms
 }
 
-func (emt *EmitterData) constructVar(depth, fixedEntryPoint int, varName string) {
+func (emt *EmitterData) constructVar(depth int, varName string) {
 
 	emt.printCheckGCCondition(depth, "currTerm", "chAllocateFragmentLTerm(1, &status)")
 
