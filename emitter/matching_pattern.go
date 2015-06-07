@@ -327,10 +327,13 @@ func (emt *EmitterData) checkAndAssemblyChain(depth int, terms []*syntax.Term) [
 	}
 
 	emt.printLabel(depth+1, "stretchingVarNumber = 0;")
-	emt.printLabel(depth+1, "memset(ENV->bracketsOffset, 0, ENV->bracketsCount * sizeof(uint64_t));")
-	emt.printLabel(depth+1, "memset(ENV->brLeftOffset, 0, ENV->bracketsCount * sizeof(uint64_t));")
-	emt.printLabel(depth+1, "memset(ENV->brRightOffset, 0,ENV-> bracketsCount * sizeof(uint64_t));")
-	emt.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->bracketsOffset[0] = CURR_FUNC_CALL->env->assembled[%d];", patternIndex))
+
+	emt.printLabel(depth+1, fmt.Sprintf("uint64_t memLength = (ENV->bracketsCount - %d) * sizeof(uint64_t);", emt.ctx.brIndex))
+
+	emt.printLabel(depth+1, fmt.Sprintf("memset(ENV->brLeftOffset + %d, 0, memLength);", emt.ctx.brIndex))
+	emt.printLabel(depth+1, fmt.Sprintf("memset(ENV->brRightOffset + %d, 0, memLength);", emt.ctx.brIndex))
+
+	emt.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->bracketsOffset[%d] = CURR_FUNC_CALL->env->assembled[%d];", emt.ctx.brIndex, patternIndex))
 	terms = emt.checkRigidTerms(depth+1, terms)
 
 	emt.printLabel(depth, "}")
@@ -341,8 +344,8 @@ func (emt *EmitterData) checkAndAssemblyChain(depth int, terms []*syntax.Term) [
 	emt.printLabel(depth, "}")
 
 	//emt.printLabel(depth, fmt.Sprintf("currFrag = VTERM_BRACKETS(CURR_FUNC_CALL->env->assembled[%d]);", patternIndex))
-	emt.printLabel(depth, "rightBound = CURR_FRAG_RIGHT(0);")
-	emt.printLabel(depth, "fragmentOffset = CURR_FRAG_LEFT(0);")
+	emt.printLabel(depth, fmt.Sprintf("rightBound = CURR_FRAG_RIGHT(%d);", emt.ctx.brIndex))
+	emt.printLabel(depth, fmt.Sprintf("fragmentOffset = CURR_FRAG_LEFT(%d);", emt.ctx.brIndex))
 
 	return terms
 }

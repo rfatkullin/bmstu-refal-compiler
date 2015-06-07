@@ -87,13 +87,16 @@ func getBrackesCountInExpr(terms []*syntax.Term, numerator *int) int {
 }
 
 func getBracketsCountInSentence(s *syntax.Sentence) int {
-	count := 0
+	count := 1
 	numerator := 1
 
+	s.Pattern.BrIndex = 0
 	count += getBrackesCountInExpr(s.Pattern.Terms, &numerator)
 
 	for _, a := range s.Actions {
 		if a.ActionOp == syntax.COLON || a.ActionOp == syntax.DCOLON {
+			a.Expr.BrIndex = numerator
+			numerator++
 			count += getBrackesCountInExpr(a.Expr.Terms, &numerator)
 		}
 	}

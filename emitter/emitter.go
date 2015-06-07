@@ -187,12 +187,18 @@ func (emt *EmitterData) processFuncSentences(depth int, currFunc *syntax.Functio
 				break
 
 			case syntax.COLON: // ':'
+				backUpBrIndex := emt.ctx.brIndex
+				emt.ctx.brIndex = a.Expr.BrIndex
 				emt.matchingPattern(depth+2, a.Expr.Terms)
+				emt.ctx.brIndex = backUpBrIndex
 				break
 
 			case syntax.DCOLON: // '::'
 				emt.ctx.clearEntryPoints()
+				backUpBrIndex := emt.ctx.brIndex
+				emt.ctx.brIndex = a.Expr.BrIndex
 				emt.matchingPattern(depth+2, a.Expr.Terms)
+				emt.ctx.brIndex = backUpBrIndex
 				break
 
 			case syntax.TARROW: // '->'
