@@ -22,7 +22,7 @@ func (emt *EmitterData) matchingRigidBr(depth int, dir int) {
 
 func (emt *EmitterData) matchingRigidIntLiteral(depth int, termInd, dir int) {
 
-	emt.printLabel(depth, "//Matching int literal")
+	emt.printLabel(depth, "//Matching int rigid literal")
 
 	emt.printLabel(depth, fmt.Sprintf("if (1 > CURR_FRAG_LENGTH(%d))", emt.ctx.brIndex))
 	emt.printPatternFailBlock(depth)
