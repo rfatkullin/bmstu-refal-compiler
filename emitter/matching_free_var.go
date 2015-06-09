@@ -74,7 +74,7 @@ func (emt *EmitterData) varStretching(depth, varNumber int) {
 
 	emt.printLabel(depth+1, "stretching = 0;")
 
-	emt.printLabel(depth+1, fmt.Sprintf("rightBound = RIGHT_BOUND(CURR_FUNC_CALL->env->bracketsOffset[%d]);", emt.ctx.brIndex))
+	emt.printLabel(depth+1, fmt.Sprintf("rightBound = CURR_FRAG_RIGHT(%d);", emt.ctx.brIndex))
 
 	emt.printLabel(depth+1, "//Restore last offset at this point")
 	emt.printLabel(depth+1, fmt.Sprintf("fragmentOffset = (CURR_FUNC_CALL->env->locals + %d)->offset + "+
