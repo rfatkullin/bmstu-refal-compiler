@@ -128,11 +128,12 @@ func (emt *EmitterData) checkDirRigidTerms(depth int, terms []*syntax.Term, dir 
 			emt.printLabel(depth, fmt.Sprintf("CURR_FUNC_CALL->env->bracketsOffset[%d] = fragmentOffset;", emt.ctx.brIndex))
 
 			term.Exprs[0].Terms = emt.checkRigidTerms(depth, term.Exprs[0].Terms)
-
 			emt.ctx.brIndex = backUpBrIndex
 
 			if len(term.Exprs[0].Terms) == 0 {
 				emt.updateBracketOffset(depth, dir)
+				emt.printLabel(depth, fmt.Sprintf("if (CURR_FRAG_LENGTH(%d) != 0)", term.Exprs[0].BrIndex))
+				emt.printPatternFailBlock(depth)
 			} else {
 				return terms[i:]
 			}
