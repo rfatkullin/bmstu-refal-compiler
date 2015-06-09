@@ -313,9 +313,6 @@ func (emt *EmitterData) checkAndAssemblyChain(depth int, terms []*syntax.Term) [
 	if emt.ctx.sentenceInfo.actionIndex == 0 {
 		if emt.ctx.sentenceInfo.index == 0 {
 			emt.printLabel(depth+1, "ASSEMBLY_FIELD(0, CURR_FUNC_CALL->fieldOfView);")
-		} else {
-			emt.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->env->assembled[%d] = CURR_FUNC_CALL->env->assembled[0];",
-				patternIndex))
 		}
 	} else {
 		if emt.ctx.needToAssembly() {
