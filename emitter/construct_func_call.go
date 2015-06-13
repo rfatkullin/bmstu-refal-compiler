@@ -19,15 +19,15 @@ func (emt *EmitterData) constructFunctionalVTerm(depth int, term *syntax.Term, e
 	}
 
 	emt.printLabel(depth, "//Start construction func term.")
-	emt.printCheckGCCondition(depth, "currTerm", "chAllocateFragmentLTerm(1, &status)")
-	emt.printCheckGCCondition(depth, "currTerm->fragment->offset", "chAllocateClosureVTerm(&status)")
+	emt.printLabel(depth, "ALLC_FRAG_LTERM(currTerm)")
+	emt.printLabel(depth, "currTerm->fragment->offset = _memMngr.vtermsOffset;")
+	emt.printLabel(depth, "ALLC_CLOSURE_VTERM")
 
 	target := "_memMngr.vterms[currTerm->fragment->offset]"
 	varStr := fmt.Sprintf("%s.closure", target)
-	funcCallStr := fmt.Sprintf("chAllocateClosureStruct(%s, %d, _memMngr.vterms[%d].str, %d, &status)",
-		emittedName, len(env), term.IndexInLiterals, rollback)
 
-	emt.printCheckGCCondition(depth, varStr, funcCallStr)
+	emt.printLabel(depth, fmt.Sprintf("ALLC_CLOSURE_STRUCT(%s, %s, %d, _memMngr.vterms[%d].str, %d)",
+		varStr, emittedName, len(env), term.IndexInLiterals, rollback))
 
 	emt.printLabel(depth, "currTerm->fragment->length = 1;")
 

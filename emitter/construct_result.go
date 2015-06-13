@@ -8,21 +8,6 @@ import (
 	"bmstu-refal-compiler/syntax"
 )
 
-func calcChainsCount(terms []*syntax.Term) int {
-	chainsCount := 0
-
-	for len(terms) > 0 {
-		term := terms[0]
-		terms = terms[1:]
-
-		if term.TermTag == syntax.EXPR || term.TermTag == syntax.EVAL {
-			chainsCount += calcChainsCount(term.Exprs[0].Terms)
-		}
-	}
-
-	return chainsCount + 1
-}
-
 func (emt *EmitterData) isLiteral(term *syntax.Term) bool {
 
 	switch term.TermTag {
@@ -98,7 +83,7 @@ func (emt *EmitterData) constructLiteralsFragment(depth int, terms []*syntax.Ter
 	}
 
 	emt.printLabel(depth, "//Start construction fragment term.")
-	emt.printCheckGCCondition(depth, "currTerm", "chAllocateFragmentLTerm(1, &status)")
+	emt.printLabel(depth, "ALLC_FRAG_LTERM(currTerm)")
 	emt.printLabel(depth, fmt.Sprintf("currTerm->fragment->offset = %d;", fragmentOffset))
 	emt.printLabel(depth, fmt.Sprintf("currTerm->fragment->length = %d;", fragmentLength))
 
@@ -117,7 +102,7 @@ func (emt *EmitterData) constructFuncCallTerm(depth int, chainNumber *int, first
 
 	terms = emt.constructExprInParenthesis(depth, chainNumber, firstFuncCall, terms)
 
-	emt.printCheckGCCondition(depth, "funcTerm", "chAllocateFuncCallLTerm(&status)")
+	emt.printLabel(depth, "ALLC_FUNC_LTERM(funcTerm)")
 	emt.printLabel(depth, fmt.Sprintf("funcTerm->funcCall->failEntryPoint = %d;", emt.ctx.getPrevEntryPoint()))
 	emt.printLabel(depth, "funcTerm->funcCall->fieldOfView = currTerm->chain;")
 
@@ -129,7 +114,7 @@ func (emt *EmitterData) concatToCallChain(depth int, firstFuncCall *bool) {
 
 	if *firstFuncCall {
 		emt.printLabel(depth, "//First call in call chain -- Initialization.")
-		emt.printCheckGCCondition(depth, "funcCallChain", "chAllocateSimpleChainLTerm(&status)")
+		emt.printLabel(depth, "ALLC_SIMPL_CHAIN(funcCallChain)")
 		emt.printLabel(depth, "funcCallChain->next = funcTerm;")
 		emt.printLabel(depth, "funcCallChain->prev = funcTerm;")
 		*firstFuncCall = false
@@ -201,7 +186,7 @@ func (emt *EmitterData) constructExprInParenthesis(depth int, chainNumber *int, 
 
 func (emt *EmitterData) constructVar(depth int, varName string) {
 
-	emt.printCheckGCCondition(depth, "currTerm", "chAllocateFragmentLTerm(1, &status)")
+	emt.printLabel(depth, "ALLC_FRAG_LTERM(currTerm)")
 
 	if scopeVar, ok := emt.ctx.sentenceInfo.scope.VarMap[varName]; ok {
 		emt.printLabel(depth, fmt.Sprintf("currTerm->fragment->offset = (CURR_FUNC_CALL->env->locals + %d)->offset;", scopeVar.Number))
@@ -229,10 +214,13 @@ func (emt *EmitterData) constructAssembly(depth int, resultExpr syntax.Expr) {
 		firstFuncCall := true
 		chainNumber := 0
 
-		emt.setGCOpenBorder(depth)
+		emt.printLabel(depth+1, "struct lterm_t* funcCallChain = 0;")
+		emt.printLabel(depth+1, "struct lterm_t* helper = 0;")
+		emt.printLabel(depth+1, "struct lterm_t* currTerm = 0;")
+		emt.printLabel(depth+1, "struct lterm_t* funcTerm = 0;")
 
-		chainsCount := calcChainsCount(resultExpr.Terms)
-		emt.printInitializeConstructVars(depth+1, chainsCount)
+		emt.checkNeedDataSize(depth+1, resultExpr.Terms)
+		emt.printLabel(depth+1, fmt.Sprintf("ALLC_CHAIN_KEEPER_LTERM_N(helper, %d);", emt.calcChainsCount(resultExpr.Terms)))
 
 		emt.constructExprInParenthesis(depth+1, &chainNumber, &firstFuncCall, resultExpr.Terms)
 
@@ -243,8 +231,6 @@ func (emt *EmitterData) constructAssembly(depth int, resultExpr syntax.Expr) {
 			emt.printLabel(depth+1, "CURR_FUNC_CALL->env->workFieldOfView = currTerm->chain;")
 			emt.printLabel(depth+1, "funcRes = (struct func_result_t){.status = OK_RESULT, .fieldChain = currTerm->chain, .callChain = funcCallChain};")
 		}
-
-		emt.setGCCloseBorder(depth)
 	}
 }
 
@@ -264,8 +250,6 @@ func (emt *EmitterData) constructFuncCallAction(depth int, actionOp syntax.Actio
 	firstFuncCall := true
 	chainNumber := 1
 
-	emt.setGCOpenBorder(depth)
-
 	emt.printInitializeConstructVars(depth+1, 2)
 
 	emt.constructFuncCallTerm(depth+1, &chainNumber, &firstFuncCall, terms)
@@ -280,7 +264,7 @@ func (emt *EmitterData) constructFuncCallAction(depth int, actionOp syntax.Actio
 	emt.printLabel(depth+1, "else")
 	emt.printLabel(depth+1, "{")
 	emt.printLabel(depth+2, "struct lterm_t* copyFieldOfView;")
-	emt.printCheckGCCondition(depth+2, "copyFieldOfView", "chCopySimpleExpr(CURR_FUNC_CALL->fieldOfView, &status)")
+	emt.printLabel(depth+2, "copyFieldOfView = chCopySimpleExpr(CURR_FUNC_CALL->fieldOfView, &status);")
 	emt.printLabel(depth+2, "CONCAT_CHAINS(funcTerm->funcCall->fieldOfView, copyFieldOfView);")
 	emt.printLabel(depth+1, "}")
 
@@ -290,8 +274,6 @@ func (emt *EmitterData) constructFuncCallAction(depth int, actionOp syntax.Actio
 		emt.printLabel(depth+1, fmt.Sprintf("CURR_FUNC_CALL->entryPoint = %d;", emt.ctx.entryPointNumerator+1))
 		emt.printLabel(depth+1, "return (struct func_result_t){.status = CALL_RESULT, .fieldChain = helper[0].chain, .callChain = funcCallChain};")
 	}
-
-	emt.setGCCloseBorder(depth)
 
 	if !(emt.ctx.sentenceInfo.isLastAction() && actionOp == syntax.ARROW) {
 		emt.printLabel(depth-1, "} // Pattern or Call Action case end\n")
@@ -311,27 +293,20 @@ func (emt *EmitterData) printInitializeConstructVars(depth, chainsCount int) {
 	emt.printLabel(depth, "struct lterm_t* currTerm = 0;")
 	emt.printLabel(depth, "struct lterm_t* funcTerm = 0;")
 
-	emt.printCheckGCCondition(depth, "helper", fmt.Sprintf("chAllocateChainKeeperLTerm(UINT64_C(%d), &status)", chainsCount))
+	emt.printLabel(depth, fmt.Sprintf("helper = allocateChainKeeperLTerm(UINT64_C(%d));", chainsCount))
 }
 
-func (emt *EmitterData) setGCOpenBorder(depth int) {
-	emt.printLabel(depth, "do { // GC block")
-	emt.printLabel(depth+1, "if(prevStatus == GC_NEED_CLEAN)")
-	emt.printLabel(depth+2, "PRINT_AND_EXIT(GC_MEMORY_OVERFLOW_MSG);")
+func (emt *EmitterData) calcChainsCount(terms []*syntax.Term) int {
+	chainsCount := 0
 
-	emt.printLabel(depth+1, "if(status == GC_NEED_CLEAN)")
-	emt.printLabel(depth+1, "{")
-	emt.printLabel(depth+2, "collectGarbage();")
-	emt.printLabel(depth+2, "prevStatus = GC_NEED_CLEAN;")
-	emt.printLabel(depth+2, "status = GC_OK;")
-	emt.printLabel(depth+1, "}")
-}
+	for len(terms) > 0 {
+		term := terms[0]
+		terms = terms[1:]
 
-func (emt *EmitterData) setGCCloseBorder(depth int) {
-	emt.printLabel(depth, "} while (status != GC_OK); // GC block")
-}
+		if term.TermTag == syntax.EXPR || term.TermTag == syntax.EVAL {
+			chainsCount += emt.calcChainsCount(term.Exprs[0].Terms)
+		}
+	}
 
-func (emt *EmitterData) printCheckGCCondition(depth int, varStr, funcCallStr string) {
-
-	emt.printLabel(depth, fmt.Sprintf("CHECK_ALLOCATION_CONTINUE(%s, %s, status);", varStr, funcCallStr))
+	return chainsCount + 1
 }

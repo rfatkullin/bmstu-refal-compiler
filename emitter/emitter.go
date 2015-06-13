@@ -111,6 +111,7 @@ func (emt *EmitterData) printHeadersAndDefs(depth int, units []*syntax.Unit) {
 	emt.printLabel(depth, "#include <vmachine.h>")
 	emt.printLabel(depth, "#include <memory_manager.h>")
 	emt.printLabel(depth, "#include <defines/gc_macros.h>")
+	emt.printLabel(depth, "#include <defines/alloc_macros.h>")
 	emt.printLabel(depth, "#include <builtins/builtins.h>")
 	emt.printLabel(depth, "#include <allocators/data_alloc.h>")
 	emt.printLabel(depth, "#include <allocators/vterm_alloc.h>")
